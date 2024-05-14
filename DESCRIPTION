@@ -1,0 +1,14 @@
+Package: HTGAnalyzer
+Type: Package
+Title: HTGAnalyzer
+Version: 0.1.0
+Author: Laia Diez-Ahijado and Aarón Marcén del Rincón
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: readxl,ggplot2,scales,pheatmap,dplyr,reshape2,gplots,RColorBrewer,plotly,ggrepel,cowplot,PoiClaClu,DESeq2,GOstats,ReactomePA,GSEABase,msigdbr,enrichplot,EnhancedVolcano,fgsea,org.Hs.eg.db,BiocGenerics
+
+RoxygenNote: 7.3.1
