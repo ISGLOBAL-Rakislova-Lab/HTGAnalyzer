@@ -1,0 +1,149 @@
+In here you will find a tutorial to perform a complete analysis for HTG.
+
+Having the results of HTG Edge this pakcage will help to perform the Quality Control, the Differential Expression analysis and the Gene Set Enrichment Analysis.
+
+# IMPORT
+In here we import the data from HTG Edge. This is an excel with this structure
+|               | 4-B00-03341-B  | 4-B04-23636-B  | 4-B05-03271-B  | 4-B06-00420 | 4-B23-15422 | 4-B23-37783-1 |
+|---------------|----------------|----------------|----------------|-------------|-------------|---------------|
+| Sample ID     | 1              | 2              | 3              | 4           | 5           | 6             |
+| Well          | A1             | B1             | C1             | D1          | E1          | F1            |
+| Date          | 23/04/2042     | 23/04/2042     | 23/04/2042     | 23/04/2042  | 23/04/2042  | 23/04/2042    |
+| Total Counts  | 2373           | 6616           | 8720           | 3309        | 1521        | 646           |
+| A1BG          | 19             | 24             | 261            | 201         | 14          | 1             |
+| A1CF          | 0              | 0              | 429            | 0           | 2           | 0             |
+| A2M           | 1472           | 2417           | 4409           | 1990        | 658         | 20            |
+| A2ML1         | 0              | 150            | 0              | 46          | 0           | 2             |
+| A3GALT2       | 0              | 0              | 0              | 0           | 0           | 0             |
+
+a<- HTG_import("/HTG Transcriptome database.xlsx")
+head(a)
+
+once you have the counts imported in the format desirable your table will have sample names as colnames and genes on the row names
+colnames(a)
+rownames(a)
+#you will see that if you make a tail of the our data, there are the probes:
+
+tail(a)
+
+#you can also see this in the excel.
+################# no va :()
+HTG_plotPCA_genes(a)
+HTG_plotPCA_probes(a)
+#################################
+
+### SUBSET:
+ERCC <- HTG_subset_counts(a, "ERCC")
+NC <- HTG_subset_counts(a, "NC")
+POS <- HTG_subset_counts(a, "POS")
+GDNA <- HTG_subset_counts(a, "GDNA")
+
+ratio<- HTG_calculate_ratios(a,POS,NC,GDNA,ERCC)
+head(ratio)
+tail(ratio)
+
+
+HTG_plotControls(a,ratio)
+
+HTG_calculate_summary_stats(a)
+
+filtered<- HTG_filterCounts(a)
+tail(filtered)
+
+HTG_HeatmapQC(ratio,filtered, n_samples = 3)
+
+##################
+##################
+# Now we have to include teh clinical data to perform de dds.
+library(readxl)
+htg_meta <- read_excel("C:/Users/ldiez/Downloads/HTG Transcriptome metadata.xlsx")
+htg_meta<- as.data.frame(htg_meta)
+head(htg_meta)
+#
+# # Corregir el nombre del grupo en htg_meta
+htg_meta$Group <- gsub("DLBCLwo CNS inv", "DLBCL wo CNS inv", htg_meta$Group)
+#
+# # Columna id como rownames en htg_meta
+htg_meta$id
+rownames_meta <- htg_meta$id
+rownames(htg_meta) <- rownames_meta
+#
+#
+head(htg_meta)
+head_meta <- head(htg_meta, 3)
+head_meta$id <- rownames(htg_meta)[c(1:3)]
+head_meta <- head_meta[, c(9, setdiff(1:ncol(head_meta), 9))]
+head_meta <- head_meta[, c(1:5)]
+
+rownames_meta <- rownames(htg_meta)
+
+# Compilar nombres de lugares de biopsia en htg_meta
+htg_meta$site <- gsub("Brain", "brain", htg_meta$site)
+htg_meta$site <- gsub("LN", "lymph node", htg_meta$site)
+htg_meta$site <- gsub("PIEL", "skin", htg_meta$site)
+
+rownames(htg_meta) <- rownames_meta
+table(htg_meta$site)
+# Se almacenan los nombres de fila
+rownames_meta <- rownames(htg_meta)
+# Nueva variable tissue_group que simplifica site mediante agrupación
+library(dplyr)
+htg_meta <- htg_meta %>%
+  mutate(tissue_group = case_when(
+    site %in% c("lymph node") ~ "lymph node",
+    site %in% c("BMO") ~ "BMO",
+    site %in% c("clivus", "etmoides") ~ "bone",
+    site %in% c("brain", "brain (vermix)", "vitreo", "retina") ~ "CNS",
+    site %in% c("MEDIASTINUM", "MESENTERIC", "lumbar", "PARARENAL", "soft tissue (thigh)", "skin", "skin skull", "skin/subcutaneous") ~ "soft tissue/skin",
+    site %in% c("VALVULA ILEOCECAL", "rinopharynx") ~ "mucosa",
+    TRUE ~ NA_character_  # Agregar un valor por defecto en caso de que no haya coincidencia
+  ))
+
+rownames(htg_meta) <- rownames_meta
+colnames(htg_meta)
+t_NHC <- table(htg_meta$NHC)
+t_NHC_ap <- t_NHC[t_NHC>1]
+t_NHC_ap
+
+head(htg_meta)
+
+str(htg_meta)
+## if needed there is a function to transform the quantitative data into qualitative data.
+# in this example we will change the tumor cell content:
+# if the tumor cell content is more than 50 we will transform the variable into high, and if not into low.
+table(htg_meta$`tumor cell content`)
+
+htg_meta <- HTG_quant_to_qual(htg_meta, "tumor cell content", 34, "high", "low")
+head(htg_meta)
+
+#Now delete those samples you know that are wrong. you can use the function HeatmapQC that bring also the the samples
+#that are ploted at least once in the heatmap.
+
+samples_vector <- c("4-B04-23636-B", "4-B16-38483-1", "4-B19-09868-B1", "3-B10-39759", "3-B17-17894", "3-B17-26615", "14-B23-14912-A3", "18-C14-03618", "18-N20-00167-A14N", "18-B20-24791", "14-B19-09150-A1", "14-B20-22458-A1")
+length(samples_vector)
+# remember when use this function to put the filtered one on counts_data
+dim(filtered) #19398    61
+61-12 #49
+dim(htg_meta) #61 12
+cleaned_counts <- HTG_remove_outliers_COUNTS(filtered, samples_vector)
+annot<-HTG_remove_outliers_ANNOT(htg_meta,"id",samples_vector)
+dim(cleaned_counts)
+dim(annot)
+
+## DESEQ
+## remember to delete the ones that are outliers.
+#The names of annot have to be without spaces.
+# be carefull if there is NA in the variable of interes because it will not work if there is any NA.
+colnames(annot) <- gsub(" ", "_", colnames(annot))
+
+annot <- annot[order(annot$id), ]
+cleaned_counts <- cleaned_counts[, order(colnames(cleaned_counts))]
+identical(colnames(cleaned_counts), annot$id)
+
+
+dds_processed <- HTG_DESeq(cleaned_counts, annot, "Group",
+                               threshold_gene = 200, threshold_subject = 10,
+                               heatmap_columns = c("Group", "INCLUDE"),
+                               contrast = c('Group', 'DLBCL wo CNS inv','PCNSL'), pCutoff = 5e-2)
+
+b<- HTG_GSEAresults(dds_processed)
