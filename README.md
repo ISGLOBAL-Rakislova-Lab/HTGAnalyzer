@@ -1,6 +1,16 @@
 Here you will find a tutorial to perform a complete analysis for HTG Edge results with HTGAnalizer.
 
 Having the results of HTG Edge this pakcage will help to perform the Quality Control, the Differential Expression analysis and the Gene Set Enrichment Analysis.
+# INSTALATION:
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+library(devtools)
+
+install_github("ISGLOBAL-Rakislova-Lab/HTGAnalizer")
+
+
 
 
 # IMPORT AND QUALITY CONTROL
