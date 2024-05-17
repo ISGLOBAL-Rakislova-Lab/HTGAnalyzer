@@ -3,12 +3,10 @@ Type: Package
 Title: HTGAnalyzer
 Version: 0.1.0
 Author: Laia Diez-Ahijado and Aarón Marcén del Rincón
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Maintainer: The package maintainer <laia.diez@isglobal.org>
+Description: The HTG EdgeSeq system revolutionized gene expression profiling technology with its ability to concurrently interrogate the whole transcriptome, providing real-time insights into gene expression across diverse sample types. This system offered a revolutionary approach for the analysis of paraffin embedded formalin-fixed samples, providing high sensitivity and reproducibility, streamlining NGS library preparation and maximizing sample utilization. However, the closure of HTG Molecular Diagnostics, Inc (HTG) has left a significant amount of unanalyzed data, particularly from HTG transcriptomic panel (HTP). Moreover, although there is a white paper explaining the quality control (QC) process for the Immuno-Oncology panel, there is a lack of information for the analysis of other HTP panels. Additionally, while existing R packages have addressed the HTG EdgeSeq Precision Immuno-Oncology Panel, this package does not include support data. Therefore, we have developed a dedicated R package to conduct QC assessments and differential gene expression analysis (DGEA) on HTP data with an intuitive interface, making it easy to use even for those without prior bioinformatics experience. This package includes various levels of QC assessments, including those emulating the HTG Reveal software's QC protocol and additional QC using ERCC probes and median library size. Unsupervised expression analysis, visualization tools such as HeatMap plots, volcano plots, and tables, as well as integration with clinical data, are also provided. The package has been validated in an independent laboratory to ensure its performance and reliability.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: readxl,ggplot2,scales,pheatmap,dplyr,reshape2,gplots,RColorBrewer,plotly,ggrepel,cowplot,PoiClaClu,DESeq2,GOstats,ReactomePA,GSEABase,msigdbr,enrichplot,EnhancedVolcano,fgsea,org.Hs.eg.db,BiocGenerics
-
+Imports: readxl,ggplot2,scales,pheatmap,dplyr,reshape2,RColorBrewer,plotly,ggrepel,cowplot,PoiClaClu,DESeq2,GSEABase,msigdbr,enrichplot,EnhancedVolcano,fgsea,org.Hs.eg.db,BiocGenerics,clusterProfiler,DOSE
 RoxygenNote: 7.3.1
