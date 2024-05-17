@@ -1,14 +1,18 @@
-In here you will find a tutorial to perform a complete analysis for HTG.
+Here you will find a tutorial to perform a complete analysis for HTG Edge results with HTGAnalizer.
 
 Having the results of HTG Edge this pakcage will help to perform the Quality Control, the Differential Expression analysis and the Gene Set Enrichment Analysis.
 
+#########################
+##############################        IMPORT AND QUALITY CONTROL
+#########################
 # IMPORT
-In here we import the data from HTG Edge. This is an excel with this structure
-|               | 4-B00-03341-B  | 4-B04-23636-B  | 4-B05-03271-B  | 4-B06-00420 | 4-B23-15422 | 4-B23-37783-1 |
+Before starting, make sure your Excel file looks like this. Here we import the data from HTG Edge. This is an Excel file with this structure:
+
+| Sample Name   | 4-B00-03341-B  | 4-B04-23636-B  | 4-B05-03271-B  | 4-B06-00420 | 4-B23-15422 | 4-B23-37783-1 |
 |---------------|----------------|----------------|----------------|-------------|-------------|---------------|
 | Sample ID     | 1              | 2              | 3              | 4           | 5           | 6             |
 | Well          | A1             | B1             | C1             | D1          | E1          | F1            |
-| Date          | 23/04/2042     | 23/04/2042     | 23/04/2042     | 23/04/2042  | 23/04/2042  | 23/04/2042    |
+| Date Parsed   | 23/04/2022     | 23/04/2022     | 23/04/2022     | 23/04/2022  | 23/04/2022  | 23/04/2022    |
 | Total Counts  | 2373           | 6616           | 8720           | 3309        | 1521        | 646           |
 | A1BG          | 19             | 24             | 261            | 201         | 14          | 1             |
 | A1CF          | 0              | 0              | 429            | 0           | 2           | 0             |
@@ -16,134 +20,147 @@ In here we import the data from HTG Edge. This is an excel with this structure
 | A2ML1         | 0              | 150            | 0              | 46          | 0           | 2             |
 | A3GALT2       | 0              | 0              | 0              | 0           | 0           | 0             |
 
-a<- HTG_import("/HTG Transcriptome database.xlsx")
-head(a)
+counts<- HTG_import("path_to_HTG_database.xlsx")
+head(counts)
 
-once you have the counts imported in the format desirable your table will have sample names as colnames and genes on the row names
-colnames(a)
-rownames(a)
-#you will see that if you make a tail of the our data, there are the probes:
+After importing, your data will look like this:
 
-tail(a)
+|               | 4-B00-03341-B  | 4-B04-23636-B  | 4-B05-03271-B  | 4-B06-00420 | 4-B23-15422 | 4-B23-37783-1 |
+|---------------|----------------|----------------|----------------|-------------|-------------|---------------|
+| A1BG          | 19             | 24             | 261            | 201         | 14          | 1             |
+| A1CF          | 0              | 0              | 429            | 0           | 2           | 0             |
+| A2M           | 1472           | 2417           | 4409           | 1990        | 658         | 20            |
+| A2ML1         | 0              | 150            | 0              | 46          | 0           | 2             |
+| A3GALT2       | 0              | 0              | 0              | 0           | 0           | 0             |
 
-#you can also see this in the excel.
-################# no va :()
-HTG_plotPCA_genes(a)
-HTG_plotPCA_probes(a)
-#################################
+Once you have the counts imported in the desired format, your table will have sample names as column names and genes as row names.
+```{r}
+colnames(counts)
+rownames(counts)
+```
+You will also find probes at the end:
 
-### SUBSET:
-ERCC <- HTG_subset_counts(a, "ERCC")
-NC <- HTG_subset_counts(a, "NC")
-POS <- HTG_subset_counts(a, "POS")
-GDNA <- HTG_subset_counts(a, "GDNA")
+tail(counts)
 
-ratio<- HTG_calculate_ratios(a,POS,NC,GDNA,ERCC)
+# PCA PLOT with PROBES.
+It performs the PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance.
+You can label the number of samples, which are farthest from the center (if is not specify, it will label 3)
+HTG_plotPCA_genes(counts, 4)
+
+# SUBSET
+As your data containg probes you can use the function subset to obtain a data.frame with the rows names that starts with a specific prefix and all the columns (samples).
+ERCC <- HTG_subset_counts(counts, "ERCC")
+NC <- HTG_subset_counts(counts, "NC")
+POS <- HTG_subset_counts(counts, "POS")
+GDNA <- HTG_subset_counts(counts, "GDNA")
+
+# FILTERED COUNTS
+This function filters counts data to remove rows with specific prefixes: "NC-", "POS-", "GDNA-", and "ERCC-".
+filtered<- HTG_filterCounts(counts)
+With tail function you can check if all the probes were deleted. 
+tail(counts_filtered)
+
+# PCA ON GENES:
+It performs the PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance.
+You can label the number of samples, which are farthest from the center (if is not specify, it will label 3)
+plotPCA_genes(filtered)
+
+# CALCULATE RATIOS
+This function calculates ratios based on counts data for different categories such as positive controls, genomic DNA. Results will be store in a .csv.
+ratio<- HTG_calculate_ratios(counts_filtered,POS,NC,GDNA,ERCC)
+check the pathway:
+getwd()
 head(ratio)
-tail(ratio)
 
+# QUALITY CONTROL.
+This function generates multiple plots to visualize various quality control (QC) metrics. The function includes several thresholds that can be modified based on specific needs, though default values have been tested and are provided.
+outliers are mark in red, samples that are clode to theshold are in yellow and samples that pass the QC are in blue. 
+the quality controls performed are the following:
+* Density plot of library size.
+* QC0 = positive control; threshold = 4 (in yellow the samples that are between 3 and 5)
+* QC1 = library size ; threshold = 7e+06 (in yellow the samples that are between 5e+06 and 8e+06)
+* QC2 = Negative Control; threshold = 0.045 (in yellow the samples that are between 0.035 and 0.05)
+* QC3 = Genomic DNA; threshold = 0.02 (in yellow the samples that are between 0.015 and 0.025)
+* QC4 = ERCC Control; thershold = 5 ( in yellow the samples that are between 0.015 and 0.03)
+* QC5 = Median ; threshold = 0.025 ( in yellow the samples that are between 3 and 7)
 
-HTG_plotControls(a,ratio)
+HTG_plotPCA_probes(counts_filtered)
 
+# SUMMARY STATS:
+This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
 HTG_calculate_summary_stats(a)
 
-filtered<- HTG_filterCounts(a)
-tail(filtered)
+# HEATMAP: 
+This plot will summerize the all the results in this it apears in red the ones that didn't pass the control and return a vector with the samples that at least once are classified as outlier.
+outliers<- HTG_HeatmapQC(ratio,filtered, n_samples = 3)
+outliers
 
-HTG_HeatmapQC(ratio,filtered, n_samples = 3)
+#########################
+##############################        DIFFERENTIAL EXPRESSION ANALYSIS
+#########################
+To perform the Differential Expression analysis you will need a clinical data. 
 
-##################
-##################
-# Now we have to include teh clinical data to perform de dds.
 library(readxl)
-htg_meta <- read_excel("C:/Users/ldiez/Downloads/HTG Transcriptome metadata.xlsx")
-htg_meta<- as.data.frame(htg_meta)
-head(htg_meta)
-#
-# # Corregir el nombre del grupo en htg_meta
-htg_meta$Group <- gsub("DLBCLwo CNS inv", "DLBCL wo CNS inv", htg_meta$Group)
-#
-# # Columna id como rownames en htg_meta
-htg_meta$id
-rownames_meta <- htg_meta$id
-rownames(htg_meta) <- rownames_meta
-#
-#
-head(htg_meta)
-head_meta <- head(htg_meta, 3)
-head_meta$id <- rownames(htg_meta)[c(1:3)]
-head_meta <- head_meta[, c(9, setdiff(1:ncol(head_meta), 9))]
-head_meta <- head_meta[, c(1:5)]
+clinical <- read_excel("path_to_clinical_data.xlsx")
+Make sure is a data.frame have the Sample id on rows but also there is a column with the samples id. It will be recomendable to have no spaces in variables names. You can change it on excel.
+It have to looks like this:
+head(clinical)
 
-rownames_meta <- rownames(htg_meta)
+|               | id             | Ciclina    | site         | Smoker   |
+|---------------|----------------|------------|--------------|----------|
+| 4-B00-16661-B | 4-B00-16661-B  | 70         |  lymph node  | yes      |
+| 4-B04-28836-B | 4-B04-28836-B  | 70         |  brain       | no       |
+| 4-B05-19888-B | 4-B05-19888-B  | 70         | brain        | no       |
+| 4-B06-01220   | 4-B06-01220    | 60         | brain        | yes      |
+| 4-B16-155432  | 4-B16-155432   | 80         |  lymph node  | no       |
+| 4-B16-38476-1 | 4-B16-38476-1  | 40         |  lymph node  | yes      |
 
-# Compilar nombres de lugares de biopsia en htg_meta
-htg_meta$site <- gsub("Brain", "brain", htg_meta$site)
-htg_meta$site <- gsub("LN", "lymph node", htg_meta$site)
-htg_meta$site <- gsub("PIEL", "skin", htg_meta$site)
+As you can see, it can have quantitative and qualitative data. 
+3 useful functions to understand better the data are:
 
-rownames(htg_meta) <- rownames_meta
-table(htg_meta$site)
-# Se almacenan los nombres de fila
-rownames_meta <- rownames(htg_meta)
-# Nueva variable tissue_group que simplifica site mediante agrupación
-library(dplyr)
-htg_meta <- htg_meta %>%
-  mutate(tissue_group = case_when(
-    site %in% c("lymph node") ~ "lymph node",
-    site %in% c("BMO") ~ "BMO",
-    site %in% c("clivus", "etmoides") ~ "bone",
-    site %in% c("brain", "brain (vermix)", "vitreo", "retina") ~ "CNS",
-    site %in% c("MEDIASTINUM", "MESENTERIC", "lumbar", "PARARENAL", "soft tissue (thigh)", "skin", "skin skull", "skin/subcutaneous") ~ "soft tissue/skin",
-    site %in% c("VALVULA ILEOCECAL", "rinopharynx") ~ "mucosa",
-    TRUE ~ NA_character_  # Agregar un valor por defecto en caso de que no haya coincidencia
-  ))
+* str(clinical) = will give you the number rows and columns aswell the class of each variable and an example on how it looks like
+* summary(clinical) = it will bring summary stadistics on quantitative data.
+* table(is.na(clinical$Smoker) = it will bring you a table with the number of observations that are NA in the column specified (ex: Smoker)
 
-rownames(htg_meta) <- rownames_meta
-colnames(htg_meta)
-t_NHC <- table(htg_meta$NHC)
-t_NHC_ap <- t_NHC[t_NHC>1]
-t_NHC_ap
+# FROM QUANTITATIVE VARIABLE TO QUALITATIVE VARIABLE
+if needed there is a function to transform the quantitative data into qualitative data.
+If is not specified, it will transform the variable into high or low, but can be changed.
+table(clinical$Ciclina)
 
-head(htg_meta)
+clinical <- HTG_quant_to_qual(clinical, "Ciclina", 34, "high", "low")
+head(clinical)
 
-str(htg_meta)
-## if needed there is a function to transform the quantitative data into qualitative data.
-# in this example we will change the tumor cell content:
-# if the tumor cell content is more than 50 we will transform the variable into high, and if not into low.
-table(htg_meta$`tumor cell content`)
-
-htg_meta <- HTG_quant_to_qual(htg_meta, "tumor cell content", 34, "high", "low")
-head(htg_meta)
-
-#Now delete those samples you know that are wrong. you can use the function HeatmapQC that bring also the the samples
-#that are ploted at least once in the heatmap.
-
-samples_vector <- c("4-B04-23636-B", "4-B16-38483-1", "4-B19-09868-B1", "3-B10-39759", "3-B17-17894", "3-B17-26615", "14-B23-14912-A3", "18-C14-03618", "18-N20-00167-A14N", "18-B20-24791", "14-B19-09150-A1", "14-B20-22458-A1")
-length(samples_vector)
-# remember when use this function to put the filtered one on counts_data
-dim(filtered) #19398    61
-61-12 #49
-dim(htg_meta) #61 12
-cleaned_counts <- HTG_remove_outliers_COUNTS(filtered, samples_vector)
-annot<-HTG_remove_outliers_ANNOT(htg_meta,"id",samples_vector)
+# DELETE OUTLIERS
+Now delete those samples you know that are wrong. you can use the function HeatmapQC that bring also the the samples.
+outliers
+dim(filtered) 
+dim(counts) 
+cleaned_counts <- HTG_remove_outliers_COUNTS(filtered, outliers)
+annot<-HTG_remove_outliers_ANNOT(clinic,"id",outliers)
 dim(cleaned_counts)
 dim(annot)
 
-## DESEQ
-## remember to delete the ones that are outliers.
-#The names of annot have to be without spaces.
-# be carefull if there is NA in the variable of interes because it will not work if there is any NA.
+# SPACE
+Variables have to not have spaces so you can change spaces for _ usign the following code:
 colnames(annot) <- gsub(" ", "_", colnames(annot))
 
+be carefull if there is NA in the variable of interes because it will not work if there is any NA.
+
+# CHECK
+This step is usefull to see if the collum of samples id are the same names as columns in our counts data.frame.
 annot <- annot[order(annot$id), ]
 cleaned_counts <- cleaned_counts[, order(colnames(cleaned_counts))]
-identical(colnames(cleaned_counts), annot$id)
+identical(colnames(cleaned_counts), annot$id) #It have to say true.
 
+# DIFFERENTIAL EXPRESSION ANALYSIS.
 
-dds_processed <- HTG_DESeq(cleaned_counts, annot, "Group",
+This function processes DESeq2 analysis with customizable parameters. It will bring plots with the results to help to understand the results as well as the results of the contrast and the distribution of counts on top ten genes from results. 
+results <- HTG_DESeq(cleaned_counts, annot, "Ciclina",
                                threshold_gene = 200, threshold_subject = 10,
-                               heatmap_columns = c("Group", "INCLUDE"),
-                               contrast = c('Group', 'DLBCL wo CNS inv','PCNSL'), pCutoff = 5e-2)
-
-b<- HTG_GSEAresults(dds_processed)
+                               heatmap_columns = c("Ciclina", "Smoker"),
+                               contrast = c('Ciclina', 'high','low'), pCutoff = 5e-2)
+#########################
+##############################        GENE SET ENRICHMENT ANALYSIS
+#########################
+This step will prot and store the results of the gene set enrichment analysis. This is the longest step it will take a while. 
+GSEanalysis<- HTG_GSEAresults(results)
