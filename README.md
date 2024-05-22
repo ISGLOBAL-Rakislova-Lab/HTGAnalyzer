@@ -13,7 +13,7 @@ install_github("ISGLOBAL-Rakislova-Lab/HTGAnalizer")
 
 
 
-# IMPORT AND QUALITY CONTROL
+# QUALITY CONTROL
 
 ## IMPORT
 Before starting, make sure your Excel file looks like this. Here we import the data from HTG Edge. This is an Excel file with this structure:
@@ -52,11 +52,6 @@ You will also find probes at the end:
 ```{r}
 tail(counts)
 ```
-## PCA Plot with Probes
-This performs PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance. You can label the number of samples farthest from the center (if not specified, it will label 3).
-```{r}
-HTG_plotPCA_genes(counts, 4)
-```
 
 ##  SUBSET
 As your data contains probes, you can use the function subset to obtain a data frame with the row names that start with a specific prefix and all the columns (samples).
@@ -77,13 +72,7 @@ With the tail function, you can check if all the probes were deleted:
 tail(counts_filtered)
 ```
 
-## PCA ON GENES:
-It performs the PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance. You can label the number of samples farthest from the center (if not specified, it will label 3).
-```{r}
-plotPCA_genes(filtered)
-```
-
-# CALCULATE RATIOS
+## CALCULATE RATIOS
 This function calculates ratios based on counts data for different categories such as positive controls and genomic DNA. Results will be stored in a .csv file.
 ```{r}
 ratio<- HTG_calculate_ratios(counts_filtered,POS,NC,GDNA,ERCC)
@@ -116,6 +105,18 @@ This plot will summarize all the results. In this heatmap, samples that did not 
 ```{r}
 outliers<- HTG_HeatmapQC(ratio,filtered, n_samples = 3)
 outliers
+```
+
+## PCA Plot with Probes
+This performs PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance. You can label the number of samples farthest from the center (if not specified, it will label 3).
+```{r}
+HTG_plotPCA_genes(counts, 4)
+```
+
+## PCA ON GENES:
+It performs the PCA, identifies outlier samples, and generates plots for PCA results, explained variance, and accumulated variance. You can label the number of samples farthest from the center (if not specified, it will label 3).
+```{r}
+plotPCA_genes(filtered)
 ```
 
 # DIFFERENTIAL EXPRESSION ANALYSIS
