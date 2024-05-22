@@ -19,6 +19,7 @@
 #' @param threshold_superior_ercc Threshold for ERCC control upper limit.
 #' @param threshold_inferior_ercc Threshold for ERCC control lower limit.
 #' @param threshold_line_ercc Threshold line for ERCC control.
+#' @param n_samples Number of samples to label as outliers.
 #'
 #' @return Multiple plots displaying different QC metrics.
 #' @export

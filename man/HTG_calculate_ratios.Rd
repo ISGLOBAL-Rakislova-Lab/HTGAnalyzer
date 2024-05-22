@@ -35,7 +35,8 @@ HTG_plotControls(
   threshold_line_ercc = 0.025,
   threshold_superior_median = 7,
   threshold_inferior_median = 3,
-  threshold_line_median = 5
+  threshold_line_median = 5,
+  n_samples = 3
 )
 }
 \arguments{
@@ -84,6 +85,8 @@ HTG_plotControls(
 \item{threshold_inferior_median}{Threshold for median lower limit.}
 
 \item{threshold_line_median}{Threshold line for median.}
+
+\item{n_samples}{Number of samples to label as outliers.}
 }
 \value{
 A data frame containing calculated ratios for different categories.
