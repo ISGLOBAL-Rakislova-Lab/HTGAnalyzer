@@ -105,7 +105,7 @@ outliers
 ## 2.7 SUMMARY STATS:
 This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
 ```{r}
-HTG_calculate_summary_stats(a)
+HTG_calculate_summary_stats(filtered)
 ```
 
 ## 2.8 PCA Plot with Probes
