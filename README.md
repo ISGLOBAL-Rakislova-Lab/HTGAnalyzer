@@ -91,6 +91,7 @@ Density plot of library size.
 * QC3 = Genomic DNA; threshold = 0.02 (samples between 0.015 and 0.025 are in yellow)
 * QC4 = ERCC Control; threshold = 5 (samples between 0.015 and 0.03 are in yellow)
 * QC5 = Median; threshold = 0.025 (samples between 3 and 7 are in yellow)
+* PCA on genes only
 
 ```{r}
 HTG_plotPCA_probes(counts_filtered)
