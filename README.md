@@ -95,16 +95,17 @@ Density plot of library size.
 ```{r}
 HTG_plotPCA_probes(counts_filtered)
 ```
-## 2.6 SUMMARY STATS:
-This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
-```{r}
-HTG_calculate_summary_stats(a)
-```
-## 2.7 HEATMAP: 
+
+## 2.6 HEATMAP: 
 This plot will summarize all the results. In this heatmap, samples that did not pass the control appear in red, and a vector with the samples classified as outliers at least once will be returned.
 ```{r}
 outliers<- HTG_HeatmapQC(ratio,filtered, n_samples = 3)
 outliers
+```
+## 2.7 SUMMARY STATS:
+This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
+```{r}
+HTG_calculate_summary_stats(a)
 ```
 
 ## 2.8 PCA Plot with Probes
