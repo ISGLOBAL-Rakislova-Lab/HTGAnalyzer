@@ -1,6 +1,6 @@
 #' Calculate Ratios
 #'
-#' This function calculates ratios based on counts data for different categories such as positive controls, genomic DNA, etc.
+#' @description  This function calculates ratios based on counts data for different categories such as positive controls, genomic DNA, etc.
 #'
 #' @param counts_filtered A data frame containing filtered counts data. Counts data without probes.
 #' @param cts_POS A data frame containing counts data for positive controls.
@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-#' calculate_ratios(counts_filtered, cts_POS, cts_NC, cts_GDNA, cts_ERCC, save_csv = TRUE, csv_file = "ratios.csv")
+#' HTG_calculate_ratios(counts_filtered, cts_POS, cts_NC, cts_GDNA, cts_ERCC, save_csv = TRUE, csv_file = "ratios.csv")
 #' @name HTG_calculate_ratios
 
 HTG_calculate_ratios <- function(counts_filtered, cts_POS, cts_NC, cts_GDNA, cts_ERCC, save_csv = FALSE, csv_file = "ratios.csv") {

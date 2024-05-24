@@ -18,5 +18,5 @@ A subset of the counts data frame containing rows with row names that match the 
 This function subsets a counts data frame based on a specified prefix in row names.
 }
 \examples{
-cts_ERCC <- subset_counts(counts, "ERCC")
+cts_ERCC <- HTG_subset_counts(counts, "ERCC")
 }

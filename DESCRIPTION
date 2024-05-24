@@ -8,5 +8,6 @@ Description: The HTG EdgeSeq system revolutionized gene expression profiling tec
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: readxl,ggplot2,scales,pheatmap,dplyr,reshape2,RColorBrewer,plotly,ggrepel,cowplot,PoiClaClu,DESeq2,GSEABase,msigdbr,enrichplot,EnhancedVolcano,fgsea,org.Hs.eg.db,BiocGenerics,clusterProfiler,DOSE
+Imports:  DESeq2, S4Vectors, stats4, BiocGenerics, IRanges, GenomicRanges, GenomeInfoDb, SummarizedExperiment, MatrixGenerics, matrixStats, Biobase, GWASTools,ggridges,ggupset
+Suggests:  DOSE, EnhancedVolcano, PoiClaClu, RColorBrewer, clusterProfiler, dplyr, enrichplot, fgsea, ggplot2, ggrepel, msigdbr, org.Hs.eg.db, pheatmap, readxl
 RoxygenNote: 7.3.1

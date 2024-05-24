@@ -30,7 +30,7 @@ Returns the modified data frame with the specified column transformed into quali
 This function converts quantitative columns in a data frame into qualitative ones based on a specified threshold.
 }
 \examples{
-# Transform the "Ciclina_D1" column in the "data" data frame with threshold 60
-data <- quant_to_qual(data, "Ciclina_D1", 60, "high", "low")
+# Transform the "Ciclina" column in the "data" data frame with threshold 60
+AnnotData <- HTG_quant_to_qual(AnnotData, "Ciclina", 60, "high", "low")
 
 }

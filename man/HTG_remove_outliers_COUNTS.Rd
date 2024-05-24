@@ -4,10 +4,10 @@
 \alias{HTG_remove_outliers_COUNTS}
 \title{Remove outliers from counts data based on specified sample IDs}
 \usage{
-HTG_remove_outliers_COUNTS(counts_data, outlier_rows)
+HTG_remove_outliers_COUNTS(counts_filtered, outlier_rows)
 }
 \arguments{
-\item{counts_data}{A data frame containing counts data.}
+\item{counts_filtered}{A data frame containing counts data.}
 
 \item{outlier_rows}{A vector of sample IDs (column names) to be removed from the counts data frame.}
 }
@@ -19,5 +19,5 @@ This function removes specified sample IDs from a data frame containing counts d
 }
 \examples{
 outlier_rows <- c("B04-23456-B", "B16-39493-1")
-cleaned_counts <- remove_outliers_COUNTS(counts_data, outlier_rows)
+cleaned_counts <- HTG_remove_outliers_COUNTS(counts_filtered, outlier_rows)
 }

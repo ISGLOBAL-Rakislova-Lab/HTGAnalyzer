@@ -16,5 +16,5 @@ A filtered counts data frame with specified prefixes removed.
 This function filters counts data to remove rows with specific prefixes such as "NC-", "POS-", "GDNA-", and "ERCC-".
 }
 \examples{
-counts_filtered <- filterCounts(counts)
+counts_filtered <- HTG_filterCounts(counts)
 }

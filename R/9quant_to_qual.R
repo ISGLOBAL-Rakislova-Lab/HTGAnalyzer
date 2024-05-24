@@ -13,8 +13,8 @@
 #' @export
 #'
 #' @examples
-#' # Transform the "Ciclina_D1" column in the "data" data frame with threshold 60
-#' data <- quant_to_qual(data, "Ciclina_D1", 60, "high", "low")
+#' # Transform the "Ciclina" column in the "data" data frame with threshold 60
+#' AnnotData <- HTG_quant_to_qual(AnnotData, "Ciclina", 60, "high", "low")
 #'
 #'@name HTG_quant_to_qual
 

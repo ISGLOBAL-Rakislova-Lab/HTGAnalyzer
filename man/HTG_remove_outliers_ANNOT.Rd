@@ -2,12 +2,12 @@
 % Please edit documentation in R/remove_outliers_ANNOT.R
 \name{HTG_remove_outliers_ANNOT}
 \alias{HTG_remove_outliers_ANNOT}
-\title{Remove outliers from annotation data based on specified sample IDs}
+\title{HTG_remove_outliers_ANNOT}
 \usage{
-HTG_remove_outliers_ANNOT(annot_data, sample_id_col, outlier_rows)
+HTG_remove_outliers_ANNOT(AnnotData, sample_id_col, outlier_rows)
 }
 \arguments{
-\item{annot_data}{A data frame containing annotation data.}
+\item{AnnotData}{A data frame containing annotation data.}
 
 \item{sample_id_col}{The name of the column containing sample IDs.}
 
@@ -17,10 +17,10 @@ HTG_remove_outliers_ANNOT(annot_data, sample_id_col, outlier_rows)
 Returns a data frame with the rows containing outlier sample IDs removed.
 }
 \description{
-This function removes specified sample IDs from a data frame containing annotation data.
+This function removes specified sample IDs from a data frame containing annotation data.Remove outliers from annotation data based on specified sample IDs
 }
 \examples{
-# Remove outliers from annot_data based on outlier_rows
+# Remove outliers from AnnotData based on outlier_rows
 outlier_rows <- c("sample2", "sample3")
-cleaned_annot <- remove_outliers_ANNOT(annot_data, "SampleID", outlier_rows)
+remove_outliers_ANNOT <- HTG_remove_outliers_ANNOT(AnnotData, "id", outlier_rows)
 }

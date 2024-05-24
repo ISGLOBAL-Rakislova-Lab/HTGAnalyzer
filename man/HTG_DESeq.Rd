@@ -39,5 +39,5 @@ Returns an object with the results of contrast demanded and an excel with the re
 This function processes DESeq2 analysis with customizable parameters.
 }
 \examples{
-dds_processed <- process_DESeq(counts_filtered, AnnotData, "column_name", threshold_gene = 200, threshold_subject = 10, heatmap_columns = c("GROUP", "RUN"), contrast = c('column_name', 'variable1','variable2'), pCutoff = 5e-2)
+res <- HTG_DESeq(counts_filtered, AnnotData, "Smoker", threshold_gene = 200, threshold_subject = 10, heatmap_columns = c("Ciclina", "Smoker"), contrast = c('Smoker', 'yes','no'), pCutoff = 5e-2)
 }

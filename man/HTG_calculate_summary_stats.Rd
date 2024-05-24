@@ -4,17 +4,17 @@
 \alias{HTG_calculate_summary_stats}
 \title{Calculate Summary Statistics}
 \usage{
-HTG_calculate_summary_stats(data)
+HTG_calculate_summary_stats(counts_filtered)
 }
 \arguments{
-\item{data}{A data frame containing the input data.}
+\item{counts_filtered}{A counts_filtered frame containing the input counts_filtered.}
 }
 \value{
-A data frame containing summary statistics for each column of the input data.
+A counts_filtered frame containing summary statistics for each column of the input counts_filtered.
 }
 \description{
-This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
+This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input counts_filtered.
 }
 \examples{
-calculate_summary_stats(data)
+HTG_calculate_summary_stats(counts_filtered)
 }

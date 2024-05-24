@@ -18,6 +18,6 @@ A combined plot of PCA samples, the first 10 principal components, and accumulat
 This function generates a PCA plot of samples and additional plots showing the explained variability of the principal components.
 }
 \examples{
-plotPCA_probes(counts_data, 5)
-plotPCA_probes(counts_data)
+HTG_plotPCA_probes(counts, 5)
+HTG_plotPCA_probes(counts)
 }

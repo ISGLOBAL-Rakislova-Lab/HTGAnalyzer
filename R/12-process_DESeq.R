@@ -1,6 +1,6 @@
 #' Process DESeq2 analysis
 #'
-#' This function processes DESeq2 analysis with customizable parameters.
+#' @description This function processes DESeq2 analysis with customizable parameters.
 #'
 #' @param count_data A matrix or data frame containing count data. It is recommended that the count data frame does not include probes nor outliers.
 #' @param col_data A data frame containing sample annotations.
@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' dds_processed <- process_DESeq(counts_filtered, AnnotData, "column_name", threshold_gene = 200, threshold_subject = 10, heatmap_columns = c("GROUP", "RUN"), contrast = c('column_name', 'variable1','variable2'), pCutoff = 5e-2)
+#' res <- HTG_DESeq(counts_filtered, AnnotData, "Smoker", threshold_gene = 200, threshold_subject = 10, heatmap_columns = c("Ciclina", "Smoker"), contrast = c('Smoker', 'yes','no'), pCutoff = 5e-2)
 #' @name HTG_DESeq
 #'
 HTG_DESeq <- function(count_data, col_data, design_formula, threshold_gene = 200, threshold_subject = 10, heatmap_columns = c("GROUP", "RUN"), contrast = c('column_name', 'variable1','variable2'), pCutoff = 5e-2) {

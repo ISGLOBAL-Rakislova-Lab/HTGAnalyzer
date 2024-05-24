@@ -20,5 +20,5 @@ This function doesn't return any value explicitly. It saves plots and tables rel
 This function processes GSE (Gene Set Enrichment) results obtained from DESeq2 analysis.
 }
 \examples{
-HTG_GSEA_results(res)
+HTG_GSEAresults(res)
 }

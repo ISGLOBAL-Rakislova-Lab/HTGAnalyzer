@@ -1,11 +1,15 @@
-#' Import HTG counts data from an Excel file
+#' HTG_import
 #'
+#' @description Import HTG counts data from an Excel file
 #' @param file_path Path to the Excel file containing HTG counts
 #' @return A data frame with HTG counts data
 #' @export
 #' @examples
-#' htg_data <- inHTG("path/to/your/excel/file.xlsx")
-#'
+#' \dontrun{
+#' # Replace "path/to/your/excel/file.xlsx" with the actual path to your Excel file
+#' path <- "path/to/your/excel/file.xlsx"
+#' htg_data <- HTG_import(path)
+#' }
 #' @name HTG_import
 HTG_import <- function(file_path) {
   library(readxl)

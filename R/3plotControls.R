@@ -1,7 +1,8 @@
 #' Plot Controls
 #'
-#' This function generates multiple plots to visualize various quality control (QC) metrics.
 #'
+#'
+#' @description Calculate various ratios from HTG count data. This function generates multiple plots to visualize various quality control (QC) metrics.
 #' @param counts_filtered data frame without probes.
 #' @param ratios A data frame containing QC ratios and other relevant metrics.
 #' @param threshold_superior_pos Threshold for positive control upper limit.
@@ -25,8 +26,8 @@
 #' @export
 #'
 #' @examples
-#' plotControls(counts_filtered,ratios)
-#' @name HTG_calculate_ratios
+#' HTG_plotControls(counts_filtered,ratios)
+#' @name HTG_plotControls
 #'
 HTG_plotControls <- function(counts_filtered,ratios,
                          threshold_superior_pos = 5,

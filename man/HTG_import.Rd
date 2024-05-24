@@ -2,7 +2,7 @@
 % Please edit documentation in R/1-inHTG.R
 \name{HTG_import}
 \alias{HTG_import}
-\title{Import HTG counts data from an Excel file}
+\title{HTG_import}
 \usage{
 HTG_import(file_path)
 }
@@ -16,6 +16,9 @@ A data frame with HTG counts data
 Import HTG counts data from an Excel file
 }
 \examples{
-htg_data <- inHTG("path/to/your/excel/file.xlsx")
-
+\dontrun{
+# Replace "path/to/your/excel/file.xlsx" with the actual path to your Excel file
+path <- "path/to/your/excel/file.xlsx"
+htg_data <- HTG_import(path)
+}
 }

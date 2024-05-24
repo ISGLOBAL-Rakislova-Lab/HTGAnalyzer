@@ -1,6 +1,6 @@
 #' Filter Counts Data
 #'
-#' This function filters counts data to remove rows with specific prefixes such as "NC-", "POS-", "GDNA-", and "ERCC-".
+#' @description This function filters counts data to remove rows with specific prefixes such as "NC-", "POS-", "GDNA-", and "ERCC-".
 #'
 #' @param counts A data frame containing counts data with genes as rows and samples as columns.
 #'
@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-#' counts_filtered <- filterCounts(counts)
+#' counts_filtered <- HTG_filterCounts(counts)
 #'@name HTG_filterCounts
 #'
 HTG_filterCounts <- function(counts) {

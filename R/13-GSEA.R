@@ -1,6 +1,6 @@
 #' Process GSEA Results
 #'
-#' This function processes GSE (Gene Set Enrichment) results obtained from DESeq2 analysis.
+#' @description This function processes GSE (Gene Set Enrichment) results obtained from DESeq2 analysis.
 #'
 #' @param res The DESeq2 results object containing log2 fold changes.
 #' @param gene_list A vector of log2 fold changes representing gene expression changes.
@@ -11,7 +11,7 @@
 #' @export
 #'
 #' @examples
-#' HTG_GSEA_results(res)
+#' HTG_GSEAresults(res)
 #' @name HTG_GSEAresults
 HTG_GSEAresults <- function(res) {
   library(clusterProfiler)
@@ -22,6 +22,8 @@ HTG_GSEAresults <- function(res) {
   library(fgsea)
   library(DOSE)
   library(enrichplot)
+  library(ggplot2)
+  library(ggupset)
 
   ##### GENE LIST
   original_gene_list <- res$log2FoldChange

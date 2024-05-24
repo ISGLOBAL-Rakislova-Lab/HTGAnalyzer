@@ -1,23 +1,20 @@
-
-#' PCA Plot and Explained Variability
+#' Plot PCA for Genes Only
 #'
-#' @description This function generates a PCA plot of samples and additional plots showing the explained variability of the principal components.
+#' @description This function generates a PCA plot for genes only, along with the explained variability and accumulated explained variability plots.
 #'
-#' @param counts An object with sample names as column names and genes as row names, containing counts data.
-#' @param n_samples The number of samples to label in red, which are farthest from the center.
+#' @param counts_filtered A data frame containing filtered counts data with genes as rows and samples as columns.
+#' @param n_samples Number of samples to label as outliers.
 #'
-#' @return A combined plot of PCA samples, the first 10 principal components, and accumulated explained variability.
+#' @return A combined plot consisting of PCA, explained variability, and accumulated explained variability plots.
 #' @export
 #'
 #' @examples
-#' HTG_plotPCA_probes(counts, 5)
-#' HTG_plotPCA_probes(counts)
-#' @name HTG_plotPCA_probes
-
-HTG_plotPCA_probes <- function(counts, n_samples = 3) {
+#' HTG_plotPCA_genes(counts_filtered, n_samples = 3)
+#' @name HTG_plotPCA_genes
+HTG_plotPCA_genes <- function(counts_filtered, n_samples = 3) {
   library(ggplot2)
   library(ggrepel)
-  pca_result <- prcomp(t(counts))
+  pca_result <- prcomp(t(counts_filtered))
   pca_data <- as.data.frame(pca_result$x[,1:2])
   pca_data$label <- rownames(pca_data)
   centro_promedio <- colMeans(pca_data[, c("PC1", "PC2")])
