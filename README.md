@@ -65,7 +65,7 @@ GDNA <- HTG_subset_counts(counts, "GDNA")
 ## 2.3 FILTERED COUNTS
 This function filters counts data to remove rows with specific prefixes: "NC-", "POS-", "GDNA-", and "ERCC-".
 ```{r}
-filtered<- HTG_filterCounts(counts)
+counts_filtered<- HTG_filterCounts(counts)
 ```
 With the tail function, you can check if all the probes were deleted:
 ```{r}
