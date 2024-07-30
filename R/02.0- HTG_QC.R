@@ -11,7 +11,7 @@
 #' Principal Component Analysis (PCA).
 #' These thresholds are tailored for the HTG EdgeSeq transcriptomic panel but can be adjusted as needed. The function generates various plots and calculates all ratios, saving them in .pdf and .xlsx files. Additionally, it includes an optional heatmap to highlight potential outlier samples.
 #'
-#' @param counts A data frame containing the HTG count data. The data must include probes that start with "^NC-|^POS-|^GDNA-|^ERCC-" for the function to work correctly.
+#' @param countsdata A data frame containing the HTG count data. The data must include probes that start with "^NC-|^POS-|^GDNA-|^ERCC-" for the function to work correctly.
 #' @param threshold_superior_pos Threshold for upper limit of positive control ratio.
 #' @param threshold_inferior_pos Threshold for lower limit of positive control ratio.
 #' @param threshold_line_pos Threshold line for positive control ratio.
@@ -41,10 +41,10 @@
 #'
 #' @examples
 #' # Run the function with example data
-#' HTG_QC(counts, save_csv = TRUE, show_heatmap = TRUE)
+#' HTG_QC(counts_data, save_csv = TRUE, show_heatmap = TRUE)
 #'
 
-HTG_QC <- function(counts,
+HTG_QC <- function(counts_data,
                              threshold_superior_pos = 5,
                              threshold_inferior_pos = 3,
                              threshold_line_pos = 4,
@@ -73,14 +73,14 @@ HTG_QC <- function(counts,
   library(cowplot)
   library(pheatmap)
 
-  # Filter counts data
-  counts_filtered <- subset(counts, !grepl("^NC-|^POS-|^GDNA-|^ERCC-", rownames(counts)))
+  # Filter counts_data data
+  counts_filtered <- subset(counts_data, !grepl("^NC-|^POS-|^GDNA-|^ERCC-", rownames(counts_data)))
 
   # Subsets
-  cts_ERCC <- as.data.frame(subset(counts, grepl("^ERCC-", rownames(counts))))
-  cts_NC <- as.data.frame(subset(counts, grepl("^NC-", rownames(counts))))
-  cts_POS <- as.data.frame(subset(counts, grepl("^POS-", rownames(counts))))
-  cts_GDNA <- as.data.frame(subset(counts, grepl("^GDNA-", rownames(counts))))
+  cts_ERCC <- as.data.frame(subset(counts_data, grepl("^ERCC-", rownames(counts_data))))
+  cts_NC <- as.data.frame(subset(counts_data, grepl("^NC-", rownames(counts_data))))
+  cts_POS <- as.data.frame(subset(counts_data, grepl("^POS-", rownames(counts_data))))
+  cts_GDNA <- as.data.frame(subset(counts_data, grepl("^GDNA-", rownames(counts_data))))
 
   # Ratios
   total_gens <- colSums(counts_filtered)

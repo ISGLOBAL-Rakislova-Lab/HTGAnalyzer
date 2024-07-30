@@ -10,13 +10,13 @@
 #'
 #' @examples
 #' # Filter out rows with default prefixes
-#' counts_filtered <- HTG_filter(counts)
+#' counts_filtered <- HTG_filter(counts_data)
 #'
 #' # Filter out rows with specific prefixes
-#' counts_filtered <- HTG_filter(counts, "^NC-|^POS-")
+#' counts_filtered <- HTG_filter(counts_data, "^NC-|^POS-")
 #'
 #' # Filter out rows with a specific pattern
-#' counts_filtered <- HTG_filter(counts, "A1BG")
+#' counts_filtered <- HTG_filter(counts_data, "A1BG")
 #' @name HTG_filter
 #'
 HTG_filter<- function(data_frame, pattern = "^NC-|^POS-|^GDNA-|^ERCC-") {

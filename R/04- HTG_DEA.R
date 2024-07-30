@@ -3,8 +3,8 @@
 #' Perform differential expression analysis using DESeq2, with options for filtering and log fold change (LFC) shrinkage.
 #'
 #' @param outliers A character vector of sample IDs to be removed as outliers.
-#' @param count_data A matrix or data frame of raw count data, with genes as rows and samples as columns.
-#' @param col_data A data frame containing the sample metadata. Must include an 'id' column that matches the column names of `count_data`.
+#' @param counts_data A matrix or data frame of raw count data, with genes as rows and samples as columns.
+#' @param col_data A data frame containing the sample metadata. Must include an 'id' column that matches the column names of `counts_data`.
 #' @param design_formula A character string representing the design formula for DESeq2. Must specify two groups for comparison.
 #' @param heatmap_columns A character vector of columns in `col_data` to be used for heatmap annotation.
 #' @param contrast A character vector specifying the contrast to be used for differential expression analysis. Should include two levels for comparison.
@@ -22,24 +22,21 @@
 #' @export
 #'
 #' @examples
-#' res<- HTG_DEA(outliers =outliers,count_data =  counts,col_data= AnnotData, design_formula = "Ciclina2",
-#' heatmap_columns = c("Ciclina2", "Smoker"),
-#' contrast = c("Ciclina2", "high", "low"),
-#' pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE, percentage_gene = 0.2,
-#' percentage_zero = 0.2, threshold_gene = 200, threshold_subject = 10, pCutoff = 5e-2,
-#' apply_filtering = TRUE, apply_lfc_shrinkage = TRUE)
+#' res1<- HTG_DEA(outliers, counts_data ,AnnotData, design_formula = "Ciclina2", heatmap_columns = c("Ciclina2", "Smoker"), contrast = c("Ciclina2", "high", "low"), pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200, threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = TRUE)
 #'
 #' @name HTG_DEA
 
-HTG_DEA <- function(outliers, count_data, col_data, design_formula, heatmap_columns, contrast,
-                            pattern, remove_outliers = TRUE, percentage_gene, percentage_zero, threshold_gene,
-                            threshold_subject, pCutoff, apply_filtering = TRUE, apply_lfc_shrinkage = TRUE) {
+HTG_DEA <- function(outliers, counts_data, col_data, design_formula, heatmap_columns, contrast,
+                    pattern, remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200,
+                    threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = TRUE) {
   library(DESeq2)
   library(EnhancedVolcano)
   library(ggplot2)
 
+  print(class(counts_data))
+
   if (remove_outliers) {
-    filtered <- subset(count_data, !grepl(pattern, rownames(count_data)))
+    filtered <- base::subset(counts_data, !grepl(pattern, rownames(counts_data)))
     counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
     AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
   } else {

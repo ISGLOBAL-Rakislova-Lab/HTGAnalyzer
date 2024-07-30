@@ -4,7 +4,7 @@
 #'
 #' @param outliers A character vector specifying the IDs of outlier samples to be removed. Outliers can also be identified using the HTG_QC function.
 #' @param pattern (Optional) A regular expression pattern to identify control probes in the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
-#' @param count_data A matrix or data frame containing count data. It is recommended that the count data does not include control probes or outliers if not needed.
+#' @param counts_data A matrix or data frame containing count data. It is recommended that the count data does not include control probes or outliers if not needed.
 #' @param col_data A data frame containing sample annotations. For survival analysis, it must include variables `time` and `variable_01`.
 #' @param design_formula The design formula for DESeq2 analysis, specified as a string without the tilde (~).
 #' @param threshold_gene Minimum count threshold per gene. Default is 200.
@@ -30,20 +30,19 @@
 #' @export
 #'
 #' @examples
-#' # Perform HTG analysis
-#' results <- HTG_analysis(outliers, count_data = counts, col_data = AnnotData, design_formula = "site")
+#'ALL_done<- HTG_analysis(outliers = outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", counts_data, col_data = AnnotData,
+#'design_formula = "Ciclina2" , percentage_gene = 0.2, percentage_zero = 0.2,
+#'threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = c("Ciclina2", "Smoker"),
+#'contrast = c("Ciclina2", "high", "low"), pCutoff = 5e-2,variable_01 = "smoke_01", time = "time",
+#'correlation = TRUE,
+#'dds = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = TRUE, generate_heatmap = TRUE, Convolution = TRUE,
+#'survival_analysis = TRUE, grupos = c("high", "low"))
 #'
-#' # Perform analysis without generating a volcano plot
-#' results <- HTG_analysis(outliers, count_data = counts, col_data = AnnotData, design_formula = "site", generate_volcano = FALSE)
-#'
-#' # Perform analysis with additional options for contrast and heatmap columns
-#' results <- HTG_analysis(outliers, count_data = counts, col_data = AnnotData, design_formula = "site",
-#'                         contrast = c("Smoker", "yes", "no"), heatmap_columns = c("site", "Smoker"), grupos = c("brain", "lymph node"))
 #'
 #' @name HTG_analysis
 
 
-HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
+HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
                         threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
                         contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL, correlation = FALSE,
                         dds = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, Convolution = TRUE,
@@ -80,16 +79,16 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
   if (remove_outliers) {
     if (!is.null(pattern)) {
       # Remove outliers based on pattern
-      filtered <- subset(count_data, !grepl(pattern, rownames(count_data)))
+      filtered <- base::subset(counts_data, !grepl(pattern, rownames(counts_data)))
     } else {
       # If no pattern is provided, do not filter based on pattern
-      filtered <- count_data
+      filtered <- counts_data
     }
     # Remove columns corresponding to outliers
     counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
     AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
   } else {
-    counts_filtered <- count_data
+    counts_filtered <- counts_data
     AnnotData <- col_data
   }
   if (dds) {
@@ -113,6 +112,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
 
   # Create DESeqDataSet object
   rownames(col_data)<- col_data$id  #important that the columns is called id
+  col_data[[contrast[1]]] <- as.factor(col_data[[contrast[1]]])
 
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
   cat("\033[32m\033[0m\n")
@@ -926,7 +926,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
                              rect_gp = gpar(col = "grey60", lwd = 1),
                              name = 'Z-score',
                              top_annotation = col_ann)
-      print(Heatmap_qti)
+      print(Heatmap_xcell)
     }
 
     cat("\033[32mHeatmap of qti, EPIC and xcell will be stored on plots_convolution_heatmap.pdf\033[0m\n")
@@ -1005,7 +1005,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
     colnames(c_imm_xcell) <- cl_cimmxcell
     c_imm_xcell <- as.data.frame(c_imm_xcell)
 
-    decounts_correlation <- function(count_data1, deconv_data, gene_list = NULL, cell_type_list = NULL) {
+    decounts_correlation <- function(counts_data1, deconv_data, gene_list = NULL, cell_type_list = NULL) {
       # Verificar si las columnas son numéricas
       cat("\033[32mAre numeric?\033[0m\n")
       numeric_columns_check <- sapply(deconv_data, is.numeric)
@@ -1019,7 +1019,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
       print(table(na_check))
 
       if (is.null(gene_list)) {
-        gene_list <- rownames(count_data1)
+        gene_list <- rownames(counts_data1)
       }
 
       if (is.null(cell_type_list)) {
@@ -1038,7 +1038,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
         for (j in seq_along(cell_type_list)) {
           cell_type <- cell_type_list[j]
           # Obtener los valores de expresión del gen y la abundancia del tipo celular
-          gene_expression <- as.numeric(count_data1[gene, ])
+          gene_expression <- as.numeric(counts_data1[gene, ])
           cell_type_abundance <- as.numeric(deconv_data[cell_type, ])
           # Realizar la prueba de correlación
           correlation_test <- cor.test(gene_expression, cell_type_abundance, method = "spearman")
@@ -1053,24 +1053,17 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
       # Retornar los resultados como una lista
       return(list(correlation = correlation_df, pvalues = pvalue_df))
     }
-    cat("aaaaaaaaaaa")
 
 
     # Ejecución de la función
     if (correlation){
     cat("\033[32mResults of correlation between gene expression data and cell type abundance data. This data will be imported in .csv\033[0m\n")
     cor_epic <- decounts_correlation(tpm_counts, c_imm_epic)
-    cat("aaaaaaaaaaa")
     write.csv(cor_epic, "correlation_epic.csv")
-    cat("BBBBBBBBBBBBBBBB")
     cor_qti <- decounts_correlation(tpm_counts, c_imm_qti)
-    cat("cccccccccc")
     write.csv(cor_qti, "correlation_qti.csv")
-    cat("dddddddddddddd")
     cor_xcell <-decounts_correlation(tpm_counts, c_imm_xcell)
-    cat("fffffffffff")
     write.csv(cor_xcell, "correlation_xcell.csv")}
-    cat("gggggggggggggg")
     }else {cat("\033[32mConvolution analysis skipped.\033[0m\n")}
 
   #####
@@ -1084,14 +1077,14 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
     if (remove_outliers) {
       if (!is.null(pattern)) {
         # Remove outliers based on pattern
-        filtered <- subset(count_data, !grepl(pattern, rownames(count_data)))
+        filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
       } else {
-        filtered <- count_data
+        filtered <- counts_data
       }
       counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
       AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
     } else {
-      counts_filtered <- count_data
+      counts_filtered <- counts_data
       AnnotData <- col_data
     }
 
@@ -1123,6 +1116,9 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
 
     rownames(col_data) <- col_data$id
     ids_data <- rownames(df_t)
+    cat("\033[32mATTENTION: We changed the '-' to '_' in column names due to errors detected before.\033[0m\n")
+    colnames(df_t) <- gsub("-", "_", colnames(df_t))
+
 
 
     # Filter data
@@ -1143,6 +1139,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
       stop("Either 'res' or 'genes_to_use' must be provided.")
     }
 
+    top_genes <- gsub("-", "_", top_genes)
     selected_df_t <- df_t[, top_genes, drop = FALSE]
     selected_df_t <- as.data.frame(selected_df_t)
     selected_df_t$id <- rownames(selected_df_t)
@@ -1184,6 +1181,7 @@ HTG_analysis <- function(outliers, pattern = NULL, count_data, col_data, design_
       # Fit survival model
       cat("\033[32mFitting survival model\033[0m\n")
       column_name <- paste0(i, "_mRNA_expression")
+      print(column_name)
       surv_object <- Surv( merged_data$time , merged_data$variable_01)
       surv_formula <- as.formula(paste("surv_object ~", column_name))
 
