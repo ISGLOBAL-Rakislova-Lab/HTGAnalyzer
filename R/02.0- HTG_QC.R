@@ -1,15 +1,24 @@
 #' HTG_QC
 #'
 #' @description
-#' This function performs various quality control (QC). The QC checks include:
-#' QC0: Percentage of positive values greater than 4%.
-#' QC1: Library size greater than 7e+06.
-#' QC2: Negative control threshold greater than 0.045.
-#' QC3: Genomic DNA threshold greater than 0.02.
-#' QC4: ERCC threshold greater than 0.025.
-#' Calculation of median values.
-#' Principal Component Analysis (PCA).
-#' These thresholds are tailored for the HTG EdgeSeq transcriptomic panel but can be adjusted as needed. The function generates various plots and calculates all ratios, saving them in .pdf and .xlsx files. Additionally, it includes an optional heatmap to highlight potential outlier samples.
+#' This function performs various quality control (QC) checks. The QC checks include:
+#' - QC0: Percentage of positive values greater than 4%.
+#' - QC1: Library size greater than 7e+06.
+#' - QC2: Negative control threshold greater than 0.045.
+#' - QC3: Genomic DNA threshold greater than 0.02.
+#' - QC4: ERCC threshold greater than 0.025.
+#'
+#' These thresholds are tailored for the HTG EdgeSeq transcriptomic panel but can be adjusted as needed.
+#'
+#' In addition to these plots, this function generates a data frame that can be saved as a .csv file (a preview of it will be shown). This data frame includes:
+#' - The sum of each probe for each sample (total genes, positive, negative, gdna, and ercc)
+#' - The ratio for each sample
+#' - The size of each sample
+#' - A column called PCA_genes which indicates the samples furthest from the center (you can specify how many samples to highlight as the furthest from the center)
+#'
+#' This function also includes an optional heatmap to highlight potential outlier samples, which will be saved in a vector.
+#'
+#' The plots will be shown in the console and saved in the current working directory.
 #'
 #' @param countsdata A data frame containing the HTG count data. The data must include probes that start with "^NC-|^POS-|^GDNA-|^ERCC-" for the function to work correctly.
 #' @param threshold_superior_pos Threshold for upper limit of positive control ratio.
@@ -123,14 +132,27 @@ HTG_QC <- function(counts_data,
   library_size <- colSums(counts_filtered)
 
   # Create dataframe of library size
-  lib_s <- data.frame(Size = library_size)
+  lib_s2 <- data.frame(Sample = colnames(counts_filtered), Size = library_size)
 
   pdf("QC_plots.pdf")
   # Density plot
-  plot(density(lib_s$Size),
+  plot(density(lib_s2$Size),
        col = "#4793AF",
-       main = "Library Size per Sample",
+       main = "Density Distribution of Count Data",
        xlab = "Counts")
+  for(i in 1:nrow(lib_s2)) {
+    lines(density(rep(lib_s2$Size[i], 100)), col = rainbow(nrow(lib_s2))[i])
+  }
+
+  barplot(lib_s2$Size,
+          names.arg = lib_s2$Sample,
+          col = ifelse(lib_s2$Size > threshold_lib, "#4793AF", "red"),
+          border = "black",
+          main = "Library Size per Sample",
+          cex.axis = 0.8,
+          cex.names = 0.8,  # Reducir el tamaño de las etiquetas del eje x
+          las = 2)
+  abline(h = threshold_lib, col = "red")
 
   # Positive controls
   colores_pos <- ifelse(ratios$`pos/gens` < threshold_inferior_pos, "#4793AF",
@@ -187,6 +209,78 @@ HTG_QC <- function(counts_data,
   abline(h = threshold_line_median, col = "red")
   dev.off()
 
+  plot(density(lib_s2$Size),
+       col = "#4793AF",
+       main = "Density Distribution of Count Data",
+       xlab = "Counts")
+  for(i in 1:nrow(lib_s2)) {
+    lines(density(rep(lib_s2$Size[i], 100)), col = rainbow(nrow(lib_s2))[i])
+  }
+
+  barplot(lib_s2$Size,
+          names.arg = lib_s2$Sample,
+          col = ifelse(lib_s2$Size > threshold_lib, "#4793AF", "red"),
+          border = "black",
+          main = "Library Size per Sample",
+          cex.axis = 0.8,
+          cex.names = 0.8,  # Reducir el tamaño de las etiquetas del eje x
+          las = 2)
+  abline(h = threshold_lib, col = "red")
+
+  # Positive controls
+  colores_pos <- ifelse(ratios$`pos/gens` < threshold_inferior_pos, "#4793AF",
+                        ifelse(ratios$`pos/gens` > threshold_superior_pos, "red", "#FFC470"))
+  plot(ratios$`pos/gens`, xlab = "", ylab = "pos/gens", col = colores_pos,
+       xaxt = "n", pch = 19, main = "Positive control 4% (QC0)")
+  axis(1, at = 1:nrow(ratios), labels = rownames(ratios),
+       las = 2, cex.axis = 0.8)
+  abline(h = threshold_line_pos, col = "red")
+
+  # Library size
+  lib_s2 <- data.frame(Sample = colnames(counts_filtered), Size = library_size)
+  colores <- ifelse(lib_s2$Size < threshold_inferior_lib, "#4793AF",
+                    ifelse(lib_s2$Size > threshold_superior_lib, "red", "#FFC470"))
+  plot(lib_s2$Size, xlab = "", ylab = "Library Size", col = colores,
+       xaxt = "n", pch = 19, main = "Library Size per Sample (QC1)", cex.axis = 0.8)
+  abline(h = threshold_lib, col = "red")
+  axis(1, at = 1:length(lib_s2$Sample), labels = lib_s2$Sample, las = 2, cex.axis = 0.8)
+
+  # Negative controls
+  colores_nc <- ifelse(ratios$`nc/gens` < threshold_inferior_nc, "#4793AF",
+                       ifelse(ratios$`nc/gens` > threshold_superior_nc, "red", "#FFC470"))
+  plot(ratios$`nc/gens`, xlab = "", ylab = "nc/gens", col = colores_nc,
+       xaxt = "n", pch = 19, main = "Negative Control (QC2)")
+  axis(1, at = 1:nrow(ratios), labels = rownames(ratios),
+       las = 2, cex.axis = 0.8)
+  abline(h = threshold_line_nc, col = "red")
+
+  # Genomic DNA
+  colores_gdna <- ifelse(ratios$`gdna/gens` < threshold_inferior_gdna, "#4793AF",
+                         ifelse(ratios$`gdna/gens` > threshold_superior_gdna, "red", "#FFC470"))
+  plot(ratios$`gdna/gens`, xlab = "", ylab = "gdna/gens", col = colores_gdna,
+       xaxt = "n", pch = 19, main = "Genomic DNA (QC3)")
+  axis(1, at = 1:nrow(ratios), labels = rownames(ratios),
+       las = 2, cex.axis = 0.8)
+  abline(h = threshold_line_gdna, col = "red")
+
+  # ERCC
+  colores_ercc <- ifelse(ratios$`ERCC/gens` < threshold_inferior_ercc, "#4793AF",
+                         ifelse(ratios$`ERCC/gens` > threshold_superior_ercc, "red", "#FFC470"))
+  plot(ratios$`ERCC/gens`, xlab = "", ylab = "ERCC", col = colores_ercc,
+       xaxt = "n", pch = 19, main = "ERCC (QC4)")
+  axis(1, at = 1:nrow(ratios), labels = rownames(ratios),
+       las = 2, cex.axis = 0.8)
+  abline(h = threshold_line_ercc, col = "red")
+
+  # Median
+  colores_med <- ifelse(ratios$median < threshold_inferior_median, "#4793AF",
+                        ifelse(ratios$median > threshold_superior_median, "red", "#FFC470"))
+  plot(ratios$median, xlab = "", ylab = "Median", col = colores_med,
+       xaxt = "n", pch = 19, main = "Median")
+  axis(1, at = 1:nrow(ratios), labels = rownames(ratios),
+       las = 2, cex.axis = 0.8)
+  abline(h = threshold_line_median, col = "red")
+
   pca_result <- prcomp(t(counts_filtered))
   pca_data <- as.data.frame(pca_result$x[,1:2])
   pca_data$label <- rownames(pca_data)
@@ -240,6 +334,17 @@ HTG_QC <- function(counts_data,
     # Row and column names
     rownames(bin_matrix) <- rownames(ratios_heat)
     colnames(bin_matrix) <- c("QC0","QC1","QC2","QC3","QC4","Median", "PCA_Genes")
+    pheatmap::pheatmap(bin_matrix,
+                       cluster_rows = FALSE,
+                       cluster_cols = FALSE,
+                       fontsize_row = 7,
+                       fontsize = 8,
+                       legend_breaks = c(0, 1),
+                       legend_labels = c("OK", "Possible Outlier"),
+                       cellwidth = 40,
+                       name = "QC",
+                       color = c("#FFF9D0","red")
+    )
 
     # Plot heatmap
     pdf("heatmap_outliers.pdf")

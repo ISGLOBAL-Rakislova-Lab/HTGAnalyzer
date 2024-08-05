@@ -1,8 +1,8 @@
 #' HTG_calculate_ratios
 #'
-#' @description  This function calculates ratios based on counts data for different categories such as positive controls, genomic DNA, etc.
+#' @description This function calculates various ratios based on counts data for different categories such as positive controls, genomic DNA, negative controls, and ERCC controls. Additionally, it computes summary statistics including median, minimum, maximum, standard deviation, first quartile (Q1), and third quartile (Q3) for each sample.
 #'
-#' @param counts_filtered A data frame containing filtered counts data (Counts data without probes.)
+#' @param counts_filtered A data frame containing filtered counts data (counts data excluding probes).
 #' @param cts_POS A data frame containing counts data for positive controls.
 #' @param cts_NC A data frame containing counts data for negative controls.
 #' @param cts_GDNA A data frame containing counts data for genomic DNA.
@@ -10,7 +10,11 @@
 #' @param save_csv Logical, indicating whether to save the calculated ratios as a CSV file. Default is FALSE.
 #' @param csv_file Character string specifying the file name if `save_csv` is TRUE. Default is "ratios.csv".
 #'
-#' @return A data frame containing calculated ratios for different categories.
+#' @return A data frame containing:
+#' - Total counts: Sum of counts for positive controls, genomic DNA, negative controls, and ERCC controls.
+#' - Ratios: Ratios of positive controls, negative controls, and ERCC controls relative to total counts.
+#' - Summary statistics:For each sample: median, minimum, maximum, standard deviation (SD), first quartile (Q1), and third quartile (Q3).
+#'
 #' @export
 #'
 #' @examples
@@ -46,6 +50,9 @@ HTG_calculate_ratios <- function(counts_filtered, cts_POS, cts_NC, cts_GDNA, cts
   ratios$min<- summary_stats$Min
   ratios$max<- summary_stats$Max
   ratios$mean<- summary_stats$Mean
+  ratios$SD<- summary_stats$SD
+  ratios$Q1<- summary_stats$Q1
+  ratios$Q3<- summary_stats$Q3
 
   # Add sample names as a factor column
   ratios$samples <- factor(rownames(ratios))

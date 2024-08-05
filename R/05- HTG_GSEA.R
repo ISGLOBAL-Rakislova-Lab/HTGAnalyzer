@@ -20,67 +20,73 @@
 #' @name HTG_GSEA
 #'
 HTG_GSEA <- function(res) {
-  library(clusterProfiler)
-  library(dplyr)
-  library(msigdbr)
-  library(enrichplot)
-  library(org.Hs.eg.db)
-  library(fgsea)
-  library(DOSE)
-  library(enrichplot)
-  library(ggplot2)
-  library(ggupset)
-  library(grid)
+  suppressMessages(library(clusterProfiler))
+  suppressMessages(library(dplyr))
+  suppressMessages(library(msigdbr))
+  suppressMessages(library(enrichplot))
+  suppressMessages(library(org.Hs.eg.db))
+  suppressMessages(library(fgsea))
+  suppressMessages(library(DOSE))
+  suppressMessages(library(enrichplot))
+  suppressMessages(library(ggplot2))
+  suppressMessages(library(ggupset))
+  suppressMessages(library(grid))
 
-  cat("\033[32mPerforming GSEA analysis\033[0m\n")
+  cat("\033[32mPerforming gseGO  analysis\033[0m\n")
 
-  # Function to add title and description to each plot
-  add_plot <- function(plot, title, description) {
-    cat("Adding plot:", title, "\n")
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(2, 1)))
-    grid.text(title, vp = viewport(layout.pos.row = 1, layout.pos.col = 1), gp = gpar(fontsize = 14, fontface = "bold"))
-    grid.text(description, vp = viewport(layout.pos.row = 2, layout.pos.col = 1), gp = gpar(fontsize = 12))
-    print(plot, vp = viewport(layout.pos.row = 2, layout.pos.col = 1))
-  }
-
-  # Prepare gene list for GSEA
-   cat("\033[32mPreparing gene list for GSEA\033[0m\n")
+  # Prepare gene list for gseGO
+  cat("\033[32mPreparing gene list for GSEA\033[0m\n")
   original_gene_list <- res$log2FoldChange
   names(original_gene_list) <- rownames(res)
   gene_list <- na.omit(original_gene_list)
   gene_list <- sort(gene_list, decreasing = TRUE)
 
-  # GSEA Analysis
-   cat("\033[32mPerforming GSEA Analysis\033[0m\n")
-  gse2 <- gseGO(geneList = gene_list, ont = "ALL", keyType = "SYMBOL", nPermSimple = 500000,
+  # gseGO  Analysis
+  cat("\033[32mPerforming gseGO Analysis\033[0m\n")
+  gse2 <- gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
                 minGSSize = 3, maxGSSize = 800, pvalueCutoff = 0.05, verbose = TRUE, eps = 0,
                 OrgDb = "org.Hs.eg.db", pAdjustMethod = "bonferroni")
 
-  # Dotplot for GSEA
-   cat("\033[32mCreating Dotplot for GSEA\033[0m\n")
+  # Dotplot for gseGO
+   cat("\033[32mCreating Dotplot for gseGO \033[0m\n")
   dotplot1 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                      title = "Enrichment Results: Pathways", color = "p.adjust", size = "Count")
-  add_plot(dotplot1, "GSEA Dotplot", "This plot shows the results of Gene Set Enrichment Analysis (GSEA).")
+                      title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count")
+  print(dotplot1)
 
   dotplot2 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                      title = "Enrichment Results: Pathways", color = "p.adjust", size = "Count") +
-    facet_grid(.~.sign)
-  add_plot(dotplot2, "GSEA Dotplot with Facet", "This plot shows the results of GSEA with facets.")
+                      title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + facet_grid(.~.sign)
+  print(dotplot2)
 
-  # Emaplot for GSEA
-   cat("\033[32mCreating Emaplot for GSEA\033[0m\n")
+  # Emaplot for gseGO
+  cat("\033[32mCreating Emaplot for gseGO \033[0m\n")
   x2 <- pairwise_termsim(gse2)
-  emapplot1 <- emapplot(x2, max.overlaps = 50, min.segment.length = 0.3, point_size = 0.5, font.size = 8)
-  add_plot(emapplot1, "GSEA Emaplot", "This plot shows the enriched terms and their relationships.")
+  emapplot1 <- emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggtitle("Enrichment Map gseGO ")
+  print(emapplot1)
+  # Ridgeplot for gseGO
+  cat("\033[32mCreating Ridgeplot for gseGO \033[0m\n")
+  ridgeplot1 <- ridgeplot(gse2)  +  labs(x = "gseGO enrichment distribution", font.size = 7) +  theme(axis.text.y = element_text(size = 9))
+  print(ridgeplot1)
 
-  # Ridgeplot for GSEA
-   cat("\033[32mCreating Ridgeplot for GSEA\033[0m\n")
-  ridgeplot1 <- ridgeplot(gse2) + labs(x = "enrichment distribution", font.size = 7)
-  add_plot(ridgeplot1, "GSEA Ridgeplot", "This plot shows the enrichment distribution of gene sets.")
+  # Heatplot for gseGO
+  cat("\033[32mCreating Heatplot for gseGO \033[0m\n")
+  heatplot1 <- heatplot(gse2, showCategory = 10) + ggtitle("gseGO Heatplot")
+  print(heatplot1)
+
+  # Treeplot for gseGO
+  cat("\033[32mCreating Treeplot for gseGO \033[0m\n")
+  treeplot1 <- treeplot(x2) + ggtitle("gseGO Treeplot")
+  print(treeplot1)
+
+  # Create gseaplot2 plots with titles
+  a <- gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
+  print(a)
+
+  b <- gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets")
+  print(b)
+
 
   # KEGG Analysis
-   cat("\033[32mPerforming KEGG Analysis\033[0m\n")
+  cat("\033[32mPerforming KEGG Analysis\033[0m\n")
   ids <- bitr(names(original_gene_list), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)
   dedup_ids <- ids[!duplicated(ids[c("SYMBOL")]), ]
   df2 <- res[rownames(res) %in% dedup_ids$SYMBOL, ]
@@ -95,61 +101,96 @@ HTG_GSEA <- function(res) {
 
   # Dotplot for KEGG
   cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
-  dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways", split = ".sign", font.size = 9) +
-    facet_grid(.~.sign)
-  add_plot(dotplot3, "KEGG Dotplot with Facet", "This plot shows the results of KEGG pathway enrichment analysis.")
+  dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + facet_grid(.~.sign)
+  print(dotplot3)
 
   # Emaplot for KEGG
   cat("\033[32mCreating Emaplot for KEGG\033[0m\n")
   x3 <- pairwise_termsim(kk2)
-  emapplot2 <- emapplot(x3, font.size = 8)
-  add_plot(emapplot2, "KEGG Emaplot", "This plot shows the enriched KEGG pathways and their relationships.")
+  emapplot2 <- emapplot(x3, font.size = 8 +  ggtitle("KEGG Enrichment Map"))
+  print(emapplot2)
 
   # Ridgeplot for KEGG
   cat("\033[32mCreating Ridgeplot for KEGG\033[0m\n")
-  ridgeplot2 <- ridgeplot(kk2) + labs(x = "enrichment distribution", font.size = 8)
-  add_plot(ridgeplot2, "KEGG Ridgeplot", "This plot shows the enrichment distribution of KEGG pathways.")
+  ridgeplot2 <- ridgeplot(kk2) +  labs(x = "KEGG enrichment distribution", font.size = 6) +  theme(axis.text.y = element_text(size = 9))
+  print(ridgeplot2)
 
-  # GO Enrichment Analysis
+  # Heatplot for KEGG
+  cat("\033[32mCreating Heatplot for KEGG \033[0m\n")
+  heatplot2 <- heatplot(kk2, showCategory = 10) + ggtitle("KEGG Heatplot")
+  print(heatplot2)
+
+  # Treeplot for KEGG
+  cat("\033[32mCreating Treeplot for KEGG \033[0m\n")
+  treeplot2 <- treeplot(x3) + ggtitle("KEGG Treeplot")
+  print(treeplot2)
+
+  upset_plot <- upsetplot(kk2) + labs(title = "Up set plot for KEGG")
+  print(upset_plot)
+
+  # enrichGO Analysis
   cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
   sig_genes_df <- subset(res, padj < 0.05)
 
   if (nrow(sig_genes_df) > 0) {
+    # Prepare the gene list for enrichment analysis
     genes <- sig_genes_df$log2FoldChange
     names(genes) <- rownames(sig_genes_df)
 
-    go_enrich <- enrichGO(gene = names(genes), universe = names(gene_list), OrgDb = org.Hs.eg.db,
-                          keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                          pvalueCutoff = 0.05, qvalueCutoff = 0.10)
+    # Perform GO enrichment analysis
+    cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
+    go_enrich <- enrichGO(
+      gene = names(genes),
+      universe = names(gene_list),
+      OrgDb = org.Hs.eg.db,
+      keyType = 'SYMBOL',
+      readable = TRUE,
+      ont = "BP",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.10
+    )
 
-    # Simplified bar plot for GO enrichment
+    # Create a bar plot for significant GO terms
     cat("\033[32mCreating Bar Plot for GO Enrichment\033[0m\n")
     go_results <- go_enrich@result
     significant_terms <- go_results[go_results$qvalue < 0.05, ]
     significant_terms <- significant_terms[order(significant_terms$qvalue), ]
 
-    bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
-      geom_bar(stat = "identity", fill = "skyblue") +
-      labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
-      theme_minimal() +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    # Check if there are significant terms to plot
+    if (nrow(significant_terms) > 0) {
+      bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
+        geom_bar(stat = "identity", fill = "skyblue") +
+        labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-    add_plot(bar_plot, "GO Enrichment Bar Plot", "This plot shows the significant GO terms enriched in the dataset.")
+      print(bar_plot)
+    } else {
+      cat("\033[31mNo significant GO terms found to plot.\033[0m\n")
+    }
+
+    # Save the GO enrichment results to a CSV file
     write.csv(go_results, "go_results.csv")
+    cat("\033[32mGO enrichment results saved to 'go_results.csv'\033[0m\n")
+  } else {
+    cat("\033[31mNo significant genes found for GO enrichment analysis.\033[0m\n")
+  }
 
     pdf("GSEA_analysis_plots.pdf")
-    dotplot1
-    add_plot(dotplot1, "GSEA Dotplot", "This plot shows the results of Gene Set Enrichment Analysis (GSEA).")
-    dotplot2
-    add_plot(dotplot2, "GSEA Dotplot with Facet", "This plot shows the results of GSEA with facets.")
-    emapplot1
-    add_plot(emapplot1, "GSEA Emaplot", "This plot shows the enriched terms and their relationships.")
-    ridgeplot1
-    add_plot(ridgeplot1, "GSEA Ridgeplot", "This plot shows the enrichment distribution of gene sets.")
-    dotplot3
-    add_plot(dotplot3, "KEGG Dotplot with Facet", "This plot shows the results of KEGG pathway enrichment analysis.")
-    emapplot2
-    add_plot(emapplot2, "KEGG Emaplot", "This plot shows the enriched KEGG pathways and their relationships.")
+    print(dotplot1)
+    print(dotplot2)
+    print(emapplot1)
+    print(ridgeplot1)
+    print(heatplot1)
+    print(treeplot1)
+    print(a)
+    print(b)
+    print(dotplot3)
+    print(emapplot2)
+    print(ridgeplot2)
+    print(heatplot2)
+    print(treeplot2)
+    print(upset_plot)
     if (nrow(sig_genes_df) > 0) {
       genes <- sig_genes_df$log2FoldChange
       names(genes) <- rownames(sig_genes_df)
@@ -164,12 +205,11 @@ HTG_GSEA <- function(res) {
         labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
         theme_minimal() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
-      add_plot(bar_plot, "GO Enrichment Bar Plot", "This plot shows the significant GO terms enriched in the dataset.")
       dev.off()
 
       # Save tables
       write.csv(gene_list, "gene_list.csv")
       write.csv(kegg_gene_list, "kegg_gene_list.csv")
     }
-  }
 }
+

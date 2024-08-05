@@ -1,4 +1,4 @@
-#' HTG_TMA
+#' HTG_TME
 #'
 #' @description This function carries out a comprehensive convolution analysis involving TPM normalization and deconvolution using multiple methods (EPIC, quanTIseq, and xCell). It produces several output files containing the results of the normalization and deconvolution processes.
 
@@ -18,39 +18,41 @@
 #'
 #' @export
 #' @examples
-#' HTG_TMA(outliers, pattern= "^NC-|^POS-|^GDNA-|^ERCC-",
+#' HTG_TME(outliers, pattern= "^NC-|^POS-|^GDNA-|^ERCC-",
 #'                  counts_filtered, AnnotData, design_formula= "Ciclina2", remove_outliers = TRUE, dds = NULL)
 #'
-#' @name HTG_TMA
+#' @name HTG_TME
 #'
 #'
 #'
-HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design_formula = NULL ,
+HTG_TME <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design_formula = NULL ,
                             correlation = FALSE, dds = NULL, generate_volcano = TRUE, remove_outliers = TRUE) {
-  library(DESeq2)
-  library(ggplot2)
-  library(ggrepel)
-  library(PoiClaClu)
-  library(EnhancedVolcano)
-  library(clusterProfiler)
-  library(org.Hs.eg.db)
-  library(msigdbr)
-  library(fgsea)
-  library(DOSE)
-  library(enrichplot)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(ggupset)
-  library(grid)
-  library(survival)
-  library(survminer)
-  library(dplyr)
-  library(IOBR)
-  library(immunedeconv)
-  library(tidyverse)
-  library(ggpubr)
-  library(tidyr)
-  library(maxstat)
+  suppressMessages({
+    library(DESeq2)
+    library(ggplot2)
+    library(ggrepel)
+    library(PoiClaClu)
+    library(EnhancedVolcano)
+    library(clusterProfiler)
+    library(org.Hs.eg.db)
+    library(msigdbr)
+    library(fgsea)
+    library(DOSE)
+    library(enrichplot)
+    library(pheatmap)
+    library(RColorBrewer)
+    library(ggupset)
+    library(grid)
+    library(survival)
+    library(survminer)
+    library(dplyr)
+    library(IOBR)
+    library(immunedeconv)
+    library(tidyverse)
+    library(ggpubr)
+    library(tidyr)
+    library(maxstat)
+  })
 
   if (remove_outliers) {
     if (!is.null(pattern)) {
@@ -72,11 +74,13 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   print(paste0("Número inicial de genes: ", dim(counts_filtered)[1]))
   ## Normalización TPM
   cat("\033[32mTPM normalization performed and stored on tpm_counts.csv\033[0m\n")
-  tpm_counts <- count2tpm(counts_filtered,
-                          idType = "Symbol",
-                          org = "hsa",
-                          source = "biomart")
-  write.csv(tpm_counts, "tpm_counts.csv")
+  suppressWarnings({
+    tpm_counts <- count2tpm(counts_filtered,
+                            idType = "Symbol",
+                            org = "hsa",
+                            source = "biomart")
+    write.csv(tpm_counts, "tpm_counts.csv")
+  })
 
   # Se almacenan los genes omitidos en la normalización TPM
   genes_omitidos <- setdiff(rownames(counts_filtered), rownames(tpm_counts))
@@ -84,11 +88,11 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   tpm_counts <- as.data.frame(tpm_counts)
 
   if (!is.null(dds)) {
-    cat("\033[32mWe are going to use dds from DEA\033[0m\n")
+    cat("\033[32mWe are going to use information from DEA\033[0m\n")
     dds <- estimateSizeFactors(dds)
     normalized_counts <- counts(dds, normalized = TRUE)
   } else {
-    cat("Performing dds normalization.\n")
+    cat("Performing normalization.\n")
     design_formul <- as.formula("~ 1")
     colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
     AnnotData <- AnnotData[order(AnnotData$id), ]
@@ -103,8 +107,6 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   imm_qti <- deconvolute(tpm_counts, method = "quantiseq")
   imm_xcell <- deconvolute(tpm_counts, method = "xcell")
   cat("\033[32mresults of the devonvolution will be stored in imm_epic.csv, imm_qti.csv and imm_xcell.csv \033[0m\n")
-
-
   write.csv(imm_epic, file = "imm_epic.csv")
   write.csv(imm_qti, file = "imm_qti.csv")
   write.csv(imm_xcell, file = "imm_xcell.csv")
@@ -144,7 +146,7 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   imm_qti <- imm_qti[order(rownames(imm_qti)), ]
   imm_xcell <- imm_xcell[order(rownames(imm_xcell)), ]
 
-  cat("\033[32mhave to be true.\033[0m\n")
+  cat("\033[32mHave to be true.\033[0m\n")
   cat("\033[32mEPIC\033[0m\n")
   print(all(rownames(AnnotData)==rownames(imm_epic)))
   cat("\033[32mqti\033[0m\n")
@@ -165,7 +167,7 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
     # Calculate means by design_formula
     means_df <- imm_epic %>%
       group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE))
+      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
     # Generate plot
     print(
       ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
@@ -347,6 +349,7 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   }
 
   # Verificación de igualdad para cada columna
+  cat("\033[32mChecking if All Values in Each Column Are Equal\033[0m\n")
   equality_results_qti <- sapply(imm_qti, check_column_equal)
   unequal_columns_qti <-sum(equality_results_qti)
 
@@ -388,11 +391,17 @@ HTG_TMA <- function(outliers, pattern = NULL, counts_filtered, AnnotData, design
   # Heatmaps
   # Function to transform dataframe to long format
   trans_formato_largo <- function(df, design_formula_sym) {
+    # df_largo <- df %>%
+    #   pivot_longer(-design_formula_sym, names_to = "Celular type", values_to = "Fraction")
     df_largo <- df %>%
-      pivot_longer(-design_formula_sym, names_to = "Celular type", values_to = "Fraction")
+      pivot_longer(-all_of(design_formula_sym),
+                   names_to = "Celular type", values_to = "Fraction")
     return(df_largo)
   }
   # Example usage to transform dataframes to long format
+  imm_epic<- as.data.frame(imm_epic)
+  imm_qti<- as.data.frame(imm_qti)
+  imm_qti<- as.data.frame(imm_qti)
   epic_largo <- trans_formato_largo(imm_epic, design_formula_sym)
   qti_largo <- trans_formato_largo(imm_qti, design_formula_sym)
   xcell_largo <- trans_formato_largo(imm_xcell, design_formula_sym)

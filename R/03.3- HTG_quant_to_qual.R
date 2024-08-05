@@ -9,7 +9,7 @@
 #' @param above_label The label for values above the threshold.
 #' @param below_label The label for values below or equal to the threshold.
 #'
-#' @return Returns the modified data frame with the specified column transformed into qualitative values.
+#' @return Returns the modified data frame with the specified column transformed into qualitative values. The name of the new column will be the same as the column that will be transformed but with a 2 at the end.
 #'
 #' @export
 #'
