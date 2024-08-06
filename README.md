@@ -65,7 +65,7 @@ GDNA <- HTG_subset_counts(counts, "GDNA")
 ## 2.3 FILTERED COUNTS
 This function filters counts data to remove rows with specific prefixes: "NC-", "POS-", "GDNA-", and "ERCC-".
 ```{r}
-counts_filtered<- HTG_filterCounts(counts)
+filtered<- HTG_filterCounts(counts)
 ```
 With the tail function, you can check if all the probes were deleted:
 ```{r}
@@ -198,3 +198,9 @@ This step will perform and store the results of the gene set enrichment analysis
 ```{r}
 GSEanalysis<- HTG_GSEAresults(results)
 ```
+
+
+
+Here you will find a tutorial to perform a complete analysis for HTG Edge results with HTGAnalizer.
+
+Having the results of HTG Edge this pakcage will help to perform the Quality Control, the Differential Expression analysis and the Gene Set Enrichment Analysis.
