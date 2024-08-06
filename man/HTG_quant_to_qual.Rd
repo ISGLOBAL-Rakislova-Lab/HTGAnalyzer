@@ -24,7 +24,7 @@ HTG_quant_to_qual(
 \item{below_label}{The label for values below or equal to the threshold.}
 }
 \value{
-Returns the modified data frame with the specified column transformed into qualitative values.
+Returns the modified data frame with the specified column transformed into qualitative values. The name of the new column will be the same as the column that will be transformed but with a 2 at the end.
 }
 \description{
 This function converts quantitative columns in a data frame into qualitative ones based on a specified threshold.

@@ -7,13 +7,13 @@
 HTG_calculate_summary_stats(counts_filtered)
 }
 \arguments{
-\item{counts_filtered}{A counts_filtered frame containing the input counts_filtered.}
+\item{counts_filtered}{A data frame containing the input counts.}
 }
 \value{
-A counts_filtered frame containing summary statistics for each column of the input counts_filtered.
+A data frame containing summary statistics for each column of the input data.
 }
 \description{
-This function calculates summary statistics including minimum, maximum, mean, and median for each column of the input data.
+This function calculates summary statistics for each column of the input data frame, including minimum, maximum, mean, median, mode, standard deviation, variance, range, first quartile (Q1), third quartile (Q3), interquartile range (IQR), skewness, kurtosis, count of missing values, and coefficient of variation (CV).
 }
 \examples{
 summary<- HTG_calculate_summary_stats(counts_filtered)

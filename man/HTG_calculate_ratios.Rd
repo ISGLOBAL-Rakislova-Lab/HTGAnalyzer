@@ -15,7 +15,7 @@ HTG_calculate_ratios(
 )
 }
 \arguments{
-\item{counts_filtered}{A data frame containing filtered counts data (Counts data without probes.)}
+\item{counts_filtered}{A data frame containing filtered counts data (counts data excluding probes).}
 
 \item{cts_POS}{A data frame containing counts data for positive controls.}
 
@@ -30,10 +30,13 @@ HTG_calculate_ratios(
 \item{csv_file}{Character string specifying the file name if `save_csv` is TRUE. Default is "ratios.csv".}
 }
 \value{
-A data frame containing calculated ratios for different categories.
+A data frame containing:
+- Total counts: Sum of counts for positive controls, genomic DNA, negative controls, and ERCC controls.
+- Ratios: Ratios of positive controls, negative controls, and ERCC controls relative to total counts.
+- Summary statistics:For each sample: median, minimum, maximum, standard deviation (SD), first quartile (Q1), and third quartile (Q3).
 }
 \description{
-This function calculates ratios based on counts data for different categories such as positive controls, genomic DNA, etc.
+This function calculates various ratios based on counts data for different categories such as positive controls, genomic DNA, negative controls, and ERCC controls. Additionally, it computes summary statistics including median, minimum, maximum, standard deviation, first quartile (Q1), and third quartile (Q3) for each sample.
 }
 \examples{
 HTG_calculate_ratios(counts_filtered, cts_POS, cts_NC, cts_GDNA, cts_ERCC,

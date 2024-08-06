@@ -81,15 +81,24 @@ HTG_QC(
 This function generates multiple plots displaying various QC metrics, saves an Excel file with all the ratios, and optionally creates a heatmap highlighting potential outlier samples. Additionally, it identifies and returns the most probable outliers based on the QC analysis.
 }
 \description{
-This function performs various quality control (QC). The QC checks include:
-QC0: Percentage of positive values greater than 4%.
-QC1: Library size greater than 7e+06.
-QC2: Negative control threshold greater than 0.045.
-QC3: Genomic DNA threshold greater than 0.02.
-QC4: ERCC threshold greater than 0.025.
-Calculation of median values.
-Principal Component Analysis (PCA).
-These thresholds are tailored for the HTG EdgeSeq transcriptomic panel but can be adjusted as needed. The function generates various plots and calculates all ratios, saving them in .pdf and .xlsx files. Additionally, it includes an optional heatmap to highlight potential outlier samples.
+This function performs various quality control (QC) checks. The QC checks include:
+- QC0: Percentage of positive values greater than 4%.
+- QC1: Library size greater than 7e+06.
+- QC2: Negative control threshold greater than 0.045.
+- QC3: Genomic DNA threshold greater than 0.02.
+- QC4: ERCC threshold greater than 0.025.
+
+These thresholds are tailored for the HTG EdgeSeq transcriptomic panel but can be adjusted as needed.
+
+In addition to these plots, this function generates a data frame that can be saved as a .csv file (a preview of it will be shown). This data frame includes:
+- The sum of each probe for each sample (total genes, positive, negative, gdna, and ercc)
+- The ratio for each sample
+- The size of each sample
+- A column called PCA_genes which indicates the samples furthest from the center (you can specify how many samples to highlight as the furthest from the center)
+
+This function also includes an optional heatmap to highlight potential outlier samples, which will be saved in a vector.
+
+The plots will be shown in the console and saved in the current working directory.
 }
 \examples{
 # Run the function with example data

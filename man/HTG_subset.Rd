@@ -4,18 +4,20 @@
 \alias{HTG_subset}
 \title{HTG_subset}
 \usage{
-HTG_subset(data_frame, prefix)
+HTG_subset(data_frame, prefix, normalize = FALSE)
 }
 \arguments{
-\item{data_frame}{A data frame from which rows need to be subsetted.}
+\item{data_frame}{A numeric data frame or matrix containing count data. The row names should include identifiers used for subsetting.}
 
 \item{prefix}{A string specifying the prefix used to match and subset rows from the data frame.}
+
+\item{normalize}{A logical value indicating whether to normalize the data using TPM before subsetting. Default is FALSE.}
 }
 \value{
-A subset of the data frame containing rows with row names that match the specified prefix.
+A data frame containing rows with row names that match the specified prefix. If `normalize` is TRUE, the data will be normalized before subsetting.
 }
 \description{
-This function subsets a data frame based on a specified prefix in the row names. It allows you to extract specific rows that match a given pattern.
+This function subsets a data frame based on a specified prefix in the row names. It allows you to extract specific rows that match a given pattern and optionally normalizes the data using TPM (Transcripts Per Million) before subsetting. The function also provides the dimensions of the resulting data frame.
 }
 \examples{
 # Subset rows with the prefix "ERCC"
@@ -29,4 +31,13 @@ cts_NC <- HTG_subset(counts_data, "NC")
 
 # Subset rows with the prefix "GDNA"
 cts_GDNA <- HTG_subset(counts_data, "GDNA")
+
+# Subset rows with the prefix "ZZZ3"
+cts_ZZZ3 <- HTG_subset(counts_data, "ZZZ3")
+
+#' # Subset rows with the prefix "ZZZ3" and normalize the data
+cts_ZZZ3 <- HTG_subset(counts_data, "ZZZ3", normalize = TRUE)
+
+resAAAS<- HTG_subset(res, "AAAS")
+
 }

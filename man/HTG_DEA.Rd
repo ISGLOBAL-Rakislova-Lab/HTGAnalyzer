@@ -19,7 +19,8 @@ HTG_DEA(
   threshold_subject = 10,
   pCutoff = 0.05,
   apply_filtering = TRUE,
-  apply_lfc_shrinkage = TRUE
+  apply_lfc_shrinkage = FALSE,
+  extract_shrinkage = FALSE
 )
 }
 \arguments{

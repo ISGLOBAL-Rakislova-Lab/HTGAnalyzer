@@ -12,10 +12,12 @@ HTG_import_counts(file_path, file_type)
 \item{file_type}{Type of file being imported, either "HTG" or "RNAseq".}
 }
 \value{
-A data frame with HTG counts data.
+A data frame with counts data.
 }
 \description{
 Import counts data from an Excel file. It can be either HTG excel or RNAseq.
+The first row in the Excel file must contain the column headers, with "id" as the first column header followed by the names of each sample.
+Please note that you might need to modify the Excel file to ensure it is in the correct format for importing data into R.
 }
 \examples{
 \dontrun{
