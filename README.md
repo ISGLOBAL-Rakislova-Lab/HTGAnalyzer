@@ -18,16 +18,18 @@ Once installed, you can start with the tutorial. Remember that this package was 
 
 We have a main function, HTG_auto, which performs all the mentioned analyses. Additionally, we have individual functions such as HTG_DEA, HTG_survival, HTG_QC, and HTG_TME, which provide more flexibility for modification.
 
-# 3. QUICK START.
+## 2.1. QUICK START.
 
-HTGAnalyzer has two functions called HTG_auto and HTG_analysis which provide an easy way to perform all the analyses. Let's start by discussing HTG_auto.
+HTGAnalyzer has a functions called HTG_auto which provide an easy way to perform all the analyses. Let's start by discussing HTG_auto.
 
-## 3.1 HTG_auto.
-This function performs all the analyses mentioned before: Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis. All the parameters can be modified, but some of them are already set to make it easier. You can refer to the documentation to change them.
+### 2.1.1 HTG_auto.
+The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analyses including Quality Control (QC), Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
 ```{r}
 HTG_auto <- function(counts_file_path,
+                     file_type,  
                      AnnotData_file_path,
                      design_formula,
+                     QC = TRUE,
                      heatmap_columns = NULL,
                      contrast = NULL,
                      variable_01 = NULL,
@@ -38,11 +40,13 @@ It has more parameters that can be modified, but to keep things simple, let's fo
 * `counts_file_path` (Character): Path to the file containing the HTG counts data in Excel format.
 * `file_type` (Character): Type of file being imported, either "HTG" or "RNAseq".
 * `AnnotData_file_path` (Character): Path to the file containing the annotation data in Excel format.
+* `QC` Indicates whether to perform quality control on the data. Default is TRUE. If set to FALSE, the QC step is skipped (for RNAseq data).
 * `design_formula` (Character): The design formula for DESeq2 analysis, specified as a string without the tilde (~).
 * `heatmap_columns` (Character vector): Specifies columns to be used for annotations in the heatmap.
 * `contrast` (Character vector): Specifies the contrast for differential expression analysis. Default is NULL.
 * `variable_01` (Character): Name of the survival event variable (e.g., "Recurrence_01"). Required for survival analysis.
 * `time` (Character): Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis.
+  
 EXAMPLE:
 imagine that your AnnotData looks like this: 
 
@@ -63,17 +67,48 @@ imagine that your AnnotData looks like this:
 Then:
 ```{r}
 HTG_auto <- function("~/HPV_counts.xlsx",
+                     file_type = "HTG",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
+                     QC = TRUE,
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
                      time = "Time_to_death_surv")
 ```
-This will perform a quality control on your data, taking into account the transcriptomic HTG Edge parameters, and will perform a differential expression analysis on HPV_status (Positive vs Negative). It will also generate a heatmap with the columns HPV_status and Ciclina_D1. The results of the differential expression analysis will be used to perform a series of GSEA. Additionally, these results will be used to perform a tumor microenvironment analysis. Finally, it will use the top genes from the differential expression analysis and Recurrence_01 and Time_to_death_surv to perform a survival analysis.
+Certainly! Here’s a narrative description based on the provided text:
+
+---
+
+In the case of HTG data, setting `QC = TRUE` is crucial as it ensures that the quality control process is carried out, allowing the detection and handling of outliers. This step is essential for validating the integrity of the data before any further analysis. With quality control enabled, the function will proceed to perform a Differential Expression Analysis (DEA) based on the `HPV_status`, comparing positive and negative samples. This comparison will reveal which genes are significantly differentially expressed between the two HPV status groups.
+
+Following the DEA, a heatmap will be generated using the columns `HPV_status` and `Ciclina_D1`. This visualization helps in understanding how well the data segregates based on these variables. By examining the heatmap, you can gain insights into which variables are most effective in distinguishing between the groups, providing a clearer picture of the data’s structure.
+
+The results from the DEA will then be utilized to perform Gene Set Enrichment Analysis (GSEA). GSEA will identify whether specific gene sets are significantly enriched in the differentially expressed genes, offering deeper biological insights into the underlying mechanisms driving the differences observed between HPV-positive and HPV-negative samples. This can help in understanding the biological pathways or processes that are activated or repressed in response to HPV status.
+
+Additionally, the findings from the DEA will be applied to a Tumor Microenvironment (TME) analysis. This analysis can be particularly valuable as it provides insights into the interaction between tumor cells and their surrounding environment. Understanding these interactions can shed light on how the tumor microenvironment influences gene expression and contributes to the overall tumor biology, potentially revealing new targets for therapeutic intervention.
+
+Finally, the top genes identified from the differential expression analysis, along with the survival-related variables `Recurrence_01` and `Time_to_death_surv`, will be used to conduct a survival analysis. This step is critical as it evaluates the impact of gene expression on patient outcomes, providing valuable prognostic information. By correlating gene expression profiles with survival data, you can identify genes associated with better or worse prognosis, which can be crucial for developing personalized treatment strategies and improving patient management.
+
+Keep in mind that this example is tailored for HTG data, where the quality control step is specifically programmed to accommodate the characteristics of transcriptomic panels. However, if you are working with RNAseq data, you will need to adjust some parameters accordingly. The quality control thresholds and other settings should be customized based on the specifics of the RNAseq data to ensure accurate and reliable analysis results.
 
 
-The counts will be imported with the funtion 
+## 2.2. PRINCIPAL FUNCTIONS AND SECUNDARY FUNCTIONS 
+Just in case you need more control of your data or you want to perform other analysis. HTGAnalyzer have principal and secundary fucntions to help reach your demands.
+
+PRINCIPAL: 
+* `HTG_import_counts`:Import counts data from an Excel file. It can be either HTG excel or RNAseq. The first row in the Excel file must contain the column headers, with "id" as the first column header followed by the names of each sample. Please note that you might need to modify the Excel file to ensure it is in the correct format for importing data into R. Ensure column names are free of special characters (e.g., spaces, (,), ?, `, ^, ., -, *, and others) to avoid import issues. The program will change the spaces into `_`
+* `HTG_QC`: This function performs comprehensive quality control (QC) for HTG EdgeSeq data, including checks on positive values, library size, and various thresholds (e.g., negative control, genomic DNA, ERCC). It generates a data frame with summary statistics and sample ratios, highlights outliers with an optional heatmap, and saves plots in the working directory.
+* `HTG_analysis`: This function conducts a comprehensive analysis pipeline including DESeq2 differential expression analysis (DEA), Gene Set Enrichment Analysis (GSEA), TME analysis, and survival analysis. The pipeline supports optional steps for generating volcano plots and heatmaps. The function is suitable for both HTG and RNA-seq data.
+
+SECUNDARY:
+* `HTG_subset`: This function subsets a data frame based on a specified prefix in the row names. It allows you to extract specific rows that match a given pattern and optionally normalizes the data using TPM (Transcripts Per Million) before subsetting. The function also provides the dimensions of the resulting data frame.
+* `HTG_plotPCA`: This function generates a PCA plot specifically for genes, along with plots showing explained variability and accumulated explained variability. It highlights the samples that are the most distant from the center of the PCA plot.
+* `quant_to_qual`: This function converts quantitative columns in a data frame into qualitative ones based on a specified threshold.
+
+### 2.2.1 IN-DEPTH GUIDE
+
+For this part of the tutorial we will 
 ```{r}
 counts<- HTG_import("path_to_HTG_database.xlsx")
 head(counts)
