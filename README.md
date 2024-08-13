@@ -17,18 +17,23 @@ install_github("ISGLOBAL-Rakislova-Lab/HTGAnalizer")
 
 ## 2.1. IMPORT
 Before starting, make sure your Excel file looks like this. Here we import the data from HTG Edge. This is an Excel file with this structure:
+In our case, AnnotData will be our clinical file which will have all the information to perform out analysis. 
 
-| Sample Name   | 4-B00-03341-B  | 4-B04-23636-B  | 4-B05-03271-B  | 4-B06-00420 | 4-B23-15422 | 4-B23-37783-1 |
-|---------------|----------------|----------------|----------------|-------------|-------------|---------------|
-| Sample ID     | 1              | 2              | 3              | 4           | 5           | 6             |
-| Well          | A1             | B1             | C1             | D1          | E1          | F1            |
-| Date Parsed   | 23/04/2022     | 23/04/2022     | 23/04/2022     | 23/04/2022  | 23/04/2022  | 23/04/2022    |
-| Total Counts  | 2373           | 6616           | 8720           | 3309        | 1521        | 646           |
-| A1BG          | 19             | 24             | 261            | 201         | 14          | 1             |
-| A1CF          | 0              | 0              | 429            | 0           | 2           | 0             |
-| A2M           | 1472           | 2417           | 4409           | 1990        | 658         | 20            |
-| A2ML1         | 0              | 150            | 0              | 46          | 0           | 2             |
-| A3GALT2       | 0              | 0              | 0              | 0           | 0           | 0             |
+|       id       | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01 | Time_to_death_surv |
+|----------------|------------|------------|-----------------|------------|----------------|---------------------|
+| pacient_1      | Positive   | 10         | IIIB            | yes        | 1              | 1287                |
+| pacient_2      | Positive   | 50         | II              | no         | 0              | 510                 |
+| pacient_3      | Positive   | NA         | IIIC            | no         | 0              | 762                 |
+| pacient_4      | Positive   | 0          | IB              | yes        | 1              | 1164                |
+| pacient_5      | Negative   | 50         | IB              | yes        | 1              | 5844                |
+| pacient_6      | Negative   | 80         | IB              | no         | 0              | 1436                |
+| pacient_7      | Negative   | 20         | IB              | no         | 0              | 2145                |
+| pacient_8      | Negative   | 50         | IB              | yes        | 1              | 2458                |
+| pacient_9      | Negative   | NA         | IB              | yes        | 1              | 234                 |
+| pacient_10     | Negative   | 70         | II              | no         | 0              | 996                 |
+| pacient_11     | Negative   | 40         | IB              | no         | 0              | 768                 |
+
+The counts will be imported with the funtion 
 ```{r}
 counts<- HTG_import("path_to_HTG_database.xlsx")
 head(counts)
