@@ -1,23 +1,50 @@
-Here you will find a tutorial to perform a complete analysis for HTG Edge results with HTGAnalizer.
+Here you will find a tutorial to perform a complete analysis for HTG Edge results and RNAseq with HTGAnalyzer.
 
-Having the results of HTG Edge this pakcage will help to perform the Quality Control, the Differential Expression analysis and the Gene Set Enrichment Analysis.
+Having the results of HTG Edge Reveal or RNAseq, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TM), and Survival Analysis.
+
 # 1. INSTALATION:
+To use this R package you have to perform the following code.
 ```{r}
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
 
 library(devtools)
-install_github("ISGLOBAL-Rakislova-Lab/HTGAnalizer")
+install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+library (HTGAnalyzer)
 ```
+# 2. TUTORIAL.
+Once installed, you can start with the tutorial. Remember that this package was initially designed for people who have HTG Edge to analyze. However, with the closure of the company, previous quality control features were revealed, but not for the transcriptomic panel, whose quality control was not well established. For this reason, this package is prepared to perform an easy analysis for people who are not into bioinformatics. It has an automatic function that will perform all the analyses and other functions for specific analyses, giving you more freedom to modify.
 
+We have a main function, HTG_auto, which performs all the mentioned analyses. Additionally, we have individual functions such as HTG_DEA, HTG_survival, HTG_QC, and HTG_TME, which provide more flexibility for modification.
 
+# 3. QUICK START.
 
-# 2. QUALITY CONTROL
+HTGAnalyzer has two functions called HTG_auto and HTG_analysis which provide an easy way to perform all the analyses. Let's start by discussing HTG_auto.
 
-## 2.1. IMPORT
-Before starting, make sure your Excel file looks like this. Here we import the data from HTG Edge. This is an Excel file with this structure:
-In our case, AnnotData will be our clinical file which will have all the information to perform out analysis. 
+## 3.1 HTG_auto.
+This function performs all the analyses mentioned before: Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis. All the parameters can be modified, but some of them are already set to make it easier. You can refer to the documentation to change them.
+```{r}
+HTG_auto <- function(counts_file_path,
+                     AnnotData_file_path,
+                     design_formula,
+                     heatmap_columns = NULL,
+                     contrast = NULL,
+                     variable_01 = NULL,
+                     time = NULL)
+```
+It has more parameters that can be modified, but to keep things simple, let's focus on these:
+
+* `counts_file_path` (Character): Path to the file containing the HTG counts data in Excel format.
+* `file_type` (Character): Type of file being imported, either "HTG" or "RNAseq".
+* `AnnotData_file_path` (Character): Path to the file containing the annotation data in Excel format.
+* `design_formula` (Character): The design formula for DESeq2 analysis, specified as a string without the tilde (~).
+* `heatmap_columns` (Character vector): Specifies columns to be used for annotations in the heatmap.
+* `contrast` (Character vector): Specifies the contrast for differential expression analysis. Default is NULL.
+* `variable_01` (Character): Name of the survival event variable (e.g., "Recurrence_01"). Required for survival analysis.
+* `time` (Character): Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis.
+EXAMPLE:
+imagine that your AnnotData looks like this: 
 
 |       id       | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01 | Time_to_death_surv |
 |----------------|------------|------------|-----------------|------------|----------------|---------------------|
@@ -32,6 +59,19 @@ In our case, AnnotData will be our clinical file which will have all the informa
 | pacient_9      | Negative   | NA         | IB              | yes        | 1              | 234                 |
 | pacient_10     | Negative   | 70         | II              | no         | 0              | 996                 |
 | pacient_11     | Negative   | 40         | IB              | no         | 0              | 768                 |
+
+Then:
+```{r}
+HTG_auto <- function("~/HPV_counts.xlsx",
+                     "~/AnnotData.xlsx",
+                     design_formula = "HPV_status",
+                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     contrast = c("HPV_status", "Positive", "Negative"),
+                     variable_01 = "Recurrence_01",
+                     time = "Time_to_death_surv")
+```
+This will perform a quality control on your data, taking into account the transcriptomic HTG Edge parameters, and will perform a differential expression analysis on HPV_status (Positive vs Negative). It will also generate a heatmap with the columns HPV_status and Ciclina_D1. The results of the differential expression analysis will be used to perform a series of GSEA. Additionally, these results will be used to perform a tumor microenvironment analysis. Finally, it will use the top genes from the differential expression analysis and Recurrence_01 and Time_to_death_surv to perform a survival analysis.
+
 
 The counts will be imported with the funtion 
 ```{r}
