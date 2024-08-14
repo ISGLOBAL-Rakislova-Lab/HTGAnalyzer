@@ -90,7 +90,7 @@ HTG_auto <- function("~/counts.xlsx",
                      time = "Time_to_death_surv")
 ```
 
-or HTG data, setting QC = TRUE is essential to ensure quality control, which identifies and manages outliers before further analysis. With quality control enabled, the function performs Differential Expression Analysis (DEA) based on HPV_status, comparing positive and negative samples to identify significantly differentially expressed genes.
+For HTG data, setting QC = TRUE is essential to ensure quality control, which identifies and manages outliers before further analysis. With quality control enabled, the function performs Differential Expression Analysis (DEA) based on HPV_status, comparing positive and negative samples to identify significantly differentially expressed genes.
 
 Following DEA, a heatmap will be generated using HPV_status and Ciclina_D1, providing insights into how well the data separates based on these variables. This visualization helps in understanding key distinguishing factors between the groups.
 
