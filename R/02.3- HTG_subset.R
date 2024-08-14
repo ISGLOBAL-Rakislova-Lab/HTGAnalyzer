@@ -43,7 +43,7 @@ HTG_subset <- function(data_frame, prefix, normalize = FALSE) {
     cat("\033[32mNormalizing data using TPM (Transcripts Per Million)...\033[0m\n")
 
     # Load the IOBR library, handle messages and warnings
-    suppressMessages(library(IOBR))
+    suppressMessages(suppressWarnings(library(IOBR)))
 
     # Perform normalization and handle possible warnings
     tpm_counts <- suppressWarnings(

@@ -62,6 +62,7 @@ HTG_GSEA <- function(res) {
   x2 <- pairwise_termsim(gse2)
   emapplot1 <- emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggtitle("Enrichment Map gseGO ")
   print(emapplot1)
+
   # Ridgeplot for gseGO
   cat("\033[32mCreating Ridgeplot for gseGO \033[0m\n")
   ridgeplot1 <- ridgeplot(gse2)  +  labs(x = "gseGO enrichment distribution", font.size = 7) +  theme(axis.text.y = element_text(size = 9))
@@ -74,8 +75,7 @@ HTG_GSEA <- function(res) {
 
   # Treeplot for gseGO
   cat("\033[32mCreating Treeplot for gseGO \033[0m\n")
-  treeplot1 <- treeplot(x2) + ggtitle("gseGO Treeplot")
-  print(treeplot1)
+  treeplot1 <- suppressWarnings(treeplot(x2)) + ggtitle("gseGO Treeplot")
 
   # Create gseaplot2 plots with titles
   a <- gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
@@ -122,8 +122,7 @@ HTG_GSEA <- function(res) {
 
   # Treeplot for KEGG
   cat("\033[32mCreating Treeplot for KEGG \033[0m\n")
-  treeplot2 <- treeplot(x3) + ggtitle("KEGG Treeplot")
-  print(treeplot2)
+  treeplot2 <- suppressWarnings(treeplot(x3)) + ggtitle("KEGG Treeplot")
 
   upset_plot <- upsetplot(kk2) + labs(title = "Up set plot for KEGG")
   print(upset_plot)
@@ -176,7 +175,7 @@ HTG_GSEA <- function(res) {
     cat("\033[31mNo significant genes found for GO enrichment analysis.\033[0m\n")
   }
 
-    pdf("GSEA_analysis_plots.pdf")
+    pdf("GSEA_analysis_plots.pdf", width = 11, height = 14)
     print(dotplot1)
     print(dotplot2)
     print(emapplot1)
@@ -206,6 +205,7 @@ HTG_GSEA <- function(res) {
         theme_minimal() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1))
       dev.off()
+      while (!is.null(dev.list())) dev.off()
 
       # Save tables
       write.csv(gene_list, "gene_list.csv")

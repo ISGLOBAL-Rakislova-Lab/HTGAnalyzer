@@ -3,7 +3,7 @@
 #' Perform differential expression analysis using DESeq2, with options for filtering and log fold change (LFC) shrinkage.
 #'
 #' @param outliers A character vector of sample IDs to be removed as outliers.
-#' @param counts_data A matrix or data frame of raw count data, with genes as rows and samples as columns.
+#' @param counts_data A matrix or data frame of raw count data, with genes as rows and samples as columns. Probes will be deleted.
 #' @param col_data A data frame containing the sample metadata. Must include an 'id' column that matches the column names of `counts_data`.
 #' @param design_formula A character string representing the design formula for DESeq2. Must specify two groups for comparison.
 #' @param heatmap_columns A character vector of columns in `col_data` to be used for heatmap annotation.
@@ -31,13 +31,25 @@
 #' @name HTG_DEA
 
 HTG_DEA <- function(outliers, counts_data, col_data, design_formula, heatmap_columns, contrast,
-                    pattern, remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200,
-                    threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = FALSE, extract_shrinkage = FALSE) {
+                    pattern = NULL, remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200,
+                    threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = FALSE, extract_shrinkage = FALSE,
+                    generate_heatmap = FALSE) {
+
   library(DESeq2)
   library(EnhancedVolcano)
   library(ggplot2)
   library(apeglm)
+  library(GWASTools)
+  library(pheatmap)
+  library(PoiClaClu)
+  library(RColorBrewer)
 
+  # Filtering counts data based on provided pattern
+  if (!is.null(pattern)) {
+    counts_data <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+  }
+
+  # Removing outliers if specified
   if (remove_outliers) {
     filtered <- base::subset(counts_data, !grepl(pattern, rownames(counts_data)))
     counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
@@ -47,98 +59,172 @@ HTG_DEA <- function(outliers, counts_data, col_data, design_formula, heatmap_col
     AnnotData <- col_data
   }
 
-  cat("\033[32mDifferential Expression Analysis design formula\033[0m\n")
+  # Prepare data for DESeq2 analysis
   design_formul <- as.formula(paste("~ ", design_formula))
-  print(design_formul)
-
-  ### Variables should not have spaces
-  cat("\033[32mSpaces will be changed for _\033[0m\n")
   colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
-
   col_data <- AnnotData[order(AnnotData$id), ]
   counts_filtered <- counts_filtered[, order(colnames(counts_filtered))]
-
-  # Create DESeqDataSet object
   rownames(col_data) <- col_data$id
 
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
-  cat("\033[32mDESeqDataSet before filtering\033[0m\n")
-  print(dds)
+  # Convert design variables to factors if needed
+  for (var in all.vars(design_formul)) {
+    if (var %in% colnames(col_data)) {
+      col_data[[var]] <- as.factor(col_data[[var]])
+    }
+  }
 
+  # Create DESeqDataSet object
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
+
+  # Filtering genes if specified
   if (apply_filtering) {
-    cat("\033[32mApplying filtering\033[0m\n")
     n_genes <- nrow(DESeq2::counts(dds))
     n_subj <- ncol(DESeq2::counts(dds))
-    zero_threshold <- ceiling(n_subj * percentage_zero)  # 20% threshold for zeros
+    zero_threshold <- ceiling(n_subj * percentage_zero)
     keep_genes <- rowSums(DESeq2::counts(dds) == 0) <= zero_threshold
-    # Filter genes that are present in at least 20% of the cases
     smallest_group_size <- ceiling(n_subj * percentage_gene)
     keep_genes <- keep_genes & (rowSums(DESeq2::counts(dds) >= threshold_gene) >= smallest_group_size)
-    # Apply gene filters to the DESeq2 object
     dds <- dds[keep_genes, ]
-
-    # Mostrar el resultado
-    cat("\033[32mDESeqDataSet after filtering\033[0m\n")
-    print(dds)
   }
 
   # Perform DESeq2 analysis
-  cat("\033[32m Variance Stabilized Data of DESeqDataSet\033[0m\n")
   vsd <- DESeq2::vst(dds, blind = FALSE)
-
   dds <- DESeq2::DESeq(dds)
-
-  # Results contrast
   res <- results(dds, contrast = contrast, cooksCutoff = TRUE)
-  cat("\033[32mResults of the contrast will be stored in results_HTG_DEA.csv\033[0m\n")
+
+  # Save results
   write.csv(res, "results_HTG_DEA.csv", row.names = TRUE)
-  cat("\033[32mTOP10 results will be shown\033[0m\n")
+
+  # Print top 10 results
   top_genes <- head(res[order(res$padj), ], 10)
   print(top_genes)
 
-  # Check available coefficients
-  print(resultsNames(dds))
-
+  # Apply LFC shrinkage if specified
   if (apply_lfc_shrinkage) {
     coef_name <- resultsNames(dds)[2]
     resLFC <- lfcShrink(dds, coef = coef_name, type = "apeglm")
-    cat("\033[32mTOP10 resLFC will be shown\033[0m\n")
     top_genes <- head(resLFC[order(resLFC$padj), ], 10)
     print(top_genes)
   }
 
-  # Plots and return result
+  # Save plots to PDF
+  pdf("DEA_plots.pdf", width = 10, height = 8)
+
+  # Volcano plot
+  suppressWarnings(invisible(print(EnhancedVolcano(res,
+                                                   lab = rownames(res),
+                                                   x = 'log2FoldChange',
+                                                   y = 'padj',
+                                                   pCutoff = pCutoff))))
+
+  # Heatmap of sample-to-sample distances
+  vsd_cor <- cor(assay(vsd))
+  rownames(vsd_cor) <- paste(vsd$SampleID)
+  colnames(vsd_cor) <- paste(vsd$HTG_RUN)
+  suppressWarnings(invisible(print(pheatmap(vsd_cor, main = "Sample-to-Sample Correlation"))))
+
+  # Boxplot of VST-transformed data (only plot, no statistics)
+  invisible(boxplot(assay(vsd), las = 2, main = "VST-transformed Data", outline = FALSE, col = "#4793AF"))
+
+  # COOK's DISTANCE
+  suppressWarnings(invisible(print(boxplot(log10(assays(dds)[["cooks"]]), range = 0, las = 2, cex.axis = 0.9, main = "COOK'S DISTANCE", outline = FALSE, col = "lightgreen"))))
+
+  # MA-plot
+  suppressWarnings(invisible(print(plotMA(res, main = "MA Plot of Results"))))
+
+  # Individual gene plots for top 10 genes
+  top_genes_indices <- rownames(top_genes)
+  for (gene_index in top_genes_indices) {
+    gen_a2m <- as.data.frame(assay(vsd)[gene_index, ])
+    colnames(gen_a2m) <- "expression"
+    gen_a2m$SampleID <- rownames(gen_a2m)
+    gen_a2m$status <- col_data[[design_formula]]
+
+    # Create ggplot for the gene
+    levels_design_formula <- unique(col_data[[design_formula]])
+
+    # Define colors based on number of levels
+    color_palette <- if (length(levels_design_formula) == 2) {
+      c("red", "#4793AF")
+    } else {
+      colorRampPalette(brewer.pal(min(length(levels_design_formula), 9), "Set1"))(length(levels_design_formula))
+    }
+
+    plot_gene <- ggplot(gen_a2m, aes(x = factor(SampleID, levels = SampleID[order(status)]), y = expression, color = status)) +
+      geom_point(size = 2) +
+      labs(x = "", y = gene_index, title = paste("Gene:", gene_index)) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.title = element_blank()) +
+      scale_color_manual(values = color_palette)
+
+    suppressWarnings(invisible(print(plot_gene)))
+  }
+
+  dev.off()  # Close the PDF device
+
+  #################
+  cat("\033[33mSHOWING PLOTS...\033[0m\n")
+
+  # Volcano plot
+  suppressWarnings(invisible(print(EnhancedVolcano(res,
+                                                   lab = rownames(res),
+                                                   x = 'log2FoldChange',
+                                                   y = 'padj',
+                                                   pCutoff = pCutoff))))
+
+  # Heatmap of sample-to-sample distances
+  vsd_cor <- cor(assay(vsd))
+  rownames(vsd_cor) <- paste(vsd$SampleID)
+  colnames(vsd_cor) <- paste(vsd$HTG_RUN)
+  suppressWarnings(invisible(print(pheatmap(vsd_cor, main = "Sample-to-Sample Correlation"))))
+
+  # Boxplot of VST-transformed data (only plot, no statistics)
+  invisible(boxplot(assay(vsd), las = 2, main = "VST-transformed Data", outline = FALSE, col = "#4793AF"))
+
+  # COOK's DISTANCE
+  suppressWarnings(invisible(print(boxplot(log10(assays(dds)[["cooks"]]), range = 0, las = 2, cex.axis = 0.9, main = "COOK'S DISTANCE", outline = FALSE, col = "lightgreen"))))
+
+  # MA-plot
+  suppressWarnings(invisible(print(plotMA(res, main = "MA Plot of Results"))))
+
+  # Individual gene plots for top 10 genes
+  top_genes_indices <- rownames(top_genes)
+  for (gene_index in top_genes_indices) {
+    gen_a2m <- as.data.frame(assay(vsd)[gene_index, ])
+    colnames(gen_a2m) <- "expression"
+    gen_a2m$SampleID <- rownames(gen_a2m)
+    gen_a2m$status <- col_data[[design_formula]]
+
+    # Create ggplot for the gene
+    levels_design_formula <- unique(col_data[[design_formula]])
+
+    # Define colors based on number of levels
+    color_palette <- if (length(levels_design_formula) == 2) {
+      c("red", "#4793AF")
+    } else {
+      colorRampPalette(brewer.pal(min(length(levels_design_formula), 9), "Set1"))(length(levels_design_formula))
+    }
+
+    plot_gene <- ggplot(gen_a2m, aes(x = factor(SampleID, levels = SampleID[order(status)]), y = expression, color = status)) +
+      geom_point(size = 2) +
+      labs(x = "", y = gene_index, title = paste("Gene:", gene_index)) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.title = element_blank()) +
+      scale_color_manual(values = color_palette)
+
+    suppressWarnings(invisible(print(plot_gene)))
+  }
+
+
   if (extract_shrinkage) {
     if (apply_lfc_shrinkage) {
-      cat("\033[32mExtracting shrinkage results\033[0m\n")
-      print(head(resLFC[order(resLFC$padj), ], 10))
-      plot <- EnhancedVolcano(resLFC,
-                              lab = rownames(resLFC),
-                              x = 'log2FoldChange',
-                              y = 'padj',
-                              pCutoff = pCutoff,
-                              title = "Volcano Plot (LFC Shrinkage)")
-      print(plot)
-      pdf("deseq2_analysis_plot_resLFC.pdf")
-      print(plot)
-      dev.off()
       return(resLFC)
     } else {
-      cat("\033[32mReturning results without shrinkage\033[0m\n")
-      print(head(res[order(res$padj), ], 10))
-      plot <- EnhancedVolcano(res,
-                              lab = rownames(res),
-                              x = 'log2FoldChange',
-                              y = 'padj',
-                              pCutoff = pCutoff,
-                              title = "Volcano Plot")
-      print(plot)
-      pdf("deseq2_analysis_plot_res.pdf")
-      print(plot)
-      dev.off()
       return(res)
     }
   } else {
     return(res)
   }
 }
+
+
+
+

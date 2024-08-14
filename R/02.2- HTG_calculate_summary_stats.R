@@ -2,15 +2,19 @@
 #'
 #' @description This function calculates summary statistics for each column of the input data frame, including minimum, maximum, mean, median, mode, standard deviation, variance, range, first quartile (Q1), third quartile (Q3), interquartile range (IQR), skewness, kurtosis, count of missing values, and coefficient of variation (CV).
 #'
-#' @param counts_filtered A data frame containing the input counts.
+#' @param counts_data A data frame containing the input counts.
+#' @param pattern (Optional) A regular expression pattern to identify control probes in the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
 #'
 #' @return A data frame containing summary statistics for each column of the input data.
 #' @export
 #'
 #' @examples
-#' summary<- HTG_calculate_summary_stats(counts_filtered)
+#' summary <- HTG_calculate_summary_stats(counts_data)
 #' @name HTG_calculate_summary_stats
-HTG_calculate_summary_stats <- function(counts_filtered) {
+HTG_calculate_summary_stats <- function(counts_data, pattern = NULL) {
+  if (!is.null(pattern)) {
+    counts_filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+  }
   min_values <- apply(counts_filtered, 2, min)
   max_values <- apply(counts_filtered, 2, max)
   mean_values <- apply(counts_filtered, 2, mean)
@@ -57,5 +61,6 @@ HTG_calculate_summary_stats <- function(counts_filtered) {
     Missing = missing_values,
     CV = cv_values
   )
+  write.csv(summary_stats, file = "summary_stats.csv")
   return(summary_stats)
 }

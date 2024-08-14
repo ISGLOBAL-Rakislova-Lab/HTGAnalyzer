@@ -1,6 +1,6 @@
-#' HTG_analysis: Perform DESeq2 Analysis, GSEA, Convolution, and Survival Analysis
+#' HTG_analysis: Perform DESeq2 Analysis, GSEA, TME, and Survival Analysis
 #'
-#' @description This function conducts a comprehensive analysis pipeline including DESeq2 differential expression analysis (DEA), Gene Set Enrichment Analysis (GSEA), convolution analysis, and survival analysis. The pipeline supports optional steps for generating volcano plots and heatmaps. The function is suitable for both HTG and RNA-seq data.
+#' @description This function conducts a comprehensive analysis pipeline including DESeq2 differential expression analysis (DEA), Gene Set Enrichment Analysis (GSEA), TME analysis, and survival analysis. The pipeline supports optional steps for generating volcano plots and heatmaps. The function is suitable for both HTG and RNA-seq data.
 #'
 #' @param outliers A character vector specifying the IDs of outlier samples to be removed. Outliers can also be identified using the HTG_QC function.
 #' @param pattern (Optional) A regular expression pattern to identify control probes in the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
@@ -16,14 +16,12 @@
 #' @param remove_outliers A logical value indicating whether to remove outliers. Default is TRUE.
 #' @param GSEA A logical value indicating whether to perform GSEA analysis. Default is FALSE.
 #' @param generate_heatmap A logical value indicating whether to generate a heatmap. Default is TRUE.
-#' @param Convolution A logical value indicating whether to perform convolution analysis. Default is TRUE.
-#' @param grupos A list specifying groups to be compared. Default is c("brain", "lymph node").
+#' @param TME A logical value indicating whether to perform TME analysis. Default is TRUE.
 #' @param survival_analysis A logical value indicating whether to perform survival analysis. Default is FALSE.
 #' @param percentage_gene A numeric value between 0 and 1 indicating the minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.
 #' @param percentage_zero A numeric value between 0 and 1 indicating the maximum fraction of samples in which a gene can be zero to be retained. Default is 0.2.
 #' @param top_genes A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").
-#' @param correlation A logical value indicating whether to perform correlation analysis within the convolution analysis. Default is FALSE.
-#' @param dds A logical value indicating whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.
+#' @param DEA A logical value indicating whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.
 #'
 #' @return Returns an object with the results of the specified contrast and saves an Excel file with the results, along with PDF files of the generated plots.
 #'
@@ -34,9 +32,8 @@
 #'design_formula = "Ciclina2" , percentage_gene = 0.2, percentage_zero = 0.2,
 #'threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = c("Ciclina2", "Smoker"),
 #'contrast = c("Ciclina2", "high", "low"), pCutoff = 5e-2,variable_01 = "smoke_01", time = "time",
-#'correlation = TRUE,
-#'dds = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = TRUE, generate_heatmap = TRUE, Convolution = TRUE,
-#'survival_analysis = TRUE, grupos = c("high", "low"))
+#'DEA = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = TRUE, generate_heatmap = TRUE, TME = TRUE,
+#'survival_analysis = TRUE)
 #'
 #'
 #' @name HTG_analysis
@@ -44,9 +41,11 @@
 
 HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
                         threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
-                        contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL, correlation = FALSE,
-                        dds = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, Convolution = TRUE,
-                        survival_analysis = FALSE, grupos = NULL) {
+                        contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL,
+                        DEA = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, TME = TRUE,
+                        survival_analysis = FALSE) {
+
+
   library(DESeq2)
   library(ggplot2)
   library(ggrepel)
@@ -76,7 +75,13 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   library(tidyr)
   library(maxstat)
 
+  if (!is.null(pattern)) {
+    cat("\033[33mFILTERING THE COUNT DATA. DELETING THE PROVES.\033[0m\n")
+    counts_data <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+  }
+
   if (remove_outliers) {
+    cat("\033[33mREMOVING OUTLIERS\033[0m\n")
     if (!is.null(pattern)) {
       # Remove outliers based on pattern
       filtered <- base::subset(counts_data, !grepl(pattern, rownames(counts_data)))
@@ -91,7 +96,8 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     counts_filtered <- counts_data
     AnnotData <- col_data
   }
-  if (dds) {
+  if (DEA) {
+    cat("\033[33mSTARTING THE DIFERENTIAN EXPRESSION ANALYSIS.\033[0m\n")
     if (is.null(contrast)) {
       stop("Contrast is required for DESeq2 analysis. Remember structure: contrast = c('column_name', 'variable1','variable2')")
     }
@@ -145,6 +151,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
   # Generate heatmap if generate_heatmap is TRUE
   if (generate_heatmap) {
+    cat("\033[33mGENERATING HEATMAP\033[0m\n")
     if (is.null(heatmap_columns)) {
       stop("heatmap_columns are required for genereting the heatmap.")
     }
@@ -155,6 +162,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   }
 
   # Results contrast
+  cat("\033[33mGENERATING CONTRAST RESULTS\033[0m\n")
   res <- results(dds, contrast = contrast, cooksCutoff = TRUE)
   cat("\033[32mSUMMARY OF RESULT OF THE CONTRAST\033[0m\n")
   print(summary(res))
@@ -181,6 +189,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   samplePoisDistMatrix <- as.matrix(poisd$dd)
   colnames(samplePoisDistMatrix) <- dds$SampleID
   colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+  cat("\033[33mGENERATING POISSON DISTANCES PLOT\033[0m\n")
 
   pheatmap(samplePoisDistMatrix,
            clustering_distance_rows = poisd$dd,
@@ -202,10 +211,11 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
            clustering_distance_cols = sampleDists,
            col = colors,
            fontsize = 8)
-
+  cat("\033[33mGENERATING VSD BOXPLOT\033[0m\n")
   boxplot(assay(vsd), las = 2, main = "vsd", cex.axis = 0.6)
 
   # COOK's DISTANCE
+  cat("\033[33mGENERATING COOKS DISTANCE PLOT\033[0m\n")
   boxplot(log10(assays(dds)[["cooks"]]), range = 0, las = 2, cex.axis = 0.9, main = "COOK'S DISTANCE")
 
   plotMA(res, main = "PLOT MA OF RESULTS")
@@ -231,6 +241,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   }
 
   if (generate_volcano) {
+    cat("\033[33mGENERATING VOLCANO PLOT\033[0m\n")
     EnhancedVolcano(res,
                     lab = rownames(res),
                     x = 'log2FoldChange',
@@ -242,55 +253,49 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   } else {cat("\033[32mSkipping Diferential expresion analysis\033[0m\n")}
 
   if (GSEA) {
-    cat("\033[32mPerforming GSEA analysis\033[0m\n")
+    cat("\033[33mSTARTING GSEA\033[0m\n")
+    suppressMessages(library(clusterProfiler))
+    suppressMessages(library(dplyr))
+    suppressMessages(library(msigdbr))
+    suppressMessages(library(enrichplot))
+    suppressMessages(library(org.Hs.eg.db))
+    suppressMessages(library(fgsea))
+    suppressMessages(library(DOSE))
+    suppressMessages(library(ggplot2))
+    suppressMessages(library(ggupset))
+    suppressMessages(library(grid))
 
-    # Function to add title and description to each plot
-    add_plot <- function(plot, title, description) {
-      cat("Adding plot:", title, "\n")
-      grid.newpage()
-      pushViewport(viewport(layout = grid.layout(2, 1)))
-      grid.text(title, vp = viewport(layout.pos.row = 1, layout.pos.col = 1), gp = gpar(fontsize = 14, fontface = "bold"))
-      grid.text(description, vp = viewport(layout.pos.row = 2, layout.pos.col = 1), gp = gpar(fontsize = 12))
-      print(plot, vp = viewport(layout.pos.row = 2, layout.pos.col = 1))
-    }
+    cat("\033[32mPerforming gseGO analysis\033[0m\n")
 
-    # Prepare gene list for GSEA
-    cat("Preparing gene list for GSEA\n")
+    # Prepare gene list for gseGO
+    cat("\033[32mPreparing gene list for GSEA\033[0m\n")
     original_gene_list <- res$log2FoldChange
     names(original_gene_list) <- rownames(res)
     gene_list <- na.omit(original_gene_list)
     gene_list <- sort(gene_list, decreasing = TRUE)
 
-    # GSEA Analysis
-    cat("Performing GSEA Analysis\n")
-    gse2 <- gseGO(geneList = gene_list, ont = "ALL", keyType = "SYMBOL", nPermSimple = 500000,
+    # gseGO Analysis
+    cat("\033[32mPerforming gseGO Analysis\033[0m\n")
+    gse2 <- gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
                   minGSSize = 3, maxGSSize = 800, pvalueCutoff = 0.05, verbose = TRUE, eps = 0,
                   OrgDb = "org.Hs.eg.db", pAdjustMethod = "bonferroni")
 
-    # Dotplot for GSEA
-    cat("Creating Dotplot for GSEA\n")
+    # Create and print plots for gseGO
+    cat("\033[32mCreating Plots for gseGO\033[0m\n")
     dotplot1 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                        title = "Enrichment Results: Pathways", color = "p.adjust", size = "Count")
-    add_plot(dotplot1, "GSEA Dotplot", "This plot shows the results of Gene Set Enrichment Analysis (GSEA).")
-
+                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count")
     dotplot2 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                        title = "Enrichment Results: Pathways", color = "p.adjust", size = "Count") +
-      facet_grid(.~.sign)
-    add_plot(dotplot2, "GSEA Dotplot with Facet", "This plot shows the results of GSEA with facets.")
-
-    # Emaplot for GSEA
-    cat("Creating Emaplot for GSEA\n")
+                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + facet_grid(.~.sign)
     x2 <- pairwise_termsim(gse2)
-    emapplot1 <- emapplot(x2, max.overlaps = 50, min.segment.length = 0.3, point_size = 0.5, font.size = 8)
-    add_plot(emapplot1, "GSEA Emaplot", "This plot shows the enriched terms and their relationships.")
-
-    # Ridgeplot for GSEA
-    cat("Creating Ridgeplot for GSEA\n")
-    ridgeplot1 <- ridgeplot(gse2) + labs(x = "enrichment distribution", font.size = 7)
-    add_plot(ridgeplot1, "GSEA Ridgeplot", "This plot shows the enrichment distribution of gene sets.")
+    emapplot1 <- emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) + ggtitle("Enrichment Map gseGO")
+    ridgeplot1 <- ridgeplot(gse2) + labs(x = "gseGO enrichment distribution", font.size = 7) + theme(axis.text.y = element_text(size = 9))
+    heatplot1 <- heatplot(gse2, showCategory = 10) + ggtitle("gseGO Heatplot")
+    treeplot1 <- suppressWarnings(treeplot(x2)) + ggtitle("gseGO Treeplot")
+    a <- gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
+    b <- gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets")
 
     # KEGG Analysis
-    cat("Performing KEGG Analysis\n")
+    cat("\033[32mPerforming KEGG Analysis\033[0m\n")
     ids <- bitr(names(original_gene_list), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)
     dedup_ids <- ids[!duplicated(ids[c("SYMBOL")]), ]
     df2 <- res[rownames(res) %in% dedup_ids$SYMBOL, ]
@@ -303,24 +308,17 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     kk2 <- gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
                    pvalueCutoff = 0.05, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
-    # Dotplot for KEGG
-    cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
-    dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways", split = ".sign", font.size = 9) +
-      facet_grid(.~.sign)
-    add_plot(dotplot3, "KEGG Dotplot with Facet", "This plot shows the results of KEGG pathway enrichment analysis.")
-
-    # Emaplot for KEGG
-    cat("\033[32mCreating Emaplot for KEGG\033[0m\n")
+    # Create and print plots for KEGG
+    cat("\033[32mCreating Plots for KEGG\033[0m\n")
+    dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + facet_grid(.~.sign)
     x3 <- pairwise_termsim(kk2)
-    emapplot2 <- emapplot(x3, font.size = 8)
-    add_plot(emapplot2, "KEGG Emaplot", "This plot shows the enriched KEGG pathways and their relationships.")
+    emapplot2 <- emapplot(x3, font.size = 8) + ggtitle("KEGG Enrichment Map")
+    ridgeplot2 <- ridgeplot(kk2) + labs(x = "KEGG enrichment distribution", font.size = 6) + theme(axis.text.y = element_text(size = 9))
+    heatplot2 <- heatplot(kk2, showCategory = 10) + ggtitle("KEGG Heatplot")
+    treeplot1 <- suppressWarnings(treeplot(x3)) + ggtitle("KEGG Treeplot")
+    upset_plot <- upsetplot(kk2) + labs(title = "UpSet Plot for KEGG")
 
-    # Ridgeplot for KEGG
-    cat("\033[32mCreating Ridgeplot for KEGG\033[0m\n")
-    ridgeplot2 <- ridgeplot(kk2) + labs(x = "enrichment distribution", font.size = 8)
-    add_plot(ridgeplot2, "KEGG Ridgeplot", "This plot shows the enrichment distribution of KEGG pathways.")
-
-    # GO Enrichment Analysis
+    # enrichGO Analysis
     cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
     sig_genes_df <- subset(res, padj < 0.05)
 
@@ -328,93 +326,119 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       genes <- sig_genes_df$log2FoldChange
       names(genes) <- rownames(sig_genes_df)
 
-      go_enrich <- enrichGO(gene = names(genes), universe = names(gene_list), OrgDb = org.Hs.eg.db,
-                            keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                            pvalueCutoff = 0.05, qvalueCutoff = 0.10)
+      go_enrich <- enrichGO(
+        gene = names(genes),
+        universe = names(gene_list),
+        OrgDb = org.Hs.eg.db,
+        keyType = 'SYMBOL',
+        readable = TRUE,
+        ont = "BP",
+        pvalueCutoff = 0.05,
+        qvalueCutoff = 0.10
+      )
 
-      # Simplified bar plot for GO enrichment
-      cat("\033[32mCreating Bar Plot for GO Enrichment\033[0m\n")
       go_results <- go_enrich@result
       significant_terms <- go_results[go_results$qvalue < 0.05, ]
       significant_terms <- significant_terms[order(significant_terms$qvalue), ]
 
-      bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
-        geom_bar(stat = "identity", fill = "skyblue") +
-        labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-      add_plot(bar_plot, "GO Enrichment Bar Plot", "This plot shows the significant GO terms enriched in the dataset.")
-      write.csv(go_results, "go_results.csv")
-
-      pdf("GSEA_analysis_plots.pdf")
-      dotplot1
-      add_plot(dotplot1, "GSEA Dotplot", "This plot shows the results of Gene Set Enrichment Analysis (GSEA).")
-      dotplot2
-      add_plot(dotplot2, "GSEA Dotplot with Facet", "This plot shows the results of GSEA with facets.")
-      emapplot1
-      add_plot(emapplot1, "GSEA Emaplot", "This plot shows the enriched terms and their relationships.")
-      ridgeplot1
-      add_plot(ridgeplot1, "GSEA Ridgeplot", "This plot shows the enrichment distribution of gene sets.")
-      dotplot3
-      add_plot(dotplot3, "KEGG Dotplot with Facet", "This plot shows the results of KEGG pathway enrichment analysis.")
-      emapplot2
-      add_plot(emapplot2, "KEGG Emaplot", "This plot shows the enriched KEGG pathways and their relationships.")
-      if (nrow(sig_genes_df) > 0) {
-        genes <- sig_genes_df$log2FoldChange
-        names(genes) <- rownames(sig_genes_df)
-        go_enrich <- enrichGO(gene = names(genes), universe = names(gene_list), OrgDb = org.Hs.eg.db,
-                              keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                              pvalueCutoff = 0.05, qvalueCutoff = 0.10)
-        go_results <- go_enrich@result
-        significant_terms <- go_results[go_results$qvalue < 0.05, ]
-        significant_terms <- significant_terms[order(significant_terms$qvalue), ]
+      if (nrow(significant_terms) > 0) {
         bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
           geom_bar(stat = "identity", fill = "skyblue") +
           labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
           theme_minimal() +
           theme(axis.text.x = element_text(angle = 90, hjust = 1))
-        add_plot(bar_plot, "GO Enrichment Bar Plot", "This plot shows the significant GO terms enriched in the dataset.")
-        dev.off()
-
-        # Save tables
-        write.csv(gene_list, "gene_list.csv")
-        write.csv(kegg_gene_list, "kegg_gene_list.csv")
+        print(bar_plot)
+      } else {
+        cat("\033[31mNo significant GO terms found to plot.\033[0m\n")
       }
+
+      # Save GO enrichment results to CSV
+      write.csv(go_results, "go_results.csv")
+      cat("\033[32mGO enrichment results saved to 'go_results.csv'\033[0m\n")
+    } else {
+      cat("\033[31mNo significant genes found for GO enrichment analysis.\033[0m\n")
     }
 
-    } else {cat("\033[31m Skipping GO Enrichment Analysis.\033[0m\n")}
+    # Save plots to PDF
+    cat("\033[33mGENERATING GSEA PLOTS ANALYSIS\033[0m\n")
+    pdf("GSEA_analysis_plots.pdf", width = 11, height = 14)
+    print(dotplot1)
+    print(dotplot2)
+    print(emapplot1)
+    print(ridgeplot1)
+    print(heatplot1)
+    print(treeplot1)
+    print(a)
+    print(b)
+    print(dotplot3)
+    print(emapplot2)
+    print(ridgeplot2)
+    print(heatplot2)
+    print(treeplot2)
+    print(upset_plot)
+    if (nrow(sig_genes_df) > 0 && nrow(significant_terms) > 0) {
+      print(bar_plot)
+    }
+    dev.off()
+
+    # Save tables
+    cat("\033[33mGENERATING .CSV OF GSEA RESULTS033[0m\n")
+    write.csv(gene_list, "gene_list.csv")
+    write.csv(kegg_gene_list, "kegg_gene_list.csv")
+  }
+
+
   #####
   ####
   ####
-  if (Convolution) {
-    cat("\033[32mCOnvolution analysis skipped.\033[0m\n")
-    print(paste0("Número inicial de genes: ", dim(counts_filtered)[1]))
+  if (TME) {
+    cat("\033[33mSTARTING TME\033[0m\n")
+
+    if (!is.null(pattern)) {
+      # Remove outliers based on pattern
+      filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+    } else {
+      # If no pattern is provided, do not filter based on pattern
+      filtered <- counts_data
+    }
+
+    if (remove_outliers) {
+      # Remove columns corresponding to outliers
+      counts_data <- filtered[, !colnames(filtered) %in% outliers]
+      AnnotData <- AnnotData[!AnnotData[["id"]] %in% outliers, ]
+    } else {
+      counts_data <- counts_data
+      AnnotData <- AnnotData
+    }
+
+    print(paste0("Inicial gene number: ", dim(counts_data)[1]))
     ## Normalización TPM
     cat("\033[32mTPM normalization performed and stored on tpm_counts.csv\033[0m\n")
-    tpm_counts <- count2tpm(counts_filtered,
-                            idType = "Symbol",
-                            org = "hsa",
-                            source = "biomart")
-    write.csv(tpm_counts, "tpm_counts.csv")
+    suppressWarnings({
+      tpm_counts <- count2tpm(counts_data,
+                              idType = "Symbol",
+                              org = "hsa",
+                              source = "biomart")
+      write.csv(tpm_counts, "tpm_counts.csv")
+    })
 
     # Se almacenan los genes omitidos en la normalización TPM
-    genes_omitidos <- setdiff(rownames(counts_filtered), rownames(tpm_counts))
-    print(paste0("Number of genes omitted during TPM normalization due to their length not being available in Biomart:   ", dim(counts_filtered)[1]-dim(tpm_counts)[1]))
+    genes_omitidos <- setdiff(rownames(counts_data), rownames(tpm_counts))
+    print(paste0("Number of genes omitted during TPM normalization due to their length not being available in Biomart:   ", dim(counts_data)[1]-dim(tpm_counts)[1]))
     tpm_counts <- as.data.frame(tpm_counts)
 
-    if (exists("dds")) {
-      cat("We are going to use dds from DEA.\n")
+    if (!is.null(dds)) {
+      cat("\033[32mWe are going to use information from DEA\033[0m\n")
       dds <- estimateSizeFactors(dds)
       normalized_counts <- counts(dds, normalized = TRUE)
     } else {
-      cat("Performing dds normalization.\n")
+      cat("Performing normalization.\n")
       design_formul <- as.formula("~ 1")
       colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
-      col_data <- AnnotData[order(AnnotData$id), ]
-      counts_filtered <- counts_filtered[, order(colnames(counts_filtered))]
-      if (!identical(colnames(counts_filtered), col_data$id)) {
-        stop("Column names of counts_filtered and IDs in col_data do not match.")
+      AnnotData <- AnnotData[order(AnnotData$id), ]
+      counts_data <- counts_data[, order(colnames(counts_data))]
+      if (!identical(colnames(counts_data), AnnotData$id)) {
+        stop("Column names of counts_data and IDs in AnnotData do not match.")
       }
     }
 
@@ -422,9 +446,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     imm_epic <- deconvolute(tpm_counts, method = "epic")
     imm_qti <- deconvolute(tpm_counts, method = "quantiseq")
     imm_xcell <- deconvolute(tpm_counts, method = "xcell")
-    cat("\033[32mresults of the devonvolution will be stored in imm_epic.csv, imm_qti.csv and imm_xcell.csv \033[0m\n")
-
-
+    cat("\033[32mresults of the TME will be stored in imm_epic.csv, imm_qti.csv and imm_xcell.csv \033[0m\n")
     write.csv(imm_epic, file = "imm_epic.csv")
     write.csv(imm_qti, file = "imm_qti.csv")
     write.csv(imm_xcell, file = "imm_xcell.csv")
@@ -446,35 +468,40 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     imm_qti <- std.im.df(imm_qti)
     imm_xcell <- std.im.df(imm_xcell)
 
-    # Se incluye la variable col_data$design_formula en los dataframes
+    # Se incluye la variable AnnotData$design_formula en los dataframes
     cat("\033[32mAre they in the same order?\033[0m\n")
-    dim(col_data)
-    dim(imm_epic)
 
-    col_data_ids <- col_data$id
-    imm_epic_ids <- as.character(rownames(imm_epic))
-    common_ids <- intersect(col_data_ids, imm_epic_ids)
-    # Filtrar los datos originales según los IDs comunes
-    col_data <- col_data[col_data_ids %in% common_ids, ]
-    dim(col_data)
-    col_data<- as.data.frame(col_data)
-    rownames(col_data)<- col_data$id
-    col_data <- col_data[order(rownames(col_data)), ]
+    rownames(AnnotData)<- AnnotData$id
+    AnnotData <- AnnotData[order(rownames(AnnotData)), ]
     imm_epic <- imm_epic[order(rownames(imm_epic)), ]
     imm_qti <- imm_qti[order(rownames(imm_qti)), ]
     imm_xcell <- imm_xcell[order(rownames(imm_xcell)), ]
+    AnnotData$id
+    rownames(imm_epic)
+    rownames(imm_qti)
+    rownames(imm_xcell)
 
-    cat("\033[32mhave to be true.\033[0m\n")
+    cat("\033[32mHave to be true.\033[0m\n")
     cat("\033[32mEPIC\033[0m\n")
-    print(all(rownames(col_data)==rownames(imm_epic)))
+    print(all(rownames(AnnotData)==rownames(imm_epic)))
     cat("\033[32mqti\033[0m\n")
-    print(all(rownames(col_data)==rownames(imm_qti)))
+    print(all(rownames(AnnotData)==rownames(imm_qti)))
     cat("\033[32mxcell\033[0m\n")
-    print(all(rownames(col_data)==rownames(imm_xcell)))
+    print(all(rownames(AnnotData)==rownames(imm_xcell)))
 
-    imm_epic[[design_formula]] <- factor(col_data[[design_formula]])
-    imm_qti[[design_formula]] <- factor(col_data[[design_formula]])
-    imm_xcell[[design_formula]] <- factor(col_data[[design_formula]])
+    imm_epic[[design_formula]] <- factor(AnnotData[[design_formula]])
+    imm_qti[[design_formula]] <- factor(AnnotData[[design_formula]])
+    imm_xcell[[design_formula]] <- factor(AnnotData[[design_formula]])
+
+    replace_space_with_underscore <- function(df) {
+      colnames(df) <- gsub(" ", "_", colnames(df))
+      return(df)
+    }
+
+    imm_epic <- replace_space_with_underscore(imm_epic)
+    imm_qti <- replace_space_with_underscore(imm_qti)
+    imm_xcell <- replace_space_with_underscore(imm_xcell)
+
 
     ############# imm_epic
     design_formula_sym <- sym(design_formula)
@@ -482,75 +509,236 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     column_names <- names(imm_epic)[-ncol(imm_epic)]
     # Loop to generate plots for each column
     for (col_name in column_names) {
-      # Calculate means by design_formula
+      # Calculate means by design formula
       means_df <- imm_epic %>%
         group_by(!!design_formula_sym) %>%
-        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE))
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_epic[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_epic)$p.value
+        } else {
+          summary(aov(formula, data = imm_epic))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
       # Generate plot
-      print(
-        ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                             fill = !!design_formula_sym, color = !!design_formula_sym)) +
-          geom_jitter(alpha = 1, width = 0.3, height = 0) +
-          geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-          geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                     shape = 22, color = "black", size = 3, stroke = 1.5,
-                     show.legend = F) +
-          labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
-          scale_y_continuous(labels = scales::percent_format(scale = 1),
-                             limits = c(0, NA)) +
-          theme(axis.text.x = element_blank())
-      )
+      plot <- ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                   fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
     }
+    pdf("plots_imm_EPIC.pdf")
+    for (col_name in column_names) {
+      # Calculate means by design formula
+      means_df <- imm_epic %>%
+        group_by(!!design_formula_sym) %>%
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_epic[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_epic)$p.value
+        } else {
+          summary(aov(formula, data = imm_epic))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
+      # Generate plot
+      plot <- ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                   fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
+    }
+    dev.off()
+    while (!is.null(dev.list())) dev.off()
+
+
     ############# imm_qti
     # Vector with column names except the last one
     column_names <- names(imm_qti)[-ncol(imm_qti)]
     # Loop to generate plots for each column
-    pdf("plots_imm_qti.pdf")
     for (col_name in column_names) {
-      # Calculate means by design_formula
+      # Calculate means by design formula
       means_df <- imm_qti %>%
         group_by(!!design_formula_sym) %>%
-        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE))
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_qti[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_qti)$p.value
+        } else {
+          summary(aov(formula, data = imm_qti))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
       # Generate plot
-      print(
-        ggplot(imm_qti, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                            fill = !!design_formula_sym, color = !!design_formula_sym)) +
-          geom_jitter(alpha = 1, width = 0.3, height = 0) +
-          geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-          geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                     shape = 22, color = "black", size = 3, stroke = 1.5,
-                     show.legend = F) +
-          labs(x = NULL, y = "Abundance (%)",  title = col_name, subtitle = "imm_qti") +
-          scale_y_continuous(labels = scales::percent_format(scale = 1),
-                             limits = c(0, NA)) +
-          theme(axis.text.x = element_blank())
-      )
+      plot <- ggplot(imm_qti, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                  fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_qti") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
+    }
+    pdf("plots_imm_qti.pdf")
+    for (col_name in column_names) {
+      # Calculate means by design formula
+      means_df <- imm_qti %>%
+        group_by(!!design_formula_sym) %>%
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_qti[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_qti)$p.value
+        } else {
+          summary(aov(formula, data = imm_qti))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
+      # Generate plot
+      plot <- ggplot(imm_qti, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                  fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_qti") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
     }
     dev.off()
+    while (!is.null(dev.list())) dev.off()
+
 
     ############# imm_xcell
-    # Vector con los nombres de las columnas excepto la última
+    # Vector with column names except the last one
     column_names <- names(imm_xcell)[-ncol(imm_xcell)]
-    # Bucle for para generar gráficos para cada columna
+    # Loop to generate plots for each column
     for (col_name in column_names) {
-      # Calcular las medias por design_formula
+      # Calculate means by design formula
       means_df <- imm_xcell %>%
         group_by(!!design_formula_sym) %>%
-        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE))
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
-      print(
-        ggplot(imm_xcell, aes(x = !!design_formula_sym , y = .data[[col_name]],
-                              fill = !!design_formula_sym, color = !!design_formula_sym)) +
-          geom_jitter(alpha = 1, width = 0.3, height = 0) +
-          geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-          geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                     shape = 22, color = "black", size = 3, stroke = 1.5,
-                     show.legend = F) +
-          labs(x = NULL, y = "Abundance (arbitrary value)", title = col_name, subtitle = "imm_xcell") +
-          scale_y_continuous(expand = expansion(add = c(0, 0.1)))  +
-          theme(axis.text.x = element_blank())
-      )
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_xcell[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_xcell)$p.value
+        } else {
+          summary(aov(formula, data = imm_xcell))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
+      # Generate plot
+      plot <- ggplot(imm_xcell, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                    fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_xcell") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
     }
+    pdf("plots_imm_xcell.pdf")
+    for (col_name in column_names) {
+      # Calculate means by design formula
+      means_df <- imm_xcell %>%
+        group_by(!!design_formula_sym) %>%
+        summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+
+      # Perform t-test or ANOVA
+      formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+      p_value <- tryCatch({
+        if (n_distinct(imm_xcell[[as_label(design_formula_sym)]]) == 2) {
+          t.test(formula, data = imm_xcell)$p.value
+        } else {
+          summary(aov(formula, data = imm_xcell))[[1]]$`Pr(>F)`[1]
+        }
+      }, error = function(e) {
+        NA  # In case of error, return NA for p-value
+      })
+
+      # Generate plot
+      plot <- ggplot(imm_xcell, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                    fill = !!design_formula_sym, color = !!design_formula_sym)) +
+        geom_jitter(alpha = 1, width = 0.3, height = 0) +
+        geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+        geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                   shape = 22, color = "black", size = 3, stroke = 1.5,
+                   show.legend = F) +
+        labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_xcell") +
+        scale_y_continuous(labels = scales::percent_format(scale = 1),
+                           limits = c(0, NA)) +
+        theme(axis.text.x = element_blank()) +
+        annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                 hjust = 1.1, vjust = 1.1, size = 5, color = "red")
+
+      print(plot)
+    }
+    dev.off()
+    while (!is.null(dev.list())) dev.off()
 
 
     # Composición celular del TME i por grupo
@@ -574,7 +762,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         scale_fill_manual(values = paleta) +
         theme_minimal() +
         theme(legend.position = legend.position,
-              axis.text.y = element_text(size = 4)) +
+              axis.text.y = element_text(size = 5)) +
         scale_y_continuous(labels = scales::percent)
 
       return(p)
@@ -582,33 +770,35 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
     # Function to generate the average bar plot by group (e.g., HPV status)
     plot_bar_group <- function(df, paleta, titulo, design_formula, legend_position = "right") {
-      design_formula_sym <- sym(design_formula)
-      niveles_tipo_cel <- colnames(df)[1:(ncol(df) - 1)]
+      suppressWarnings({
+        design_formula_sym <- sym(design_formula)
+        niveles_tipo_cel <- colnames(df)[1:(ncol(df) - 1)]
 
-      promedios <- df %>%
-        rownames_to_column(var = "Sample") %>%
-        pivot_longer(cols = niveles_tipo_cel,
-                     names_to = "Cell_Type", values_to = "Value") %>%
-        group_by(!!design_formula_sym, Cell_Type) %>%
-        summarise(Average = mean(Value, na.rm = TRUE)) %>%
-        ungroup() %>%
-        mutate(!!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
-               Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
+        promedios <- df %>%
+          rownames_to_column(var = "Sample") %>%
+          pivot_longer(cols = niveles_tipo_cel,
+                       names_to = "Cell_Type", values_to = "Value") %>%
+          group_by(!!design_formula_sym, Cell_Type) %>%
+          summarise(Average = mean(Value, na.rm = TRUE), .groups = "drop") %>%
+          ungroup() %>%
+          mutate(!!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
+                 Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
 
-      p <- ggplot(promedios, aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
-        geom_bar(stat = "identity") +
-        labs(title = titulo,
-             x = design_formula,
-             y = "Average Cell Fraction (%)") +
-        coord_flip() +
-        guides(fill = guide_legend(reverse = TRUE)) +
-        scale_fill_manual(values = paleta) +
-        theme_minimal() +
-        theme(legend.position = legend_position,
-              axis.text.y = element_text(size = 8)) +
-        scale_y_continuous(labels = scales::percent)
+        p <- ggplot(promedios, aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
+          geom_bar(stat = "identity") +
+          labs(title = titulo,
+               x = design_formula,
+               y = "Average Cell Fraction (%)") +
+          coord_flip() +
+          guides(fill = guide_legend(reverse = TRUE)) +
+          scale_fill_manual(values = paleta) +
+          theme_minimal() +
+          theme(legend.position = legend_position,
+                axis.text.y = element_text(size = 7)) +
+          scale_y_continuous(labels = scales::percent)
 
-      return(p)
+        return(p)
+      })
     }
 
     # Function to combine both plots into one
@@ -640,121 +830,143 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     combined_plot_xCell <- plot_combined(imm_xcell, paleta_extendida, "xCell Individual", "xCell Average", design_formula, "right")
     print(combined_plot_xCell)
 
-    pdf("plot_cell_fraction_Average_cell_fraction.pdf")
+    pdf("plot_cell_fraction_Average_cell_fraction_EPIC.pdf", width = 11, height = 14)
     print(combined_plot_EPIC)
-    print(combined_plot_quanTIseq)
-    print(combined_plot_xCell)
     dev.off()
 
-    # # Contrastes de Hipótesis
-    prueba_norm <- function(df, design_formula_sym) {
-      # Transform the dataframe to long format
-      df_largo <- df %>%
-        pivot_longer(-design_formula_sym,
-                     names_to = "Celular type", values_to = "Fraction")
+    pdf("plot_cell_fraction_Average_cell_fraction_quanTIseq.pdf", width = 11, height = 14)
+    print(combined_plot_quanTIseq)
+    dev.off()
 
-      # Perform Shapiro-Wilk test for each cell type
+    pdf("plot_cell_fraction_Average_cell_fraction_xCell.pdf", width = 11, height = 14)
+    print(combined_plot_xCell)
+    dev.off()
+    while (!is.null(dev.list())) dev.off()
+
+
+    ########################
+    trans_formato_largo <- function(df, design_formula_sym) {
+      df_largo <- df %>%
+        pivot_longer(-all_of(design_formula_sym), names_to = "Cell_Type", values_to = "Fraction")
+      return(df_largo)
+    }
+
+    # Function to perform Shapiro-Wilk normality test
+    prueba_norm <- function(df, design_formula_sym) {
+      df_largo <- trans_formato_largo(df, design_formula_sym)
+
       resultados_normalidad <- df_largo %>%
-        group_by(`Celular type`) %>%
+        group_by(Cell_Type) %>%
         summarise(shapiro_test = list(shapiro.test(Fraction))) %>%
         mutate(p.value = map_dbl(shapiro_test, "p.value"))
 
       return(resultados_normalidad)
     }
+
+    # Function to check if all values in a column are the same
     check_column_equal <- function(column) {
       all_equal <- length(unique(column)) == 1
       return(all_equal)
     }
 
-    # Verificación de igualdad para cada columna
-    equality_results_qti <- sapply(imm_qti, check_column_equal)
-    unequal_columns_qti <-sum(equality_results_qti)
+    # Function to filter valid columns
+    filter_valid_columns <- function(df, design_formula_sym, dataset_name) {
+      cat("\033[32mChecking if All Values in Each Column Are Equal in dataset:", dataset_name, "\033[0m\n")
 
-    equality_results_epic <- sapply(imm_epic, check_column_equal)
-    unequal_columns_epic<- sum(equality_results_epic)
+      equality_results <- sapply(df, check_column_equal)
+      unequal_columns_count <- sum(!equality_results)
 
-    equality_results_xcell <- sapply(imm_xcell, check_column_equal)
-    print(equality_results_xcell)
-    unequal_columns_xcell<-sum(equality_results_xcell)
+      if (unequal_columns_count > 0) {
+        cat("\033[33mIn dataset", dataset_name, "the following columns have the same value in all rows and will be excluded from the analysis:\033[0m\n")
+        print(names(df)[equality_results])
+      } else {
+        cat("\033[32mAll columns in dataset", dataset_name, "have variability. No columns to exclude.\033[0m\n")
+      }
 
+      valid_columns <- !equality_results
+      df_filtered <- df[, valid_columns]
 
-    if (unequal_columns_qti == 0) {
-      resultados_norm_imm_qti <- prueba_norm(imm_qti, design_formula_sym)
-      cat("\033[32mTest for normality: Shapiro-Wilk test of quanTIseq\033[0m\n")
+      return(df_filtered)
+    }
+
+    # Function to perform parametric tests (t-test and ANOVA)
+    perform_parametric_tests <- function(df, design_formula_sym) {
+      df_largo <- trans_formato_largo(df, design_formula_sym)
+      cell_types <- unique(df_largo$Cell_Type)
+
+      results <- list()
+
+      for (cell_type in cell_types) {
+
+        df_cell_type <- df_largo %>% filter(Cell_Type == cell_type)
+        groups <- unique(df_cell_type[[design_formula_sym]])
+
+        if (length(groups) == 2) {
+          # Perform t-test
+          t_test_result <- t.test(Fraction ~ df_cell_type[[design_formula_sym]], data = df_cell_type)
+          results[[cell_type]] <- list(Test = "t-test", p.value = t_test_result$p.value)
+        } else {
+          # Perform ANOVA
+          anova_result <- aov(Fraction ~ df_cell_type[[design_formula_sym]], data = df_cell_type)
+          p_value <- summary(anova_result)[[1]]$`Pr(>F)`[1]
+          results[[cell_type]] <- list(Test = "ANOVA", p.value = p_value)
+        }
+      }
+
+      results_df <- bind_rows(lapply(names(results), function(cell_type) {
+        result <- results[[cell_type]]
+        tibble(Cell_Type = cell_type, Test = result$Test, p.value = result$p.value)
+      }))
+
+      return(results_df)
+    }
+
+    # Apply the filtering and normality test for each dataset
+    cat("\033[33mApply the filtering and normality test for each dataset\033[0m\n")
+    imm_qti_filtered <- filter_valid_columns(imm_qti, design_formula_sym, "quanTIseq")
+    imm_epic_filtered <- filter_valid_columns(imm_epic, design_formula_sym, "EPIC")
+    imm_xcell_filtered <- filter_valid_columns(imm_xcell, design_formula_sym, "xcell")
+
+    # Perform the normality test
+    if (ncol(imm_qti_filtered) > 1) {
+      cat("\033[32mPerforming Shapiro-Wilk test for quanTIseq\033[0m\n")
+      resultados_norm_imm_qti <- prueba_norm(imm_qti_filtered, design_formula_sym)
       print(resultados_norm_imm_qti)
-    }else{
-      cat("\033[32mCan't perform Shapiro-Wilk test for . Some columns have same value\033[0m\n")
-      print(equality_results_qti)
+      # Perform parametric tests if normality is satisfied
+      cat("\033[32mPerforming parametric tests for quanTIseq\033[0m\n")
+      parametric_results_imm_qti <- perform_parametric_tests(imm_qti_filtered, design_formula_sym)
+      print(parametric_results_imm_qti)
+    } else {
+      cat("\033[31mCan't perform Shapiro-Wilk test for quanTIseq. No valid columns available.\033[0m\n")
     }
 
-
-    if (unequal_columns_epic == 0) {
-      resultados_norm_epic <- prueba_norm(imm_epic, design_formula_sym)
-      cat("\033[32mTest for normality: Shapiro-Wilk test of EPIC\033[0m\n")
+    if (ncol(imm_epic_filtered) > 1) {
+      cat("\033[32mPerforming Shapiro-Wilk test for EPIC\033[0m\n")
+      resultados_norm_epic <- prueba_norm(imm_epic_filtered, design_formula_sym)
       print(resultados_norm_epic)
-    }else{
-      cat("\033[32mCan't perform Shapiro-Wilk test fro EPIC. Some columns have same value")
-      print(equality_results_epic)
+      # Perform parametric tests if normality is satisfied
+      cat("\033[32mPerforming parametric tests for EPIC\033[0m\n")
+      parametric_results_epic <- perform_parametric_tests(imm_epic_filtered, design_formula_sym)
+      print(parametric_results_epic)
+    } else {
+      cat("\033[31mCan't perform Shapiro-Wilk test for EPIC. No valid columns available.\033[0m\n")
     }
-    if (unequal_columns_xcell == 0) {
-      resultados_norm_xcell <- prueba_norm(imm_xcell, design_formula_sym)
-      cat("\033[32mTest for normality: Shapiro-Wilk test of xcell\033[0m\n")
+
+    if (ncol(imm_xcell_filtered) > 1) {
+      cat("\033[32mPerforming Shapiro-Wilk test for xcell\033[0m\n")
+      resultados_norm_xcell <- prueba_norm(imm_xcell_filtered, design_formula_sym)
       print(resultados_norm_xcell)
-    }else{
-      cat("\033[32mCan't perform Shapiro-Wilk test fro xcell. Some columns have same value\033[0m\n")
-      print(equality_results_epic)
+      # Perform parametric tests if normality is satisfied
+      cat("\033[32mPerforming parametric tests for xcell\033[0m\n")
+      parametric_results_xcell <- perform_parametric_tests(imm_xcell_filtered, design_formula_sym)
+      print(parametric_results_xcell)
+    } else {
+      cat("\033[31mCan't perform Shapiro-Wilk test for xcell. No valid columns available.\033[0m\n")
     }
 
-
-
-    # Heatmaps
-    # Function to transform dataframe to long format
-    trans_formato_largo <- function(df, design_formula_sym) {
-      df_largo <- df %>%
-        pivot_longer(-design_formula_sym, names_to = "Celular type", values_to = "Fraction")
-      return(df_largo)
-    }
-    # Example usage to transform dataframes to long format
-    epic_largo <- trans_formato_largo(imm_epic, design_formula_sym)
-    qti_largo <- trans_formato_largo(imm_qti, design_formula_sym)
-    xcell_largo <- trans_formato_largo(imm_xcell, design_formula_sym)
-
-    ## Comparación entre Grupos
-    perform_parametric_test <- function(df, variable, groups) {
-      resultados <- list()
-      if (length(groups) != 2) {
-        stop("groups should be a list with exactly two elements.")
-      }
-      # Iterate over column names except the last one (assuming the last one  or a similar grouping variable)
-      for (col_name in colnames(df)[1:(ncol(df) - 1)]) {
-        # Perform t-test for group 1
-        if (!is.null(groups[[1]]) && length(groups[[1]]) > 1) {
-          resultado <- t.test(df[[col_name]] ~ df[[variable]], subset = df[[variable]] %in% groups[[1]])
-          resultados[[paste0(col_name, "_", groups[[1]][1], "_vs_", groups[[1]][2])]] <- c(col_name, paste0(groups[[1]][1], " vs ", groups[[1]][2]), resultado$p.value)
-        } else {
-          warning("Group 1 does not have enough samples.")
-        }
-
-        # Perform t-test for group 2
-        if (!is.null(groups[[2]]) && length(groups[[2]]) > 1) {
-          resultado <- t.test(df[[col_name]] ~ df[[variable]], subset = df[[variable]] %in% groups[[2]])
-          resultados[[paste0(col_name, "_", groups[[2]][1], "_vs_", groups[[2]][2])]] <- c(col_name, paste0(groups[[2]][1], " vs ", groups[[2]][2]), resultado$p.value)
-        } else {
-          warning("Group 2 does not have enough samples.")
-        }
-      }
-      resultados_df <- do.call(rbind, resultados)
-      colnames(resultados_df) <- c("Tipo_Celular", "Comparacion", "P-valor")
-      rownames(resultados_df) <- NULL
-      resultados_df <- as.data.frame(resultados_df)
-      print(resultados_df)
-    }
-
-    # Heatmaps
-    # Crear dataframe para heatmap
-    h_imm_epic <- imm_epic
+    ############# Heatmaps
     # Transponer y estandarizar por filas
-    h_imm_epic <- as.data.frame(t(h_imm_epic))
+    h_imm_epic <- as.data.frame(t(imm_epic))
     ## Delete the row uncharacterized cell
     h_imm_epic <- head(h_imm_epic, -1)
     rn_himmepic <- rownames(h_imm_epic)
@@ -767,10 +979,9 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     colnames(h_imm_epic) <- cl_himmepic
     h_imm_epic <- as.data.frame(h_imm_epic)
 
-    # Crear dataframe para heatmap
-    h_imm_qti <- imm_qti
+
     # Transponer y estandarizar por filas
-    h_imm_qti <- as.data.frame(t(h_imm_qti))
+    h_imm_qti <- as.data.frame(t(imm_qti))
     h_imm_qti <- head(h_imm_qti, -1)
     rn_himmqti <- rownames(h_imm_qti)
     rn_himmqti[7] <- "T cell CD4+"
@@ -784,15 +995,6 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
     # Crear dataframe para heatmap
     h_imm_xcell <- as.data.frame(imm_xcell)
-    # Renombrar nombres de poblaciones celulares antes de transponer
-    h_imm_xcell <- h_imm_xcell %>%
-      rename('Myeloid DC activated' = 'Myeloid dendritic cell activated') %>%
-      rename('T cell CD4+' = 'T cell CD4+ (non-regulatory)') %>%
-      rename('Myeloid DC' = 'Myeloid dendritic cell') %>%
-      rename('CAFs' = 'Cancer associated fibroblast') %>%
-      rename('Plasmacytoid DC' = 'Plasmacytoid dendritic cell') %>%
-      rename('T cell regulatory' = 'T cell regulatory (Tregs)')
-
     # Transponer y estandarizar por filas
     h_imm_xcell <- as.data.frame(t(h_imm_xcell))
     h_imm_xcell <- head(h_imm_xcell, -4)
@@ -812,125 +1014,146 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     colnames(h_imm_xcell) <- cl_himmxcell
     h_imm_xcell <- as.data.frame(h_imm_xcell)
 
-    # Factorización de variables y renombrado en col_data
-    col_data[[design_formula]] <- as.factor(col_data[[design_formula]])
+    # Factorización de variables y renombrado en AnnotData
+    AnnotData[[design_formula]] <- as.factor(AnnotData[[design_formula]])
 
-    ###################################
+    ################################### HEATMAP
+    cat("\033[33mGENERATING HEATMAPS\033[0m\n")
+    remove_nan_rows <- function(df) {
+      # Remove rows with any NaN values
+      df_cleaned <- df[!apply(df, 1, function(row) any(is.nan(row))), ]
+      return(df_cleaned)
+    }
+
     #### EPIC
-    combined_data <- h_imm_epic
-    # Verificar si hay NaN en combined_data
-    if (any(is.na(combined_data))) {
-      cat("Cannot generate the EPIc heatmap because there are NaN values in the data.\n")
+    combined_data <- remove_nan_rows(h_imm_epic)
+
+    if (ncol(combined_data) < 3) {
+      cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
     } else {
-      # Continuar con la generación del heatmap
-      combined_data <- h_imm_epic
-      col_ann_data <- col_data[colnames(combined_data), , drop = FALSE]
-
-      # Asegúrate de que col_ann_data tenga las mismas dimensiones que combined_data
-      if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.matrix(col_ann_data)  # Convertir a matriz
+      # Check if there are still any NaN values
+      if (any(is.na(combined_data))) {
+        cat("Cannot generate the heatmap because there are NaN values in the data.\n")
       } else {
-        stop("Dimensions of col_ann_data and combined_data do not match")
+        # Ensure col_ann_data has the same dimensions as combined_data
+        col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
+
+        if (ncol(combined_data) == nrow(col_ann_data)) {
+          col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        } else {
+          stop("Dimensions of col_ann_data and combined_data do not match")
+        }
+
+        # Annotations
+        col_ann <- HeatmapAnnotation(
+          df = col_ann_data[, design_formula, drop = FALSE],
+          gp = gpar(col = "grey60", lwd = 1),
+          annotation_name_gp = gpar(fontsize = 9),
+          show_legend = TRUE
+        )
+        combined_data <- as.matrix(combined_data)
+
+        # Generar Heatmap
+        HeatmapEPIC <- Heatmap(combined_data,
+                               column_title = "Heatmap EPIC",
+                               cluster_rows = TRUE,
+                               cluster_columns = TRUE,
+                               column_names_gp = gpar(fontsize = 9),
+                               row_names_gp = gpar(fontsize = 9),
+                               rect_gp = gpar(col = "grey60", lwd = 1),
+                               name = 'Z-score',
+                               top_annotation = col_ann)
+
+        print(HeatmapEPIC)
       }
-
-      # Anotaciones
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],  # Selecciona solo la columna design_formula
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 10),
-        show_legend = TRUE
-      )
-
-      # Generar Heatmap
-      HeatmapEPIC <- Heatmap(combined_data,
-                             column_title = "Heatmap EPIC",
-                             cluster_rows = TRUE,
-                             cluster_columns = TRUE,
-                             column_names_gp = gpar(fontsize = 6),
-                             row_names_gp = gpar(fontsize = 8),
-                             rect_gp = gpar(col = "grey60", lwd = 1),
-                             name = 'Z-score',
-                             top_annotation = col_ann)
-
-      print(HeatmapEPIC)
     }
     ###### qti
-    combined_data <- h_imm_qti
+    combined_data <- remove_nan_rows(h_imm_qti)
+
     # Verificar si hay NaN en combined_data
-    if (any(is.na(combined_data))) {
-      cat("Cannot generate the qti heatmap because there are NaN values in the data.\n")
+    if (ncol(combined_data) < 3) {
+      cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
     } else {
-      # Continuar con la generación del heatmap
-      combined_data <- h_imm_qti
-      col_ann_data <- col_data[colnames(combined_data), , drop = FALSE]
-
-      # Asegúrate de que col_ann_data tenga las mismas dimensiones que combined_data
-      if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.matrix(col_ann_data)  # Convertir a matriz
+      # Check if there are still any NaN values
+      if (any(is.na(combined_data))) {
+        cat("Cannot generate the heatmap because there are NaN values in the data.\n")
       } else {
-        stop("Dimensions of col_ann_data and combined_data do not match")
+        # Ensure col_ann_data has the same dimensions as combined_data
+        col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
+
+        if (ncol(combined_data) == nrow(col_ann_data)) {
+          col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        } else {
+          stop("Dimensions of col_ann_data and combined_data do not match")
+        }
+
+        # Annotations
+        col_ann <- HeatmapAnnotation(
+          df = col_ann_data[, design_formula, drop = FALSE],
+          gp = gpar(col = "grey60", lwd = 1),
+          annotation_name_gp = gpar(fontsize = 9),
+          show_legend = TRUE
+        )
+        combined_data <- as.matrix(combined_data)
+
+        # Generar Heatmap
+        Heatmap_qti <- Heatmap(combined_data,
+                               column_title = "Heatmap qti",
+                               cluster_rows = TRUE,
+                               cluster_columns = TRUE,
+                               column_names_gp = gpar(fontsize = 9),
+                               row_names_gp = gpar(fontsize = 9),
+                               rect_gp = gpar(col = "grey60", lwd = 1),
+                               name = 'Z-score',
+                               top_annotation = col_ann)
+        print(Heatmap_qti)
       }
-
-      # Anotaciones
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],  # Selecciona solo la columna design_formula
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 10),
-        show_legend = TRUE
-      )
-
-      # Generar Heatmap
-      Heatmap_qti <- Heatmap(combined_data,
-                             column_title = "Heatmap qti",
-                             cluster_rows = TRUE,
-                             cluster_columns = TRUE,
-                             column_names_gp = gpar(fontsize = 6),
-                             row_names_gp = gpar(fontsize = 8),
-                             rect_gp = gpar(col = "grey60", lwd = 1),
-                             name = 'Z-score',
-                             top_annotation = col_ann)
-      print(Heatmap_qti)
     }
     ####### h_imm_xcell
-    combined_data <- h_imm_xcell
+    combined_data <- remove_nan_rows(h_imm_xcell)
+
     # Verificar si hay NaN en combined_data
-    if (any(is.na(combined_data))) {
-      cat("Cannot generate the xcell heatmap because there are NaN values in the data.\n")
+    if (ncol(combined_data) < 3) {
+      cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
     } else {
-      # Continuar con la generación del heatmap
-      combined_data <- h_imm_xcell
-      col_ann_data <- col_data[colnames(combined_data), , drop = FALSE]
-
-      # Asegúrate de que col_ann_data tenga las mismas dimensiones que combined_data
-      if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.matrix(col_ann_data)  # Convertir a matriz
+      # Check if there are still any NaN values
+      if (any(is.na(combined_data))) {
+        cat("Cannot generate the heatmap because there are NaN values in the data.\n")
       } else {
-        stop("Dimensions of col_ann_data and combined_data do not match")
+        # Ensure col_ann_data has the same dimensions as combined_data
+        col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
+
+        if (ncol(combined_data) == nrow(col_ann_data)) {
+          col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        } else {
+          stop("Dimensions of col_ann_data and combined_data do not match")
+        }
+
+        # Annotations
+        col_ann <- HeatmapAnnotation(
+          df = col_ann_data[, design_formula, drop = FALSE],
+          gp = gpar(col = "grey60", lwd = 1),
+          annotation_name_gp = gpar(fontsize = 9),
+          show_legend = TRUE
+        )
+        combined_data <- as.matrix(combined_data)
+
+        # Generar Heatmap
+        Heatmap_xcell <- Heatmap(combined_data,
+                                 column_title = "Heatmap xcell",
+                                 cluster_rows = TRUE,
+                                 cluster_columns = TRUE,
+                                 column_names_gp = gpar(fontsize = 9),
+                                 row_names_gp = gpar(fontsize = 9),
+                                 rect_gp = gpar(col = "grey60", lwd = 1),
+                                 name = 'Z-score',
+                                 top_annotation = col_ann)
+        print(Heatmap_xcell)
       }
-
-      # Anotaciones
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 10),
-        show_legend = TRUE
-      )
-
-      # Generar Heatmap
-      Heatmap_xcell <- Heatmap(combined_data,
-                             column_title = "Heatmap xcell",
-                             cluster_rows = TRUE,
-                             cluster_columns = TRUE,
-                             column_names_gp = gpar(fontsize = 6),
-                             row_names_gp = gpar(fontsize = 8),
-                             rect_gp = gpar(col = "grey60", lwd = 1),
-                             name = 'Z-score',
-                             top_annotation = col_ann)
-      print(Heatmap_xcell)
     }
 
-    cat("\033[32mHeatmap of qti, EPIC and xcell will be stored on plots_convolution_heatmap.pdf\033[0m\n")
-    pdf("plots_convolution_heatmap.pdf")
+    cat("\033[32mHeatmap of qti, EPIC and xcell will be stored on plots_TME_heatmap.pdf\033[0m\n")
+    pdf("plots_TME_heatmap.pdf", width = 11, height = 14)
     if (exists("Heatmap_qti")) {
       print(Heatmap_qti)
     } else {
@@ -942,145 +1165,35 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       cat("HeatmapEPIC object does not exist.\n")
     }
 
-    if (exists("Heatmapxcell")) {
-      print(Heatmapxcell)
+    if (exists("Heatmap_xcell")) {
+      print(Heatmap_xcell)
     } else {
       cat("Heatmapxcell object does not exist.\n")
     }
     dev.off()
+    while (!is.null(dev.list())) dev.off()
 
-    # Correlación genes \~ tipos celulares
-    ## EPIC
-    c_imm_epic <- imm_epic
-    c_imm_epic <- as.data.frame(t(c_imm_epic))
-    c_imm_epic <- head(c_imm_epic, -1)
-    rn_cimmepic <- rownames(c_imm_epic)
-    rn_cimmepic[2] <- "CAFs"
-    cl_cimmepic <- colnames(c_imm_epic)
-    c_imm_epic <- apply(c_imm_epic, 2, as.numeric)
-    rownames(c_imm_epic) <- rn_cimmepic
-    colnames(c_imm_epic) <- cl_cimmepic
-    c_imm_epic <- as.data.frame(c_imm_epic)
+    data_table_list<- list(EPIC= imm_epic, QTI = imm_qti, XCELL= imm_xcell)
 
-    ## Quantiseq
-    c_imm_qti <- imm_qti
-    c_imm_qti <- as.data.frame(t(c_imm_qti))
-    c_imm_qti <- head(c_imm_qti, -1)
-    rn_cimmqti <- rownames(c_imm_qti)
-    rn_cimmqti[7] <- "T cell CD4+"
-    rn_cimmqti[9] <- "T cell regulatory"
-    cl_cimmqti <- colnames(c_imm_qti)
-    c_imm_qti <- apply(c_imm_qti, 2, as.numeric)
-    rownames(c_imm_qti) <- rn_cimmqti
-    colnames(c_imm_qti) <- cl_cimmqti
-    c_imm_qti <- as.data.frame(c_imm_qti)
-
-    ## xCell
-    c_imm_xcell <- as.data.frame(imm_xcell)
-
-    # Renombrar nombres de poblaciones celulares antes de transponer
-    c_imm_xcell <- c_imm_xcell %>%
-      rename('Myeloid DC activated' = 'Myeloid dendritic cell activated') %>%
-      rename('T cell CD4+' = 'T cell CD4+ (non-regulatory)') %>%
-      rename('Myeloid DC' = 'Myeloid dendritic cell') %>%
-      rename('CAFs' = 'Cancer associated fibroblast') %>%
-      rename('Plasmacytoid DC' = 'Plasmacytoid dendritic cell') %>%
-      rename('T cell regulatory' = 'T cell regulatory (Tregs)')
-
-    # Transponer
-    c_imm_xcell <- as.data.frame(t(c_imm_xcell))
-    c_imm_xcell <- head(c_imm_xcell, -4)
-
-    # Poblaciones celulares no interesantes
-    xcell_row_delete <- c('Common lymphoid progenitor', 'Common myeloid progenitor',
-                          'Granulocyte-monocyte progenitor', 'Hematopoietic stem cell')
-
-    c_imm_xcell <- c_imm_xcell %>%
-      filter(!row.names(.) %in% xcell_row_delete)  # Eliminar filas
-
-    rn_cimmxcell <- rownames(c_imm_xcell)
-    cl_cimmxcell <- colnames(c_imm_xcell)
-    c_imm_xcell <- apply(c_imm_xcell, 2, as.numeric)
-    rownames(c_imm_xcell) <- rn_cimmxcell
-    colnames(c_imm_xcell) <- cl_cimmxcell
-    c_imm_xcell <- as.data.frame(c_imm_xcell)
-
-    decounts_correlation <- function(counts_data1, deconv_data, gene_list = NULL, cell_type_list = NULL) {
-      # Verificar si las columnas son numéricas
-      cat("\033[32mAre numeric?\033[0m\n")
-      numeric_columns_check <- sapply(deconv_data, is.numeric)
-      print(numeric_columns_check)
-      print(table(numeric_columns_check))
-
-      # Verificar si hay valores NA
-      cat("\033[32mAre any NA?\033[0m\n")
-      na_check <- sapply(deconv_data, function(x) any(is.na(x)))
-      print(na_check)
-      print(table(na_check))
-
-      if (is.null(gene_list)) {
-        gene_list <- rownames(counts_data1)
-      }
-
-      if (is.null(cell_type_list)) {
-        cell_type_list <- rownames(deconv_data)
-      }
-
-      cat("\033[32mIniciating the correlation...\033[0m\n")
-      correlation_df <- data.frame(matrix(NA, nrow = length(gene_list), ncol = length(cell_type_list), dimnames = list(gene_list, cell_type_list)), check.names = FALSE)
-      pvalue_df <- data.frame(matrix(NA, nrow = length(gene_list), ncol = length(cell_type_list), dimnames = list(gene_list, cell_type_list)), check.names = FALSE)
-
-      total_genes <- length(gene_list)
-      total_cell_types <- length(cell_type_list)
-      for (i in seq_along(gene_list)) {
-        gene <- gene_list[i]
-        start_time_gene <- Sys.time()
-        for (j in seq_along(cell_type_list)) {
-          cell_type <- cell_type_list[j]
-          # Obtener los valores de expresión del gen y la abundancia del tipo celular
-          gene_expression <- as.numeric(counts_data1[gene, ])
-          cell_type_abundance <- as.numeric(deconv_data[cell_type, ])
-          # Realizar la prueba de correlación
-          correlation_test <- cor.test(gene_expression, cell_type_abundance, method = "spearman")
-          # Almacenar los resultados en los dataframes
-          correlation_df[gene, cell_type] <- correlation_test$estimate
-          pvalue_df[gene, cell_type] <- correlation_test$p.value
-        }
-        end_time_gene <- Sys.time()
-        cat(sprintf("Done with gene %s (%d/%d). Time taken: %f seconds\n", gene, i,
-                    total_genes, as.numeric(difftime(end_time_gene, start_time_gene, units = "secs"))))
-      }
-      # Retornar los resultados como una lista
-      return(list(correlation = correlation_df, pvalues = pvalue_df))
-    }
-
-
-    # Ejecución de la función
-    if (correlation){
-    cat("\033[32mResults of correlation between gene expression data and cell type abundance data. This data will be imported in .csv\033[0m\n")
-    cor_epic <- decounts_correlation(tpm_counts, c_imm_epic)
-    write.csv(cor_epic, "correlation_epic.csv")
-    cor_qti <- decounts_correlation(tpm_counts, c_imm_qti)
-    write.csv(cor_qti, "correlation_qti.csv")
-    cor_xcell <-decounts_correlation(tpm_counts, c_imm_xcell)
-    write.csv(cor_xcell, "correlation_xcell.csv")}
-    }else {cat("\033[32mConvolution analysis skipped.\033[0m\n")}
+    }else {cat("\033[32mTME analysis skipped.\033[0m\n")}
 
   #####
   #####
   #####
   if (survival_analysis) {
-    if (is.null(variable_01) || is.null(time)) {
+    cat("\033[33mSTARTING SURVIVAL ANALYSIS\033[0m\n")
+    if (is.null(col_data[[time]]) || is.null(col_data[[variable_01]])) {
       stop("Variables for survival analysis are required.")
     }
 
+    if (!is.null(pattern)) {
+      # Remove outliers based on pattern
+      filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+    } else {
+      filtered <- counts_data
+    }
+
     if (remove_outliers) {
-      if (!is.null(pattern)) {
-        # Remove outliers based on pattern
-        filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
-      } else {
-        filtered <- counts_data
-      }
       counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
       AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
     } else {
@@ -1098,10 +1211,18 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       stop("Column names of counts_filtered and IDs in col_data do not match.")
     }
 
+    # Clean column names to avoid issues with special characters
+    clean_column_names <- function(names) {
+      gsub("[^[:alnum:]_]", "_", names)
+    }
+
     # Create DESeqDataSet object
-    rownames(col_data) <- col_data$id
-    dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
-    dds <- DESeq2::estimateSizeFactors(dds)
+    if (is.null(dds)) {
+      # Create DESeqDataSet object
+      rownames(col_data) <- col_data$id
+      dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = ~ 1)
+      dds <- DESeq2::estimateSizeFactors(dds)
+    }
     normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
     df_t <- t(normalized_counts)
 
@@ -1116,10 +1237,6 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
     rownames(col_data) <- col_data$id
     ids_data <- rownames(df_t)
-    cat("\033[32mATTENTION: We changed the '-' to '_' in column names due to errors detected before.\033[0m\n")
-    colnames(df_t) <- gsub("-", "_", colnames(df_t))
-
-
 
     # Filter data
     cat("\033[32mFiltering data.\033[0m\n")
@@ -1132,89 +1249,240 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     if (!is.null(res)) {
       cat("\033[32mSelecting TOP 10 genes with the lowest padj\033[0m\n")
       top_genes <- rownames(head(res[order(res$padj), ], 10))
+      selected_df_t <- df_t[, top_genes, drop = FALSE]
+      selected_df_t <- as.data.frame(selected_df_t)
+      selected_df_t$id <- rownames(selected_df_t)
+      col_data$id <- rownames(col_data)
+      merged_data <- merge(col_data, selected_df_t, by = "id")
+      merged_data[[time]] <- as.numeric(merged_data[[time]])
+
+      cat("\033[32mStarting survival analysis.\033[0m\n")
+
+      pdf("survival_analysis_plots.pdf")
+
+      # Replace special characters in top_genes
+      top_genes_clean <- clean_column_names(top_genes)
+
+      # Perform survival analysis for each gene
+      for (i in top_genes_clean) {
+        if (!is.numeric(merged_data[[i]])) {
+          next
+        }
+
+        cat("\n")
+        cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
+
+        # Perform MAXSTAT test
+        merged_data$time <- merged_data[[time]]
+        merged_data$variable_01 <- merged_data[[variable_01]]
+        gene_column <- get(i, merged_data)  # Access the column dynamically
+        MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ gene_column, data = merged_data,
+                                smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+        cut.off <- MAXSTAT$estimate
+        cat("\033[32mCUT OFF\033[0m\n")
+        print(cut.off)
+
+        # Create a new variable based on the cutoff
+        new_column_name <- paste0(i, "_mRNA_expression")
+        merged_data[[new_column_name]] <- ifelse(gene_column > cut.off, "High", "Low")
+        merged_data[[new_column_name]] <- factor(merged_data[[new_column_name]])
+
+        # Fit survival model
+        cat("\033[32mFitting survival model\033[0m\n")
+        surv_object <- Surv(merged_data$time, merged_data$variable_01)
+        surv_formula <- as.formula(paste("surv_object ~", new_column_name))
+
+        fit1 <- survfit(surv_formula, data = merged_data)
+
+        # Summary of the fit
+        cat("\033[32mSummary of the fit\033[0m\n")
+        print(summary(fit1))
+
+        # Log-rank test and p-value
+        cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
+        surv_diff <- survdiff(surv_formula, data = merged_data)
+        p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+
+        print(surv_diff)
+        cat("\033[32mP-value\033[0m\n")
+        print(p_value)
+
+        # Generate Kaplan-Meier plot
+        cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
+        palette <- c("#9A3449", "#D4A8B1")
+        plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
+
+        # Add a legend
+        legend("topright",
+               legend = c("High", "Low"),
+               lty = 1,
+               col = palette,
+               lwd = 4)
+        cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
+      }
+      dev.off()
+      while (!is.null(dev.list())) dev.off()
+
     } else if (!is.null(genes_to_use)) {
       cat("\033[32mUsing provided genes\033[0m\n")
       top_genes <- genes_to_use
-    } else {
-      stop("Either 'res' or 'genes_to_use' must be provided.")
-    }
+      selected_df_t <- df_t[, top_genes, drop = FALSE]
+      selected_df_t <- as.data.frame(selected_df_t)
+      selected_df_t$id <- rownames(selected_df_t)
+      col_data$id <- rownames(col_data)
+      merged_data <- merge(col_data, selected_df_t, by = "id")
+      merged_data[[time]] <- as.numeric(merged_data[[time]])
 
-    top_genes <- gsub("-", "_", top_genes)
-    selected_df_t <- df_t[, top_genes, drop = FALSE]
-    selected_df_t <- as.data.frame(selected_df_t)
-    selected_df_t$id <- rownames(selected_df_t)
-    col_data$id <- rownames(col_data)
-    merged_data <- merge(col_data, selected_df_t, by = "id")
-    merged_data[[time]] <- as.numeric(merged_data[[time]])
 
-    cat("\033[32mStarting survival analysis.\033[0m\n")
-    print(dim(merged_data))
-    print(head(merged_data))
-    print(length(merged_data$time))
-    print(length(merged_data$variable_01))
+      cat("\033[32mStarting survival analysis.\033[0m\n")
 
-    pdf("survival_analysis_plots.pdf")
+      pdf("survival_analysis_plots_SELECTED_GENES.pdf")
 
-    for (i in top_genes) {
-      if (!is.numeric(merged_data[[i]])) {
-        next
+      # Replace special characters in top_genes
+      top_genes_clean <- clean_column_names(top_genes)
+
+      # Perform survival analysis for each gene
+      for (i in top_genes_clean) {
+        if (!is.numeric(merged_data[[i]])) {
+          next
+        }
+
+        cat("\n")
+        cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
+
+        # Perform MAXSTAT test
+        merged_data$time <- merged_data[[time]]
+        merged_data$variable_01 <- merged_data[[variable_01]]
+        gene_column <- get(i, merged_data)  # Access the column dynamically
+        MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ gene_column, data = merged_data,
+                                smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+        cut.off <- MAXSTAT$estimate
+        cat("\033[32mCUT OFF\033[0m\n")
+        print(cut.off)
+
+        # Create a new variable based on the cutoff
+        new_column_name <- paste0(i, "_mRNA_expression")
+        merged_data[[new_column_name]] <- ifelse(gene_column > cut.off, "High", "Low")
+        merged_data[[new_column_name]] <- factor(merged_data[[new_column_name]])
+
+        # Fit survival model
+        cat("\033[32mFitting survival model\033[0m\n")
+        surv_object <- Surv(merged_data$time, merged_data$variable_01)
+        surv_formula <- as.formula(paste("surv_object ~", new_column_name))
+
+        fit1 <- survfit(surv_formula, data = merged_data)
+
+        # Summary of the fit
+        cat("\033[32mSummary of the fit\033[0m\n")
+        print(summary(fit1))
+
+        # Log-rank test and p-value
+        cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
+        surv_diff <- survdiff(surv_formula, data = merged_data)
+        p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+
+        print(surv_diff)
+        cat("\033[32mP-value\033[0m\n")
+        print(p_value)
+
+        # Generate Kaplan-Meier plot
+        cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
+        palette <- c("#9A3449", "#D4A8B1")
+        plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
+
+        # Add a legend
+        legend("topright",
+               legend = c("High", "Low"),
+               lty = 1,
+               col = palette,
+               lwd = 4)
+        cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
       }
+      dev.off()
+      while (!is.null(dev.list())) dev.off()
 
-      cat("\n")
-      cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
+    } else if (!is.null(TME)) {
+      cat("\033[32mUsing rownames from TME\033[0m\n")
+      TME <- TME[, -ncol(TME)]
+      colnames(TME) <- gsub(" ", "_", colnames(TME))
+      col_data$id <- rownames(col_data)
+      TME$id <- rownames(TME)
+      merged_data <- merge(col_data, TME, by = "id")
+      merged_data[[time]] <- as.numeric(merged_data[[time]])
 
-      # Perform MAXSTAT test
-      merged_data$time<- merged_data[[time]]
-      merged_data$variable_01<- merged_data[[variable_01]]
-      MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
-                              smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-      cut.off <- MAXSTAT$estimate
-      cat("\033[32mCUT OFF\033[0m\n")
-      print(cut.off)
-
-      # Create a new variable based on the cutoff
-
-      merged_data[[paste0(i, "_mRNA_expression")]] <- ifelse(merged_data[[i]] > cut.off, "High", "Low")
-      merged_data[[paste0(i, "_mRNA_expression")]] <- factor(merged_data[[paste0(i, "_mRNA_expression")]])
+      cat("\033[32mStarting survival analysis.\033[0m\n")
+      colnames(merged_data) <- gsub(" ", "_", colnames(merged_data))
+      colnames(merged_data) <- gsub("\\+", "_", colnames(merged_data))
 
 
-      # Fit survival model
-      cat("\033[32mFitting survival model\033[0m\n")
-      column_name <- paste0(i, "_mRNA_expression")
-      print(column_name)
-      surv_object <- Surv( merged_data$time , merged_data$variable_01)
-      surv_formula <- as.formula(paste("surv_object ~", column_name))
+      pdf("survival_analysis_plots_TME.pdf")
 
-      fit1 <- survfit(surv_formula, data = merged_data)
-      # Summary of the fit
+      for (i in colnames(TME)) {
+        if (!is.numeric(merged_data[[i]])) {
+          next
+        }
 
-      cat("\033[32mSummary of the fit\033[0m\n")
-      print(summary(fit1))
+        cat("\n")
+        cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
 
-      # Log-rank test and p-value
-      cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
-      surv_diff <- survdiff(surv_formula, data = merged_data)
-      p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+        # Perform MAXSTAT test
+        merged_data$time<- merged_data[[time]]
+        merged_data$variable_01<- merged_data[[variable_01]]
+        MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
+                                smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+        cut.off <- MAXSTAT$estimate
+        cat("\033[32mCUT OFF\033[0m\n")
+        print(cut.off)
 
-      print(surv_diff)
-      cat("\033[32mP-value\033[0m\n")
-      print(p_value)
+        # Create a new variable based on the cutoff
 
-      # Generate Kaplan-Meier plot
-      cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
-      palette <- c("#9A3449", "#D4A8B1")
-      plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
+        merged_data[[paste0(i)]] <- ifelse(merged_data[[i]] > cut.off, "High", "Low")
+        merged_data[[paste0(i)]] <- factor(merged_data[[paste0(i)]])
 
-      # Añadir una leyenda
-      legend("topright",
-             legend = c("High", "Low"),
-             lty = 1,
-             col = palette,
-             lwd = 4)
-      cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
+
+        # Fit survival model
+        cat("\033[32mFitting survival model\033[0m\n")
+        column_name <- paste0(i)
+        surv_object <- Surv( merged_data$time , merged_data$variable_01)
+        surv_formula <- as.formula(paste("surv_object ~", column_name))
+
+        fit1 <- survfit(surv_formula, data = merged_data)
+        # Summary of the fit
+
+        cat("\033[32mSummary of the fit\033[0m\n")
+        print(summary(fit1))
+
+        # Log-rank test and p-value
+        cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
+        surv_diff <- survdiff(surv_formula, data = merged_data)
+        p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+
+        print(surv_diff)
+        cat("\033[32mP-value\033[0m\n")
+        print(p_value)
+
+        # Generate Kaplan-Meier plot
+        cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
+        palette <- c("#9A3449", "#D4A8B1")
+        plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
+
+        # Añadir una leyenda
+        legend("topright",
+               legend = c("High", "Low"),
+               lty = 1,
+               col = palette,
+               lwd = 4)
+        cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
+      }
+      dev.off()
+      while (!is.null(dev.list())) dev.off()
+
+
+    } else {
+      stop("Either 'res', 'genes_to_use', or 'TME' must be provided.")
     }
-    dev.off()
 
-  } else {cat("\033[32msurvival_analysis skipped.\033[0m\n")}
-
+    } else {
+      cat("\033[31mSkipping survival analysis.\033[0m\n")
+    }
 }
