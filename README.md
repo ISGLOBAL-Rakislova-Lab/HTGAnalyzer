@@ -66,7 +66,8 @@ imagine that your AnnotData looks like this:
 
 Then:
 ```{r}
-HTG_auto <- function("~/HPV_counts.xlsx",
+FOR HTG:
+HTG_auto <- function("~/counts.xlsx",
                      file_type = "HTG",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
@@ -75,22 +76,30 @@ HTG_auto <- function("~/HPV_counts.xlsx",
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
                      time = "Time_to_death_surv")
+
+
+FOR RNAseq:
+HTG_auto <- function("~/counts.xlsx",
+                     file_type = "RNAseq",
+                     "~/AnnotData.xlsx",
+                     design_formula = "HPV_status",
+                     QC = TRUE,
+                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     contrast = c("HPV_status", "Positive", "Negative"),
+                     variable_01 = "Recurrence_01",
+                     time = "Time_to_death_surv")
 ```
-Certainly! Here’s a narrative description based on the provided text:
 
----
+or HTG data, setting QC = TRUE is essential to ensure quality control, which identifies and manages outliers before further analysis. With quality control enabled, the function performs Differential Expression Analysis (DEA) based on HPV_status, comparing positive and negative samples to identify significantly differentially expressed genes.
 
-In the case of HTG data, setting `QC = TRUE` is crucial as it ensures that the quality control process is carried out, allowing the detection and handling of outliers. This step is essential for validating the integrity of the data before any further analysis. With quality control enabled, the function will proceed to perform a Differential Expression Analysis (DEA) based on the `HPV_status`, comparing positive and negative samples. This comparison will reveal which genes are significantly differentially expressed between the two HPV status groups.
+Following DEA, a heatmap will be generated using HPV_status and Ciclina_D1, providing insights into how well the data separates based on these variables. This visualization helps in understanding key distinguishing factors between the groups.
 
-Following the DEA, a heatmap will be generated using the columns `HPV_status` and `Ciclina_D1`. This visualization helps in understanding how well the data segregates based on these variables. By examining the heatmap, you can gain insights into which variables are most effective in distinguishing between the groups, providing a clearer picture of the data’s structure.
+The DEA results will then be used for Gene Set Enrichment Analysis (GSEA) to determine if specific gene sets are enriched in differentially expressed genes, offering deeper biological insights.
 
-The results from the DEA will then be utilized to perform Gene Set Enrichment Analysis (GSEA). GSEA will identify whether specific gene sets are significantly enriched in the differentially expressed genes, offering deeper biological insights into the underlying mechanisms driving the differences observed between HPV-positive and HPV-negative samples. This can help in understanding the biological pathways or processes that are activated or repressed in response to HPV status.
+Additionally, DEA findings will inform Tumor Microenvironment (TME) analysis, shedding light on tumor-environment interactions and their impact on gene expression and tumor biology.
 
-Additionally, the findings from the DEA will be applied to a Tumor Microenvironment (TME) analysis. This analysis can be particularly valuable as it provides insights into the interaction between tumor cells and their surrounding environment. Understanding these interactions can shed light on how the tumor microenvironment influences gene expression and contributes to the overall tumor biology, potentially revealing new targets for therapeutic intervention.
+Finally, a survival analysis will be conducted using the top genes from DEA and survival variables Recurrence_01 and Time_to_death_surv. This analysis evaluates the impact of gene expression on patient outcomes, providing valuable prognostic information.
 
-Finally, the top genes identified from the differential expression analysis, along with the survival-related variables `Recurrence_01` and `Time_to_death_surv`, will be used to conduct a survival analysis. This step is critical as it evaluates the impact of gene expression on patient outcomes, providing valuable prognostic information. By correlating gene expression profiles with survival data, you can identify genes associated with better or worse prognosis, which can be crucial for developing personalized treatment strategies and improving patient management.
-
-Keep in mind that this example is tailored for HTG data, where the quality control step is specifically programmed to accommodate the characteristics of transcriptomic panels. However, if you are working with RNAseq data, you will need to adjust some parameters accordingly. The quality control thresholds and other settings should be customized based on the specifics of the RNAseq data to ensure accurate and reliable analysis results.
 
 ## 2.2 IN-DEPTH GUIDE
 
