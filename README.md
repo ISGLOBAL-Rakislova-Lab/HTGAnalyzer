@@ -171,9 +171,9 @@ head(AnnotData
 ```
 We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
 
-### 2.2.2 QUALITY CONTROL.
+### 2.2.3 QUALITY CONTROL.
 
-#### 2.2.2.1 HTG_QC
+#### 2.2.3.1 HTG_QC
 This function performs various quality control (QC) checks tailored for the HTG EdgeSeq transcriptomic panel, though thresholds can be adjusted as needed. QC checks include:
 
 * **QC0**: % of positive values > 4%.
@@ -196,7 +196,7 @@ outliers<- HTG_QC(counts_data)
 outliers
 ```
 
-#### 2.2.2.2 HTG_plotPCA and HTG_calculate_summary_stats
+#### 2.2.3.2 HTG_plotPCA and HTG_calculate_summary_stats
 This QC process is designed primarily for HTG data, assuming that RNAseq data has already passed the necessary controls. However, should additional checks be needed, we use two secondary functions:
 
 1. **`HTG_plotPCA`**: Performs Principal Component Analysis (PCA).
@@ -234,7 +234,7 @@ summary <- HTG_calculate_summary_stats(counts_data)
 summary
 ```
 
-#### 2.2.2.3 HTG_subset
+#### 2.2.3.3 HTG_subset
 The `HTG_subset` function is a versatile tool for quickly extracting specific genes or probes from your data, whether it be raw counts or results from differential expression analysis. This functionality is especially useful for focusing on individual genes of interest and facilitating detailed visualization.
 
 EXAMPLES:
@@ -255,14 +255,21 @@ counts_AAAS_normalize <- HTG_subset(counts_data, "AAAS", normalize = TRUE)
 res_AAAS <- HTG_subset(res, "AAAS")
 ```
 
-### 2.2.3 ANALYSIS
-Once the QC is performed you can also 4 diferent analysis:
-* differential expression analysis
-* GSEA
-* Tumor microenviroment
-* survival analysis.
+### 2.2.4 ANALYSIS
+After completing the quality control (QC) steps, you can perform up to four different types of analysis:
 
-All this analysis can be perfomed with HTG_analysis. 
+* Differential Expression Analysis
+* Gene Set Enrichment Analysis (GSEA)
+* Tumor Microenvironment Analysis
+* Survival Analysis
+
+Since HTG data may have outliers while RNA-seq data typically does not, we will provide two examples for each type of analysis specific to HTG and RNA-seq datasets. Please note that the documentation will include various adjustable parameters for each function, allowing you to tailor the analysis to your specific needs.
+
+
+#### 2.2.4.5 HTG_analysis
+All these analyses can be performed using the `HTG_analysis` function.  This function facilitates the execution of differential expression analysis, Gene Set Enrichment Analysis (GSEA), tumor microenvironment analysis, and survival analysis. In the two examples provided in this tutorial, the function is configured to perform all analyses. However, you can customize the function to execute only the analyses you require by setting the relevant parameters to `TRUE` or `FALSE`.
+
+
 ```{r}
 # EXAMPLE HTG:
 ALL_analysis <- HTG_analysis(
@@ -293,11 +300,13 @@ ALL_analysis <- HTG_analysis(
   GSEA = TRUE, 
   survival_analysis = TRUE)
 ```
-TALK ABOUT RESULTS i la diferencia amb la quick start.
+The `HTG_analysis` function generates several Excel files and plots. These can be visualized and saved as PDFs if needed.
 
-#### 2.2.3.1 HTG_DEA
 
-Each analysis can be performed separatelly with give you more control and variables to be modified. That's the example of `HTG_DEA`. This function provides flexibility to adapt the differential expression analysis to specific needs and datasets, allowing you to apply filters and perform LFC shrinkage as required.
+#### 2.2.4.2 HTG_DEA
+
+Each analysis can be performed separately, giving you greater control and flexibility over the process. For example, the `HTG_DEA` function allows you to tailor the differential expression analysis to meet specific needs and datasets. It provides options to apply filters and perform log-fold change (LFC) shrinkage as required, enabling you to customize the analysis according to your objectives.
+
 
 ```{r}
 # EXAMPLE FOR HTG: 
@@ -338,16 +347,16 @@ res <- HTG_DEA(
   extract_shrinkage = TRUE
 )
 ```
-#### 2.2.3.2 HTG_GSEA
+#### 2.2.4.3 HTG_GSEA
 
-In case you had already performed the diferential expresion analysis with other pakcages, you can also perform the GSEA with the function `HTG_GSEA`
+If you have already conducted differential expression analysis using other packages, you can still perform Gene Set Enrichment Analysis (GSEA) with the `HTG_GSEA` function.
 
 ```{r}
 HTG_GSEA(res)
 ```
-#### 2.2.3.3 HTG_TME
+#### 2.2.4.4 HTG_TME
 
-The `HTG_TME` is another function that is prepared to perform the tumor microienviroment analysis for 3 diferent methods. This function at diference of the `HTG_analysis` will return you an object which have the 3 tables inside. This funtion allows you to use your diferential expresion data from deseq2 library. 
+The `HTG_TME` function is designed to perform tumor microenvironment (TME) analysis using three different methods. Unlike the HTG_analysis function, which provides results in various formats, `HTG_TME` returns an object containing three separate tables for each method. This function is specifically suited for use with differential expression data from the DESeq2 library.
 
 ```{r}
 # FOR HTG
@@ -363,13 +372,15 @@ TME_data$EPIC
 TME_data$QTI
 TME_data$XCELL
 ```
+
+#### 2.2.4.5 HTG_survival
+
 The `HTG_survival` function is designed for performing survival analysis and offers flexibility for various use cases:
 
 * Top 10 Genes from Differential Expression Analysis: Conduct survival analysis on the top 10 genes identified from your differential expression results.
 * Custom Genes: Perform survival analysis on a selected set of genes that you specify.
 * Tumor Microenvironment Analysis Results: Analyze survival data based on results from tumor microenvironment studies.
 
-#### 2.2.3.4 HTG_survival
 
 ```{r}
 FOR HTG: 
