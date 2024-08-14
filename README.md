@@ -92,8 +92,11 @@ Finally, the top genes identified from the differential expression analysis, alo
 
 Keep in mind that this example is tailored for HTG data, where the quality control step is specifically programmed to accommodate the characteristics of transcriptomic panels. However, if you are working with RNAseq data, you will need to adjust some parameters accordingly. The quality control thresholds and other settings should be customized based on the specifics of the RNAseq data to ensure accurate and reliable analysis results.
 
+## 2.2 IN-DEPTH GUIDE
 
-## 2.2. PRINCIPAL FUNCTIONS AND SECUNDARY FUNCTIONS 
+For this part of the tutorial, we will combine principal and secondary functions to explore their capabilities. 
+
+### 2.2.1 PRINCIPAL FUNCTIONS AND SECUNDARY FUNCTIONS 
 Just in case you need more control of your data or you want to perform other analysis. HTGAnalyzer have principal and secundary fucntions to help reach your demands.
 
 PRINCIPAL: 
@@ -106,11 +109,9 @@ SECUNDARY:
 * `HTG_plotPCA`: This function generates a PCA plot specifically for genes, along with plots showing explained variability and accumulated explained variability. It highlights the samples that are the most distant from the center of the PCA plot.
 * `quant_to_qual`: This function converts quantitative columns in a data frame into qualitative ones based on a specified threshold.
 
-### 2.2.1 IN-DEPTH GUIDE
+### 2.2.2 DATA IMPORT.
 
-For this part of the tutorial, we will combine principal and secondary functions to explore their capabilities. 
-
-#### 2.2.1.1 DATA IMPORT.
+#### 2.2.2.1 HTG_import_counts
 
 Let's start with the `HTG_import_counts` function. This function is designed to import count data (either RNAseq or HTG) into R from an Excel file. 
 
@@ -170,14 +171,16 @@ head(AnnotData
 ```
 We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
 
-#### 2.2.1.2 QUALITY CONTROL.
+### 2.2.2 QUALITY CONTROL.
+
+#### 2.2.2.1 HTG_QC
 This function performs various quality control (QC) checks tailored for the HTG EdgeSeq transcriptomic panel, though thresholds can be adjusted as needed. QC checks include:
 
-* QC0: % of positive values > 4%.
-* QC1: Library size > 7e+06.
-* QC2: Negative control threshold > 0.045.
-* QC3: Genomic DNA threshold > 0.02.
-* QC4: ERCC threshold > 0.025.
+* **QC0**: % of positive values > 4%.
+* **QC1**: Library size > 7e+06.
+* **QC2**: Negative control threshold > 0.045.
+* **QC3**: Genomic DNA threshold > 0.02.
+* **QC4**: ERCC threshold > 0.025.
 
 The function generates a data frame (which can be saved as a .csv file, with a preview shown in the R console) with:
 * Sum of each probe for each sample (total genes, positive, negative, gdna, ercc).
@@ -192,6 +195,8 @@ The function includes a heatmap to highlight potential outliers, which will be s
 outliers<- HTG_QC(counts_data)
 outliers
 ```
+
+#### 2.2.2.2 HTG_plotPCA and HTG_calculate_summary_stats
 This QC process is designed primarily for HTG data, assuming that RNAseq data has already passed the necessary controls. However, should additional checks be needed, we use two secondary functions:
 
 1. **`HTG_plotPCA`**: Performs Principal Component Analysis (PCA).
@@ -215,19 +220,21 @@ The summary statistics include columns for:
 - **CV**: Coefficient of Variation (SD / Mean)
 
 ```{r}
-# PCA FOR RNAseq
-PCA_RNAseq<- HTG_plotPCA(counts_data, n_samples = 0,pattern = NULL)
-PCA_RNAseq
-summary <- HTG_calculate_summary_stats(counts_data)
-summary
-
 # PCA FOR HTG
 PCA_HTG<- HTG_plotPCA(counts_data, n_samples = 0,pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 PCA_HTG
 summary <- HTG_calculate_summary_stats(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 summary
+
+
+# PCA FOR RNAseq
+PCA_RNAseq<- HTG_plotPCA(counts_data, n_samples = 0,pattern = NULL)
+PCA_RNAseq
+summary <- HTG_calculate_summary_stats(counts_data)
+summary
 ```
 
+#### 2.2.2.3 HTG_subset
 The `HTG_subset` function is a versatile tool for quickly extracting specific genes or probes from your data, whether it be raw counts or results from differential expression analysis. This functionality is especially useful for focusing on individual genes of interest and facilitating detailed visualization.
 
 EXAMPLES:
@@ -248,41 +255,142 @@ counts_AAAS_normalize <- HTG_subset(counts_data, "AAAS", normalize = TRUE)
 res_AAAS <- HTG_subset(res, "AAAS")
 ```
 
-#### 2.2.1.3 ANALYSIS
+### 2.2.3 ANALYSIS
 Once the QC is performed you can also 4 diferent analysis:
 * differential expression analysis
 * GSEA
 * Tumor microenviroment
 * survival analysis.
 
-All this analysis can be perfomed with HTG_analysis
+All this analysis can be perfomed with HTG_analysis. 
 ```{r}
-
-a <- HTG_analysis(
+# EXAMPLE HTG:
+ALL_analysis <- HTG_analysis(
   outliers = outliers, 
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-", 
   counts_data = counts_data, 
-  col_data = clinical, 
+  col_data = AnnotData, 
   design_formula = "HPV_status",
-  percentage_gene = 0.2, 
-  percentage_zero = 0.2, 
-  threshold_gene = 200, 
-  threshold_subject = 10, 
-  top_genes = c("CCND1", "MMP10", "CTTN"), 
   heatmap_columns = c("HPV_status", "Ciclina_D1"), 
   contrast = c("HPV_status", "Positive", "Negative"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
   time = "Time_to_death_surv", 
-  dds = TRUE, 
-  generate_volcano = FALSE, 
-  remove_outliers = TRUE, 
   GSEA = TRUE, 
-  generate_heatmap = TRUE, 
-  TME = FALSE, 
-  survival_analysis = FALSE, 
-  grupos = NULL
+  survival_analysis = TRUE)
+
+
+# EXAMPLE RNAseq:
+ALL_analysis <- HTG_analysis(
+  counts_data = counts_data, 
+  col_data = AnnotData, 
+  design_formula = "HPV_status",
+  heatmap_columns = c("HPV_status", "Ciclina_D1"), 
+  contrast = c("HPV_status", "Positive", "Negative"), 
+  pCutoff = 5e-2, 
+  variable_01 = "Recurrence_01", 
+  time = "Time_to_death_surv", 
+  GSEA = TRUE, 
+  survival_analysis = TRUE)
+```
+TALK ABOUT RESULTS i la diferencia amb la quick start.
+
+#### 2.2.3.1 HTG_DEA
+
+Each analysis can be performed separatelly with give you more control and variables to be modified. That's the example of `HTG_DEA`. This function provides flexibility to adapt the differential expression analysis to specific needs and datasets, allowing you to apply filters and perform LFC shrinkage as required.
+
+```{r}
+# EXAMPLE FOR HTG: 
+res <- HTG_DEA(
+  outliers = outliers,
+  counts_data = counts_data,
+  col_data = AnnotData,
+  design_formula = "HPV_status",
+  heatmap_columns = c("HPV_status", "Ciclina"),
+  contrast = c("HPV_status", "Positive", "Negative"),
+  pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+  percentage_gene = 0.2,
+  percentage_zero = 0.2,
+  threshold_gene = 200,
+  threshold_subject = 10,
+  pCutoff = 5e-2,
+  apply_filtering = TRUE,
+  apply_lfc_shrinkage = TRUE,
+  extract_shrinkage = TRUE
 )
 
+# EXAMPLE FOR RNAseq:
+res <- HTG_DEA(
+  counts_data = counts_data,
+  col_data = AnnotData,
+  design_formula = "HPV_status",
+  heatmap_columns = c("HPV_status", "Ciclina"),
+  contrast = c("HPV_status", "Positive", "Negative"),
+  pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+  remove_outliers = FALSE,
+  percentage_gene = 0.2,
+  percentage_zero = 0.2,
+  threshold_gene = 200,
+  threshold_subject = 10,
+  pCutoff = 5e-2,
+  apply_filtering = TRUE,
+  apply_lfc_shrinkage = TRUE,
+  extract_shrinkage = TRUE
+)
 ```
+#### 2.2.3.2 HTG_GSEA
 
+In case you had already performed the diferential expresion analysis with other pakcages, you can also perform the GSEA with the function `HTG_GSEA`
+
+```{r}
+HTG_GSEA(res)
+```
+#### 2.2.3.3 HTG_TME
+
+The `HTG_TME` is another function that is prepared to perform the tumor microienviroment analysis for 3 diferent methods. This function at diference of the `HTG_analysis` will return you an object which have the 3 tables inside. This funtion allows you to use your diferential expresion data from deseq2 library. 
+
+```{r}
+# FOR HTG
+TME_data<- HTG_TME(outliers, pattern =  "^NC-|^POS-|^GDNA-|^ERCC-", counts_data, AnnotData, design_formula = "HPV_status")
+TME_data$EPIC
+TME_data$QTI
+TME_data$XCELL
+
+
+# FOR RNAseq
+TME_data<- HTG_TME(counts_data, AnnotData, design_formula = "HPV_status")
+TME_data$EPIC
+TME_data$QTI
+TME_data$XCELL
+```
+The `HTG_survival` function is designed for performing survival analysis and offers flexibility for various use cases:
+
+* Top 10 Genes from Differential Expression Analysis: Conduct survival analysis on the top 10 genes identified from your differential expression results.
+* Custom Genes: Perform survival analysis on a selected set of genes that you specify.
+* Tumor Microenvironment Analysis Results: Analyze survival data based on results from tumor microenvironment studies.
+
+#### 2.2.3.4 HTG_survival
+
+```{r}
+FOR HTG: 
+# Survival from Top10 genes
+survival_res<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, res = res,
+                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+# Survial of CCND1 gene
+survival_gene_to_use<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, genes_to_use = "CCND1",
+                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+# Survival of EPIC TME results.
+survival_TME<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts,
+                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", TME = TME_data$EPIC)
+
+
+FOR RNAseq: 
+# Survival from Top10 genes
+survival_res<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, res = res)
+                         
+# Survial of CCND1 gene
+survival_gene_to_use<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, genes_to_use = "CCND1")
+
+# Survival of EPIC TME results.
+survival_TME<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, TME = TME_data$EPIC)
+```
