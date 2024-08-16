@@ -176,7 +176,7 @@ This function can handle both formats efficiently, ensuring that your data is co
 For AnnotData importation, you can easy do it by:
 ```{r}
 AnnotData<- read_excel("path/to/your/annot_file.xlsx")
-head(AnnotData
+head(AnnotData)
 ```
 We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
 
@@ -201,7 +201,7 @@ Additionally, a statistical .csv is generated with columns for Min, Max, Mean, M
 The function includes a heatmap to highlight potential outliers, which will be saved in a vector. Additionally, it performs a PCA analysis that identifies and highlights the specified number of samples that are furthest from the center. The PCA results include plots showing the explained variability and the cumulative explained variability.
 
 ```{r}
-outliers<- HTG_QC(counts_data)
+outliers<- HTG_QC(counts_data_tutorial)
 outliers
 ```
 
@@ -230,16 +230,16 @@ The summary statistics include columns for:
 
 ```{r}
 # PCA FOR HTG
-PCA_HTG<- HTG_plotPCA(counts_data, n_samples = 0,pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+PCA_HTG<- HTG_plotPCA(counts_data_tutorial, n_samples = 0,pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 PCA_HTG
-summary <- HTG_calculate_summary_stats(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+summary <- HTG_calculate_summary_stats(counts_data_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 summary
 
 
 # PCA FOR RNAseq
-PCA_RNAseq<- HTG_plotPCA(counts_data, n_samples = 0,pattern = NULL)
+PCA_RNAseq<- HTG_plotPCA(counts_data_tutorial, n_samples = 0,pattern = NULL)
 PCA_RNAseq
-summary <- HTG_calculate_summary_stats(counts_data)
+summary <- HTG_calculate_summary_stats(counts_data_tutorial)
 summary
 ```
 
@@ -250,18 +250,18 @@ EXAMPLES:
 
 ```r
 # Subset ERCC probes from counts data
-  ERCC <- HTG_subset(counts_data, "ERCC")
+  ERCC <- HTG_subset(counts_data_tutorial, "ERCC")
 
 # Extracting a Specific Gene (AAAS) from Counts Data
 # Subset AAAS gene from counts data without normalization
-counts_AAAS <- HTG_subset(counts_data, "AAAS")
+counts_AAAS <- HTG_subset(counts_data_tutorial, "AAAS")
 
 # Subset AAAS gene from counts data with normalization
-counts_AAAS_normalize <- HTG_subset(counts_data, "AAAS", normalize = TRUE)
+counts_AAAS_normalize <- HTG_subset(counts_data_tutorial, "AAAS", normalize = TRUE)
 
 # Extracting a Specific Gene (AAAS) from Differential Expression Results
 # Subset AAAS gene from differential expression results
-res_AAAS <- HTG_subset(res, "AAAS")
+res_AAAS <- HTG_subset(res_tutorial, "AAAS")
 ```
 
 ### 2.2.4 ANALYSIS
@@ -284,8 +284,8 @@ All these analyses can be performed using the `HTG_analysis` function.  This fun
 ALL_analysis <- HTG_analysis(
   outliers = outliers, 
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-", 
-  counts_data = counts_data, 
-  col_data = AnnotData, 
+  counts_data = counts_data_tutorial, 
+  col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina_D1"), 
   contrast = c("HPV_status", "Positive", "Negative"), 
@@ -298,8 +298,8 @@ ALL_analysis <- HTG_analysis(
 
 # EXAMPLE RNAseq:
 ALL_analysis <- HTG_analysis(
-  counts_data = counts_data, 
-  col_data = AnnotData, 
+  counts_data = counts_data_tutorial, 
+  col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina_D1"), 
   contrast = c("HPV_status", "Positive", "Negative"), 
@@ -319,10 +319,10 @@ Each analysis can be performed separately, giving you greater control and flexib
 
 ```{r}
 # EXAMPLE FOR HTG: 
-res <- HTG_DEA(
+results <- HTG_DEA(
   outliers = outliers,
-  counts_data = counts_data,
-  col_data = AnnotData,
+  counts_data = counts_data_tutorial,
+  col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina"),
   contrast = c("HPV_status", "Positive", "Negative"),
@@ -338,9 +338,9 @@ res <- HTG_DEA(
 )
 
 # EXAMPLE FOR RNAseq:
-res <- HTG_DEA(
-  counts_data = counts_data,
-  col_data = AnnotData,
+results <- HTG_DEA(
+  counts_data = counts_data_tutorial,
+  col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina"),
   contrast = c("HPV_status", "Positive", "Negative"),
@@ -361,7 +361,7 @@ res <- HTG_DEA(
 If you have already conducted differential expression analysis using other packages, you can still perform Gene Set Enrichment Analysis (GSEA) with the `HTG_GSEA` function.
 
 ```{r}
-HTG_GSEA(res)
+HTG_GSEA(res_tutorial)
 ```
 #### 2.2.4.4 HTG_TME
 
@@ -369,14 +369,14 @@ The `HTG_TME` function is designed to perform tumor microenvironment (TME) analy
 
 ```{r}
 # FOR HTG
-TME_data<- HTG_TME(outliers, pattern =  "^NC-|^POS-|^GDNA-|^ERCC-", counts_data, AnnotData, design_formula = "HPV_status")
+TME_data<- HTG_TME(outliers = outliers_tutorial, pattern =  "^NC-|^POS-|^GDNA-|^ERCC-", counts_data = counts_data_tutorial , AnnotData= AnnotData_tutorial, design_formula = "HPV_status")
 TME_data$EPIC
 TME_data$QTI
 TME_data$XCELL
 
 
 # FOR RNAseq
-TME_data<- HTG_TME(counts_data, AnnotData, design_formula = "HPV_status")
+TME_data<- HTG_TME(counts_data = counts_data_tutorial, AnnotData = AnnotData_tutorial, design_formula = "HPV_status")
 TME_data$EPIC
 TME_data$QTI
 TME_data$XCELL
@@ -392,25 +392,30 @@ The `HTG_survival` function is designed for performing survival analysis and off
 
 
 ```{r}
-FOR HTG: 
+
 # Survival from Top10 genes
-survival_res<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, res = res,
-                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+survival_res<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
+              count_data = counts_data_tutorial, res = res_tutorial, genes_to_use = NULL,
+              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
+
 # Survial of CCND1 gene
-survival_gene_to_use<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, genes_to_use = "CCND1",
-                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
+survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
+              count_data = counts_data_tutorial, res = res_tutorial, genes_to_use = c("LCP1", "OMA1"),
+              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
+
 # Survival of EPIC TME results.
-survival_TME<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts,
-                         outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", TME = TME_data$EPIC)
+survival_TME<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
+              count_data = counts_data_tutorial, res = NULL, genes_to_use = NULL, TME = TME_data_tutorial$EPIC,
+              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
 
 
 FOR RNAseq: 
 # Survival from Top10 genes
-survival_res<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, res = res)
+survival_res<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, res = res_tutorial)
                          
 # Survial of CCND1 gene
-survival_gene_to_use<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, genes_to_use = "CCND1")
+survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, genes_to_use = "CCND1")
 
 # Survival of EPIC TME results.
-survival_TME<- HTG_survival("Recurrence_01", "Time_to_death_surv", clinical, counts, TME = TME_data$EPIC)
+survival_TME<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, TME = TME_data_tutorial$EPIC)
 ```
