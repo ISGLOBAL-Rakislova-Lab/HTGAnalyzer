@@ -1,6 +1,6 @@
 Here you will find a tutorial to perform a complete analysis for HTG Edge results and RNAseq with HTGAnalyzer.
 
-Having the results of HTG Edge Reveal or RNAseq, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TM), and Survival Analysis.
+Having the results of HTG Edge Reveal or RNAseq, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis.
 
 # 1. INSTALATION:
 To use this R package you have to perform the following code.
@@ -14,9 +14,7 @@ install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library (HTGAnalyzer)
 ```
 # 2. TUTORIAL.
-Once installed, you can start with the tutorial. Remember that this package was initially designed for people who have HTG Edge to analyze. However, with the closure of the company, previous quality control features were revealed, but not for the transcriptomic panel, whose quality control was not well established. For this reason, this package is prepared to perform an easy analysis for people who are not into bioinformatics. It has an automatic function that will perform all the analyses and other functions for specific analyses, giving you more freedom to modify.
-
-We have a main function, HTG_auto, which performs all the mentioned analyses. Additionally, we have individual functions such as HTG_DEA, HTG_survival, HTG_QC, and HTG_TME, which provide more flexibility for modification.
+Once installed, you can start with the tutorial. This package, HTG_Analyzer, was originally designed for analyzing HTG Edge files. However, following the closure of the company, only certain quality control features were fully disclosed, particularly those not related to the transcriptomic panel. To address this, our package provides a simplified approach for users who may not have a background in bioinformatics. The primary function, HTG_auto, automates the entire analysis process—from data import and quality control to detailed analyses, complete with plots and tables. Every aspect is customizable, allowing users to easily modify and tailor the analyses to their specific needs. Although it was initially created for HTG, the package is also compatible with RNAseq data. Additionally, there are individual functions like HTG_DEA, HTG_survival, HTG_QC, and HTG_TME that offer more flexibility and precision for advanced users looking to perform specific analyses.
 
 ## 2.1. QUICK START.
 
