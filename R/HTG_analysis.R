@@ -2,47 +2,63 @@
 #'
 #' @description This function conducts a comprehensive analysis pipeline including DESeq2 differential expression analysis (DEA), Gene Set Enrichment Analysis (GSEA), TME analysis, and survival analysis. The pipeline supports optional steps for generating volcano plots and heatmaps. The function is suitable for both HTG and RNA-seq data.
 #'
-#' @param outliers A character vector specifying the IDs of outlier samples to be removed. Outliers can also be identified using the HTG_QC function.
-#' @param pattern (Optional) A regular expression pattern to identify control probes in the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
+#' @param outliers A character vector specifying the IDs of outlier samples to be removed. If you have RNA-seq data or don't have outliers, this parameter can be set to NULL. Note: For RNA-seq data, `remove_outliers` should be set to FALSE.
+#' @param pattern A regular expression pattern to identify control probes in the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
 #' @param counts_data A matrix or data frame containing count data. It is recommended that the count data does not include control probes or outliers if not needed.
 #' @param col_data A data frame containing sample annotations. For survival analysis, it must include variables `time` and `variable_01`.
 #' @param design_formula The design formula for DESeq2 analysis, specified as a string without the tilde (~).
 #' @param threshold_gene Minimum count threshold per gene. Default is 200.
 #' @param threshold_subject Minimum count threshold per subject. Default is 10.
-#' @param heatmap_columns A character vector specifying the columns to be used for annotations in the heatmap. Default is c("design_formula", "Smoker").
-#' @param contrast A character vector specifying the contrast for differential expression analysis. Default is c('column_name', 'variable1', 'variable2').
+#' @param heatmap_columns A character vector specifying the columns to be used for annotations in the heatmap. It is recommended to include the column used in `design_formula`. Default is NULL.
+#' @param contrast A character vector specifying the contrast for differential expression analysis. Should include the column name and two levels for comparison.
 #' @param pCutoff The p-value cutoff for generating the volcano plot. Default is 0.05.
-#' @param generate_volcano A logical value indicating whether to generate a volcano plot. Default is TRUE.
-#' @param remove_outliers A logical value indicating whether to remove outliers. Default is TRUE.
-#' @param GSEA A logical value indicating whether to perform GSEA analysis. Default is FALSE.
+#' @param remove_outliers A logical value indicating whether to remove outliers. Default is TRUE. Note: For RNA-seq data, this should be set to FALSE.
+#' @param GSEA A logical value indicating whether to perform Gene Set Enrichment Analysis. Default is FALSE.
 #' @param generate_heatmap A logical value indicating whether to generate a heatmap. Default is TRUE.
-#' @param TME A logical value indicating whether to perform TME analysis. Default is TRUE.
+#' @param TME A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE.
 #' @param survival_analysis A logical value indicating whether to perform survival analysis. Default is FALSE.
 #' @param percentage_gene A numeric value between 0 and 1 indicating the minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.
 #' @param percentage_zero A numeric value between 0 and 1 indicating the maximum fraction of samples in which a gene can be zero to be retained. Default is 0.2.
-#' @param top_genes A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").
-#' @param DEA A logical value indicating whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.
+#' @param genes_to_use A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").
+#' @param DEA A logical value indicating whether to perform DESeq2 analysis with filtering and without LFC shrinkage. Default is TRUE.
+#' @param variable_01 A character string specifying the event/censoring variable used in the survival analysis.
+#' @param time A character string specifying the time variable used in the survival analysis.
 #'
 #' @return Returns an object with the results of the specified contrast and saves an Excel file with the results, along with PDF files of the generated plots.
-#'
 #' @export
 #'
 #' @examples
-#'ALL_done<- HTG_analysis(outliers = outliers, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", counts_data, col_data = AnnotData,
-#'design_formula = "Ciclina2" , percentage_gene = 0.2, percentage_zero = 0.2,
-#'threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = c("Ciclina2", "Smoker"),
-#'contrast = c("Ciclina2", "high", "low"), pCutoff = 5e-2,variable_01 = "smoke_01", time = "time",
-#'DEA = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = TRUE, generate_heatmap = TRUE, TME = TRUE,
-#'survival_analysis = TRUE)
-#'
-#'
+#' ALL_done <- HTG_analysis(
+#'   outliers = outliers_tutorial,
+#'   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+#'   counts_data = counts_data_tutorial,
+#'   col_data = AnnotData_tutorial,
+#'   design_formula = "HPV_status",
+#'   percentage_gene = 0.2,
+#'   percentage_zero = 0.2,
+#'   threshold_gene = 200,
+#'   threshold_subject = 10,
+#'   genes_to_use = c("CCND1", "MMP10", "CTTN"),
+#'   heatmap_columns = c("HPV_status", "Ciclina_D1"),
+#'   contrast = c("HPV_status", "Positive", "Negative"),
+#'   pCutoff = 5e-2,
+#'   variable_01 = "Recurrence_01",
+#'   time = "Time_to_death_surv",
+#'   DEA = TRUE,
+#'   remove_outliers = TRUE,
+#'   GSEA = TRUE,
+#'   generate_heatmap = TRUE,
+#'   TME = TRUE,
+#'   survival_analysis = TRUE
+#' )
 #' @name HTG_analysis
 
 
-HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
-                        threshold_gene = 200, threshold_subject = 10, top_genes = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
+
+HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
+                        threshold_gene = 200, threshold_subject = 10, genes_to_use = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
                         contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL,
-                        DEA = TRUE, generate_volcano = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, TME = TRUE,
+                        DEA = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, TME = TRUE,
                         survival_analysis = FALSE) {
 
 
@@ -61,7 +77,6 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   library(DOSE)
   library(enrichplot)
   library(ggplot2)
-  library(pheatmap)
   library(RColorBrewer)
   library(ggupset)
   library(grid)
@@ -75,28 +90,24 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   library(tidyr)
   library(maxstat)
 
+
   if (!is.null(pattern)) {
-    cat("\033[33mFILTERING THE COUNT DATA. DELETING THE PROVES.\033[0m\n")
+    cat("\033[33mFILTERING THE COUNT DATA. DELETING THE PROVES...\033[0m\n")
     counts_data <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
   }
 
-  if (remove_outliers) {
-    cat("\033[33mREMOVING OUTLIERS\033[0m\n")
-    if (!is.null(pattern)) {
-      # Remove outliers based on pattern
-      filtered <- base::subset(counts_data, !grepl(pattern, rownames(counts_data)))
-    } else {
-      # If no pattern is provided, do not filter based on pattern
-      filtered <- counts_data
-    }
-    # Remove columns corresponding to outliers
-    counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
+  # Removing outliers if specified
+  if (remove_outliers && !is.null(outliers) && length(outliers) > 0) {
+    cat("\033[33mREMOVING OUTLIERS...\033[0m\n")
+    counts_filtered <- counts_data[, !colnames(counts_data) %in% outliers]
     AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
   } else {
     counts_filtered <- counts_data
     AnnotData <- col_data
   }
-  if (DEA) {
+
+
+  if (!is.null(DEA) && DEA) {
     cat("\033[33mSTARTING THE DIFERENTIAN EXPRESSION ANALYSIS.\033[0m\n")
     if (is.null(contrast)) {
       stop("Contrast is required for DESeq2 analysis. Remember structure: contrast = c('column_name', 'variable1','variable2')")
@@ -127,9 +138,8 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   cat("\033[32m\033[0m\n")
   n_genes <- nrow(DESeq2::counts(dds))
   n_subj <- ncol(DESeq2::counts(dds))
-  zero_threshold <- ceiling(n_subj * percentage_zero)  # 20% threshold for zeros
+  zero_threshold <- ceiling(n_subj * percentage_zero)
   keep_genes <- rowSums(DESeq2::counts(dds) == 0) <= zero_threshold
-  # Filter genes that are present in at least 20% of the cases
   smallest_group_size <- ceiling(n_subj * percentage_gene)
   keep_genes <- keep_genes & (rowSums(DESeq2::counts(dds) >= threshold_gene) >= smallest_group_size)
   # Apply gene filters to the DESeq2 object
@@ -155,9 +165,9 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     if (is.null(heatmap_columns)) {
       stop("heatmap_columns are required for genereting the heatmap.")
     }
-    select <- order(rowMeans(DESeq2::counts(dds, normalized = TRUE)), decreasing = TRUE)[1:500]
+    selecto <- order(rowMeans(DESeq2::counts(dds, normalized = TRUE)), decreasing = TRUE)[1:500]
     df <- as.data.frame(colData(dds)[, heatmap_columns])
-    pheatmap(assay(vsd)[select,], cluster_rows = FALSE, show_rownames = FALSE,
+    pheatmap::pheatmap(assay(vsd)[selecto,], cluster_rows = FALSE, show_rownames = FALSE,
              cluster_cols = TRUE, annotation_col = df)
   }
 
@@ -183,7 +193,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   vsd_cor <- cor(assay(vsd))
   rownames(vsd_cor) <- paste(vsd$SampleID)
   colnames(vsd_cor) <- paste(vsd$HTG_RUN)
-  pheatmap(vsd_cor)
+  pheatmap::pheatmap(vsd_cor)
 
   poisd <- PoissonDistance(t(counts(dds)))
   samplePoisDistMatrix <- as.matrix(poisd$dd)
@@ -191,7 +201,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
   cat("\033[33mGENERATING POISSON DISTANCES PLOT\033[0m\n")
 
-  pheatmap(samplePoisDistMatrix,
+  pheatmap::pheatmap(samplePoisDistMatrix,
            clustering_distance_rows = poisd$dd,
            clustering_distance_cols = poisd$dd,
            col = colors,
@@ -206,7 +216,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
   rownames(sampleDistMatrix) <- paste(vsd$SampleID, sep = " - ")
   colnames(sampleDistMatrix) <- NULL
   colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
-  pheatmap(sampleDistMatrix,
+  pheatmap::pheatmap(sampleDistMatrix,
            clustering_distance_rows = sampleDists,
            clustering_distance_cols = sampleDists,
            col = colors,
@@ -240,19 +250,29 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     legend("topright", legend = levels_design_formula, fill = colors)
   }
 
-  if (generate_volcano) {
+
     cat("\033[33mGENERATING VOLCANO PLOT\033[0m\n")
     EnhancedVolcano(res,
                     lab = rownames(res),
                     x = 'log2FoldChange',
                     y = 'padj',
                     pCutoff = pCutoff)
-  }
+
 
   plotDispEsts(dds, main = "DIPERSION PLOT")
   } else {cat("\033[32mSkipping Diferential expresion analysis\033[0m\n")}
 
   if (GSEA) {
+    if (!exists("res")) {
+      cat("\033[31mWarning: The variable 'res' does not exist. GSEA analysis cannot proceed without it.\033[0m\n")
+    }
+    else if (!inherits(res, "DESeqResults")) {
+      cat("\033[31mWarning: The variable 'res' exists but is not of class 'DESeqResults'. GSEA analysis cannot proceed.\033[0m\n")
+    }
+    else {
+    head(res)
+    class(res)
+    print(res)
     cat("\033[33mSTARTING GSEA\033[0m\n")
     suppressMessages(library(clusterProfiler))
     suppressMessages(library(dplyr))
@@ -282,17 +302,17 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
     # Create and print plots for gseGO
     cat("\033[32mCreating Plots for gseGO\033[0m\n")
-    dotplot1 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count")
-    dotplot2 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + facet_grid(.~.sign)
+    dotplot1 <- suppressWarnings(dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
+                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count"))
+    dotplot2 <- suppressWarnings(dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
+                        title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + facet_grid(.~.sign))
     x2 <- pairwise_termsim(gse2)
-    emapplot1 <- emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) + ggtitle("Enrichment Map gseGO")
-    ridgeplot1 <- ridgeplot(gse2) + labs(x = "gseGO enrichment distribution", font.size = 7) + theme(axis.text.y = element_text(size = 9))
-    heatplot1 <- heatplot(gse2, showCategory = 10) + ggtitle("gseGO Heatplot")
-    treeplot1 <- suppressWarnings(treeplot(x2)) + ggtitle("gseGO Treeplot")
-    a <- gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
-    b <- gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets")
+    emapplot1 <- suppressWarnings(emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) + ggtitle("Enrichment Map gseGO"))
+    ridgeplot1 <- suppressWarnings(ridgeplot(gse2) + labs(x = "gseGO enrichment distribution", font.size = 7) + theme(axis.text.y = element_text(size = 9)))
+    heatplot1 <- suppressWarnings(heatplot(gse2, showCategory = 10) + ggtitle("gseGO Heatplot"))
+    treeplot1 <- suppressWarnings(treeplot(x2) + ggtitle("gseGO Treeplot"))
+    a <- suppressWarnings(gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1])))
+    b <- suppressWarnings(gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets"))
 
     # KEGG Analysis
     cat("\033[32mPerforming KEGG Analysis\033[0m\n")
@@ -310,13 +330,13 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
     # Create and print plots for KEGG
     cat("\033[32mCreating Plots for KEGG\033[0m\n")
-    dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + facet_grid(.~.sign)
-    x3 <- pairwise_termsim(kk2)
-    emapplot2 <- emapplot(x3, font.size = 8) + ggtitle("KEGG Enrichment Map")
-    ridgeplot2 <- ridgeplot(kk2) + labs(x = "KEGG enrichment distribution", font.size = 6) + theme(axis.text.y = element_text(size = 9))
-    heatplot2 <- heatplot(kk2, showCategory = 10) + ggtitle("KEGG Heatplot")
-    treeplot1 <- suppressWarnings(treeplot(x3)) + ggtitle("KEGG Treeplot")
-    upset_plot <- upsetplot(kk2) + labs(title = "UpSet Plot for KEGG")
+    dotplot3 <- suppressWarnings(dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + facet_grid(.~.sign))
+    x3 <- suppressWarnings(pairwise_termsim(kk2))
+    emapplot2 <- suppressWarnings(emapplot(x3, font.size = 8) + ggtitle("KEGG Enrichment Map"))
+    ridgeplot2 <- suppressWarnings(ridgeplot(kk2) + labs(x = "KEGG enrichment distribution", font.size = 6) + theme(axis.text.y = element_text(size = 9)))
+    heatplot2 <- suppressWarnings(heatplot(kk2, showCategory = 10) + ggtitle("KEGG Heatplot"))
+    treeplot2 <- suppressWarnings(treeplot(x3) + ggtitle("KEGG Treeplot"))
+    upset_plot <- suppressWarnings(upsetplot(kk2) + labs(title = "UpSet Plot for KEGG"))
 
     # enrichGO Analysis
     cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
@@ -381,11 +401,13 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     }
     dev.off()
 
+
+
     # Save tables
     cat("\033[33mGENERATING .CSV OF GSEA RESULTS033[0m\n")
     write.csv(gene_list, "gene_list.csv")
     write.csv(kegg_gene_list, "kegg_gene_list.csv")
-  }
+  }}
 
 
   #####
@@ -423,11 +445,11 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     })
 
     # Se almacenan los genes omitidos en la normalización TPM
-    genes_omitidos <- setdiff(rownames(counts_data), rownames(tpm_counts))
+    genes_omitidos <- base::setdiff(rownames(counts_data), rownames(tpm_counts))
     print(paste0("Number of genes omitted during TPM normalization due to their length not being available in Biomart:   ", dim(counts_data)[1]-dim(tpm_counts)[1]))
     tpm_counts <- as.data.frame(tpm_counts)
 
-    if (!is.null(dds)) {
+    if (!is.null(DEA) && DEA) {
       cat("\033[32mWe are going to use information from DEA\033[0m\n")
       dds <- estimateSizeFactors(dds)
       normalized_counts <- counts(dds, normalized = TRUE)
@@ -440,6 +462,9 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       if (!identical(colnames(counts_data), AnnotData$id)) {
         stop("Column names of counts_data and IDs in AnnotData do not match.")
       }
+      dds <- DESeqDataSetFromMatrix(countData = counts_data, colData = AnnotData, design = design_formul)
+      dds <- estimateSizeFactors(dds)
+      normalized_counts <- counts(dds, normalized = TRUE)
     }
 
     ## Deconvolución
@@ -580,7 +605,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       print(plot)
     }
     dev.off()
-    while (!is.null(dev.list())) dev.off()
+
 
 
     ############# imm_qti
@@ -659,7 +684,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       print(plot)
     }
     dev.off()
-    while (!is.null(dev.list())) dev.off()
+
 
 
     ############# imm_xcell
@@ -738,7 +763,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       print(plot)
     }
     dev.off()
-    while (!is.null(dev.list())) dev.off()
+
 
 
     # Composición celular del TME i por grupo
@@ -834,14 +859,17 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     print(combined_plot_EPIC)
     dev.off()
 
+
     pdf("plot_cell_fraction_Average_cell_fraction_quanTIseq.pdf", width = 11, height = 14)
     print(combined_plot_quanTIseq)
     dev.off()
 
+
+
     pdf("plot_cell_fraction_Average_cell_fraction_xCell.pdf", width = 11, height = 14)
     print(combined_plot_xCell)
     dev.off()
-    while (!is.null(dev.list())) dev.off()
+
 
 
     ########################
@@ -898,7 +926,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
 
       for (cell_type in cell_types) {
 
-        df_cell_type <- df_largo %>% filter(Cell_Type == cell_type)
+        df_cell_type <- df_largo %>% dplyr::filter(Cell_Type == cell_type)
         groups <- unique(df_cell_type[[design_formula_sym]])
 
         if (length(groups) == 2) {
@@ -1004,7 +1032,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
                           'Granulocyte-monocyte progenitor', 'Hematopoietic stem cell')
 
     h_imm_xcell <- h_imm_xcell %>%
-      filter(!row.names(.) %in% xcell_row_delete)  # Eliminar filas
+      dplyr::filter(!row.names(.) %in% xcell_row_delete)  # Eliminar filas
 
     rn_himmxcell <- rownames(h_imm_xcell)
     cl_himmxcell <- colnames(h_imm_xcell)
@@ -1054,7 +1082,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         combined_data <- as.matrix(combined_data)
 
         # Generar Heatmap
-        HeatmapEPIC <- Heatmap(combined_data,
+        HeatmapEPIC <- base::heatmap(combined_data,
                                column_title = "Heatmap EPIC",
                                cluster_rows = TRUE,
                                cluster_columns = TRUE,
@@ -1097,7 +1125,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         combined_data <- as.matrix(combined_data)
 
         # Generar Heatmap
-        Heatmap_qti <- Heatmap(combined_data,
+        Heatmap_qti <- base::heatmap(combined_data,
                                column_title = "Heatmap qti",
                                cluster_rows = TRUE,
                                cluster_columns = TRUE,
@@ -1139,7 +1167,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         combined_data <- as.matrix(combined_data)
 
         # Generar Heatmap
-        Heatmap_xcell <- Heatmap(combined_data,
+        Heatmap_xcell <- base::heatmap(combined_data,
                                  column_title = "Heatmap xcell",
                                  cluster_rows = TRUE,
                                  cluster_columns = TRUE,
@@ -1171,7 +1199,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
       cat("Heatmapxcell object does not exist.\n")
     }
     dev.off()
-    while (!is.null(dev.list())) dev.off()
+
 
     data_table_list<- list(EPIC= imm_epic, QTI = imm_qti, XCELL= imm_xcell)
 
@@ -1202,7 +1230,6 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     }
 
     cat("\033[32mNormalizing data...\033[0m\n")
-    design_formul <- as.formula("~ 1")
     colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
     col_data <- AnnotData[order(AnnotData$id), ]
     col_data<- as.data.frame(col_data)
@@ -1217,7 +1244,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     }
 
     # Create DESeqDataSet object
-    if (is.null(dds)) {
+    if (!exists("dds")) {
       # Create DESeqDataSet object
       rownames(col_data) <- col_data$id
       dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = ~ 1)
@@ -1246,7 +1273,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
     df_ta$id <- rownames(df_ta)
 
     # Selecting genes
-    if (!is.null(res)) {
+    if (exists("res")) {
       cat("\033[32mSelecting TOP 10 genes with the lowest padj\033[0m\n")
       top_genes <- rownames(head(res[order(res$padj), ], 10))
       selected_df_t <- df_t[, top_genes, drop = FALSE]
@@ -1321,7 +1348,7 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
       }
       dev.off()
-      while (!is.null(dev.list())) dev.off()
+
 
     } else if (!is.null(genes_to_use)) {
       cat("\033[32mUsing provided genes\033[0m\n")
@@ -1399,90 +1426,11 @@ HTG_analysis <- function(outliers, pattern = NULL, counts_data, col_data, design
         cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
       }
       dev.off()
-      while (!is.null(dev.list())) dev.off()
 
-    } else if (!is.null(TME)) {
-      cat("\033[32mUsing rownames from TME\033[0m\n")
-      TME <- TME[, -ncol(TME)]
-      colnames(TME) <- gsub(" ", "_", colnames(TME))
-      col_data$id <- rownames(col_data)
-      TME$id <- rownames(TME)
-      merged_data <- merge(col_data, TME, by = "id")
-      merged_data[[time]] <- as.numeric(merged_data[[time]])
-
-      cat("\033[32mStarting survival analysis.\033[0m\n")
-      colnames(merged_data) <- gsub(" ", "_", colnames(merged_data))
-      colnames(merged_data) <- gsub("\\+", "_", colnames(merged_data))
-
-
-      pdf("survival_analysis_plots_TME.pdf")
-
-      for (i in colnames(TME)) {
-        if (!is.numeric(merged_data[[i]])) {
-          next
-        }
-
-        cat("\n")
-        cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
-
-        # Perform MAXSTAT test
-        merged_data$time<- merged_data[[time]]
-        merged_data$variable_01<- merged_data[[variable_01]]
-        MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
-                                smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-        cut.off <- MAXSTAT$estimate
-        cat("\033[32mCUT OFF\033[0m\n")
-        print(cut.off)
-
-        # Create a new variable based on the cutoff
-
-        merged_data[[paste0(i)]] <- ifelse(merged_data[[i]] > cut.off, "High", "Low")
-        merged_data[[paste0(i)]] <- factor(merged_data[[paste0(i)]])
-
-
-        # Fit survival model
-        cat("\033[32mFitting survival model\033[0m\n")
-        column_name <- paste0(i)
-        surv_object <- Surv( merged_data$time , merged_data$variable_01)
-        surv_formula <- as.formula(paste("surv_object ~", column_name))
-
-        fit1 <- survfit(surv_formula, data = merged_data)
-        # Summary of the fit
-
-        cat("\033[32mSummary of the fit\033[0m\n")
-        print(summary(fit1))
-
-        # Log-rank test and p-value
-        cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
-        surv_diff <- survdiff(surv_formula, data = merged_data)
-        p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
-
-        print(surv_diff)
-        cat("\033[32mP-value\033[0m\n")
-        print(p_value)
-
-        # Generate Kaplan-Meier plot
-        cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
-        palette <- c("#9A3449", "#D4A8B1")
-        plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
-
-        # Añadir una leyenda
-        legend("topright",
-               legend = c("High", "Low"),
-               lty = 1,
-               col = palette,
-               lwd = 4)
-        cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
-      }
-      dev.off()
-      while (!is.null(dev.list())) dev.off()
-
-
-    } else {
-      stop("Either 'res', 'genes_to_use', or 'TME' must be provided.")
-    }
 
     } else {
       cat("\033[31mSkipping survival analysis.\033[0m\n")
     }
+  }
 }
+
