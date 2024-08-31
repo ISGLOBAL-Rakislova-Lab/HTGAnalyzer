@@ -42,12 +42,9 @@ HTG_subset <- function(data_frame, prefix, normalize = FALSE) {
   if (normalize) {
     cat("\033[32mNormalizing data using TPM (Transcripts Per Million)...\033[0m\n")
 
-    # Load the IOBR library, handle messages and warnings
-    suppressMessages(suppressWarnings(library(IOBR)))
-
     # Perform normalization and handle possible warnings
     tpm_counts <- suppressWarnings(
-      suppressMessages(count2tpm(data_frame, idType = "Symbol", org = "hsa", source = "biomart"))
+      suppressMessages(IOBR::count2tpm(data_frame, idType = "Symbol", org = "hsa", source = "biomart"))
     )
 
     # Subset the normalized data based on the prefix

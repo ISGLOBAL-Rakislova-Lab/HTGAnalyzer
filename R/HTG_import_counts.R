@@ -8,6 +8,8 @@
 #' @param file_type Type of file being imported, either "HTG" or "RNAseq".
 #' @return A data frame with counts data.
 #' @export
+#' @importFrom readxl read_excel
+#'
 #' @examples
 #' \dontrun{
 #' # Replace "path/to/your/excel/file.xlsx" with the actual path to your Excel file
@@ -19,7 +21,6 @@
 #'
 #'
 HTG_import_counts <- function(file_path, file_type) {
-  library(readxl)
 
   if (file_type == "HTG") {
     htg_db <- readxl::read_excel(file_path)

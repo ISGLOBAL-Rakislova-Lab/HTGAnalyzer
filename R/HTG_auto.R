@@ -135,7 +135,7 @@ HTG_auto <- function(counts_file_path, file_type = "HTG",
   cat("\033[33mINICIATING IMPORTATION OF DATA...\033[0m\n")
   counts_data <- HTG_import_counts(counts_file_path, file_type)
   counts_data <- as.data.frame(counts_data)
-  col_data <- read_excel(AnnotData_file_path)
+  col_data <- readxl::read_excel(AnnotData_file_path)
   col_data <- as.data.frame(col_data)
 
   # Normalizar los nombres de las columnas en col_data para que sean válidos en R

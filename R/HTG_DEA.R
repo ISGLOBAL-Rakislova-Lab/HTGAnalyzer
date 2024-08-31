@@ -8,7 +8,7 @@
 #' @param design_formula A character string representing the design formula for DESeq2. Must specify two groups for comparison.
 #' @param heatmap_columns A character vector of columns in `col_data` to be used for heatmap annotation. It is recommended to include the column used in `design_formula`.
 #' @param contrast A character vector specifying the contrast to be used for differential expression analysis. Should include two levels for comparison.
-#' @param pattern A regular expression pattern to filter out unwanted genes from the count data.
+#' @param pattern A regular expression pattern to filter out unwanted genes from the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
 #' @param remove_outliers A logical value indicating whether to remove outliers specified in `outliers`.
 #' @param percentage_gene A numeric value specifying the minimum percentage of samples a gene must be expressed in to be kept.
 #' @param percentage_zero A numeric value specifying the maximum percentage of samples a gene can be zero in to be kept.
@@ -42,20 +42,13 @@
 #'   extract_shrinkage = FALSE
 #' )
 #' @name HTG_DEA
-
+#'
+utils::globalVariables(c("SampleID", "status"))
 HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heatmap_columns, contrast,
                     pattern = NULL, remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200,
                     threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = FALSE, extract_shrinkage = FALSE) {
 
 
-  library(DESeq2)
-  library(EnhancedVolcano)
-  library(ggplot2)
-  library(apeglm)
-  library(GWASTools)
-  library(pheatmap)
-  library(PoiClaClu)
-  library(RColorBrewer)
 
   # Filtering counts data based on provided pattern
   if (!is.null(pattern)) {
@@ -102,7 +95,7 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   # Perform DESeq2 analysis
   vsd <- DESeq2::vst(dds, blind = FALSE)
   dds <- DESeq2::DESeq(dds)
-  res <- results(dds, contrast = contrast, cooksCutoff = TRUE)
+  res <- DESeq2::results(dds, contrast = contrast, cooksCutoff = TRUE)
 
   # Save results
   write.csv(res, "results_HTG_DEA.csv", row.names = TRUE)
@@ -113,8 +106,8 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
 
   # Apply LFC shrinkage if specified
   if (apply_lfc_shrinkage) {
-    coef_name <- resultsNames(dds)[2]
-    resLFC <- lfcShrink(dds, coef = coef_name, type = "apeglm")
+    coef_name <- DESeq2::resultsNames(dds)[2]
+    resLFC <- DESeq2::lfcShrink(dds, coef = coef_name, type = "apeglm")
     top_genes <- head(resLFC[order(resLFC$padj), ], 10)
     print(top_genes)
   }
@@ -123,33 +116,31 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   pdf("DEA_plots.pdf", width = 10, height = 8)
 
   # Volcano plot
-  suppressWarnings(invisible(print(EnhancedVolcano(res,
+  suppressWarnings(invisible(print(EnhancedVolcano::EnhancedVolcano(res,
                                                    lab = rownames(res),
                                                    x = 'log2FoldChange',
                                                    y = 'padj',
                                                    pCutoff = pCutoff))))
 
   # Heatmap of sample-to-sample distances
-  vsd_cor <- cor(assay(vsd))
+  vsd_cor <- stats::cor(SummarizedExperiment::assay(vsd))
   rownames(vsd_cor) <- paste(vsd$SampleID)
   colnames(vsd_cor) <- paste(vsd$HTG_RUN)
   suppressWarnings(invisible(print(pheatmap::pheatmap(vsd_cor, main = "Sample-to-Sample Correlation"))))
+  suppressWarnings(invisible(print(pheatmap::pheatmap(vsd_cor, main = "Sample-to-Sample Correlation"))))
+
 
   invisible(capture.output(
-    boxplot(assay(vsd), las = 2, main = "VST-transformed Data", outline = FALSE, col = "#4793AF")
+    boxplot(SummarizedExperiment::assay(vsd), las = 2, main = "VST-transformed Data", outline = FALSE, col = "#4793AF")
   ))
 
-  # COOK's DISTANCE
-  suppressWarnings(invisible(capture.output(
-    boxplot(log10(assays(dds)[["cooks"]]), range = 0, las = 2, cex.axis = 0.9, main = "COOK'S DISTANCE", outline = FALSE, col = "#4793AF")
-  )))
   # MA-plot
-  suppressWarnings(invisible(print(plotMA(res, main = "MA Plot of Results"))))
+  suppressWarnings(invisible(print(DESeq2::plotMA(res, main = "MA Plot of Results"))))
 
   # Individual gene plots for top 10 genes
   top_genes_indices <- rownames(top_genes)
   for (gene_index in top_genes_indices) {
-    gen_a2m <- as.data.frame(assay(vsd)[gene_index, ])
+    gen_a2m <- as.data.frame(SummarizedExperiment::assay(vsd)[gene_index, ])
     colnames(gen_a2m) <- "expression"
     gen_a2m$SampleID <- rownames(gen_a2m)
     gen_a2m$status <- col_data[[design_formula]]
@@ -164,11 +155,11 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
       colorRampPalette(brewer.pal(min(length(levels_design_formula), 9), "Set1"))(length(levels_design_formula))
     }
 
-    plot_gene <- ggplot(gen_a2m, aes(x = factor(SampleID, levels = SampleID[order(status)]), y = expression, color = status)) +
-      geom_point(size = 2) +
-      labs(x = "", y = gene_index, title = paste("Gene:", gene_index)) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.title = element_blank()) +
-      scale_color_manual(values = color_palette)
+    plot_gene <- ggplot2::ggplot(gen_a2m, ggplot2::aes(x = factor(SampleID, levels = SampleID[order(status)]), y = expression, color = status)) +
+      ggplot2::geom_point(size = 2) +
+      ggplot2::labs(x = "", y = gene_index, title = paste("Gene:", gene_index)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1), legend.title = ggplot2::element_blank()) +
+      ggplot2::scale_color_manual(values = color_palette)
 
     suppressWarnings(invisible(print(plot_gene)))
   }
@@ -185,7 +176,3 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
     return(res)
   }
 }
-
-
-
-

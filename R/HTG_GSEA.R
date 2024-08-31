@@ -17,19 +17,9 @@
 #' HTG_GSEA(res_tutorial)
 #' @name HTG_GSEA
 #'
+#'
+utils::globalVariables(c("padj", "Description", "Count"))
 HTG_GSEA <- function(res) {
-  suppressMessages(library(clusterProfiler))
-  suppressMessages(library(dplyr))
-  suppressMessages(library(msigdbr))
-  suppressMessages(library(enrichplot))
-  suppressMessages(library(org.Hs.eg.db))
-  suppressMessages(library(fgsea))
-  suppressMessages(library(DOSE))
-  suppressMessages(library(enrichplot))
-  suppressMessages(library(ggplot2))
-  suppressMessages(library(ggupset))
-  suppressMessages(library(grid))
-
   cat("\033[32mPerforming gseGO  analysis\033[0m\n")
 
   # Prepare gene list for gseGO
@@ -41,51 +31,42 @@ HTG_GSEA <- function(res) {
 
   # gseGO  Analysis
   cat("\033[32mPerforming gseGO Analysis\033[0m\n")
-  gse2 <- gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
+  gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
                 minGSSize = 3, maxGSSize = 800, pvalueCutoff = 0.05, verbose = TRUE, eps = 0,
-                OrgDb = "org.Hs.eg.db", pAdjustMethod = "bonferroni")
+                OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
 
   # Dotplot for gseGO
    cat("\033[32mCreating Dotplot for gseGO \033[0m\n")
-  dotplot1 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
+  dotplot1 <- clusterProfiler::dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
                       title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count")
-  print(dotplot1)
 
-  dotplot2 <- dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
-                      title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + facet_grid(.~.sign)
-  print(dotplot2)
+  dotplot2 <- clusterProfiler::dotplot(gse2, showCategory = 10, split = ".sign", font.size = 9, label_format = 40,
+                      title = "gseGO Enrichment Results: Pathways", color = "p.adjust", size = "Count") + ggplot2::facet_grid(.~.sign)
 
   # Emaplot for gseGO
   cat("\033[32mCreating Emaplot for gseGO \033[0m\n")
-  x2 <- pairwise_termsim(gse2)
-  emapplot1 <- emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggtitle("Enrichment Map gseGO ")
-  print(emapplot1)
+  x2 <- enrichplot::pairwise_termsim(gse2)
+  emapplot1 <- enrichplot::emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggplot2::ggtitle("Enrichment Map gseGO ")
 
   # Ridgeplot for gseGO
   cat("\033[32mCreating Ridgeplot for gseGO \033[0m\n")
-  ridgeplot1 <- ridgeplot(gse2)  +  labs(x = "gseGO enrichment distribution", font.size = 7) +  theme(axis.text.y = element_text(size = 9))
-  print(ridgeplot1)
+  ridgeplot1 <- enrichplot::ridgeplot(gse2)  +  ggplot2::labs(x = "gseGO enrichment distribution", font.size = 7) +  ggplot2::theme(axis.text.y = ggplot2::element_text(size = 9))
 
   # Heatplot for gseGO
   cat("\033[32mCreating Heatplot for gseGO \033[0m\n")
-  heatplot1 <- heatplot(gse2, showCategory = 10) + ggtitle("gseGO Heatplot")
-  print(heatplot1)
+  heatplot1 <- enrichplot::heatplot(gse2, showCategory = 10) + ggplot2::ggtitle("gseGO Heatplot")
 
   # Treeplot for gseGO
   cat("\033[32mCreating Treeplot for gseGO \033[0m\n")
-  treeplot1 <- suppressWarnings(treeplot(x2) + ggtitle("gseGO Treeplot"))
+  treeplot1 <- suppressWarnings(enrichplot::treeplot(x2) + ggplot2::ggtitle("gseGO Treeplot"))
 
   # Create gseaplot2 plots with titles
-  a <- gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
-  print(a)
-
-  b <- gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets")
-  print(b)
-
+  a <- enrichplot::gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
+  b <- enrichplot::gseaplot2(gse2, geneSetID = 1:5, pvalue_table = TRUE, title = "GSEA: Top 5 Gene Sets")
 
   # KEGG Analysis
   cat("\033[32mPerforming KEGG Analysis\033[0m\n")
-  ids <- bitr(names(original_gene_list), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)
+  ids <- clusterProfiler::bitr(names(original_gene_list), fromType = "SYMBOL", toType = "ENTREZID", OrgDb =  org.Hs.eg.db::org.Hs.eg.db)
   dedup_ids <- ids[!duplicated(ids[c("SYMBOL")]), ]
   df2 <- res[rownames(res) %in% dedup_ids$SYMBOL, ]
   df2$Y <- dedup_ids$ENTREZID
@@ -94,36 +75,31 @@ HTG_GSEA <- function(res) {
   kegg_gene_list <- na.omit(kegg_gene_list)
   kegg_gene_list <- sort(kegg_gene_list, decreasing = TRUE)
 
-  kk2 <- gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
+  kk2 <- clusterProfiler::gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
                  pvalueCutoff = 0.05, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
   # Dotplot for KEGG
   cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
-  dotplot3 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + facet_grid(.~.sign)
-  print(dotplot3)
+  dotplot3 <- clusterProfiler::dotplot(kk2, showCategory = 10, title = "Enriched Pathways for KEGG", split = ".sign", font.size = 9) + ggplot2::facet_grid(.~.sign)
 
   # Emaplot for KEGG
   cat("\033[32mCreating Emaplot for KEGG\033[0m\n")
-  x3 <- pairwise_termsim(kk2)
-  emapplot2 <- emapplot(x3, font.size = 8 +  ggtitle("KEGG Enrichment Map"))
-  print(emapplot2)
+  x3 <- enrichplot::pairwise_termsim(kk2)
+  emapplot2 <- enrichplot::emapplot(x3, font.size = 8 +  ggplot2::ggtitle("KEGG Enrichment Map"))
 
   # Ridgeplot for KEGG
   cat("\033[32mCreating Ridgeplot for KEGG\033[0m\n")
-  ridgeplot2 <- ridgeplot(kk2) +  labs(x = "KEGG enrichment distribution", font.size = 6) +  theme(axis.text.y = element_text(size = 9))
-  print(ridgeplot2)
+  ridgeplot2 <- enrichplot::ridgeplot(kk2) +  ggplot2::labs(x = "KEGG enrichment distribution", font.size = 6) +  ggplot2::theme(axis.text.y = ggplot2::element_text(size = 9))
 
   # Heatplot for KEGG
   cat("\033[32mCreating Heatplot for KEGG \033[0m\n")
-  heatplot2 <- heatplot(kk2, showCategory = 10) + ggtitle("KEGG Heatplot")
-  print(heatplot2)
+  heatplot2 <- enrichplot::heatplot(kk2, showCategory = 10) + ggplot2::ggtitle("KEGG Heatplot")
 
   # Treeplot for KEGG
   cat("\033[32mCreating Treeplot for KEGG \033[0m\n")
-  treeplot2 <- suppressWarnings(treeplot(x3) + ggtitle("KEGG Treeplot"))
+  treeplot2 <- suppressWarnings(enrichplot::treeplot(x3) + ggplot2::ggtitle("KEGG Treeplot"))
 
-  upset_plot <- upsetplot(kk2) + labs(title = "Up set plot for KEGG")
-  print(upset_plot)
+  upset_plot <- enrichplot::upsetplot(kk2) + ggplot2::labs(title = "Up set plot for KEGG")
 
   # enrichGO Analysis
   cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
@@ -136,10 +112,10 @@ HTG_GSEA <- function(res) {
 
     # Perform GO enrichment analysis
     cat("\033[32mPerforming GO Enrichment Analysis\033[0m\n")
-    go_enrich <- enrichGO(
+    go_enrich <- clusterProfiler::enrichGO(
       gene = names(genes),
       universe = names(gene_list),
-      OrgDb = org.Hs.eg.db,
+      OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
       keyType = 'SYMBOL',
       readable = TRUE,
       ont = "BP",
@@ -155,13 +131,12 @@ HTG_GSEA <- function(res) {
 
     # Check if there are significant terms to plot
     if (nrow(significant_terms) > 0) {
-      bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
-        geom_bar(stat = "identity", fill = "skyblue") +
-        labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      bar_plot <- ggplot2::ggplot(significant_terms, ggplot2::aes(x = reorder(Description, -Count), y = Count)) +
+        ggplot2::geom_bar(stat = "identity", fill = "skyblue") +
+        ggplot2::labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
 
-      print(bar_plot)
     } else {
       cat("\033[31mNo significant GO terms found to plot.\033[0m\n")
     }
@@ -173,36 +148,38 @@ HTG_GSEA <- function(res) {
     cat("\033[31mNo significant genes found for GO enrichment analysis.\033[0m\n")
   }
 
-    pdf("GSEA_analysis_plots.pdf", width = 11, height = 14)
+    pdf("GSEA_analysis_plots1_of_2.pdf", width = 11, height = 14)
     print(dotplot1)
     print(dotplot2)
     print(emapplot1)
     print(ridgeplot1)
-    print(heatplot1)
     print(treeplot1)
     print(a)
     print(b)
     print(dotplot3)
     print(emapplot2)
     print(ridgeplot2)
-    print(heatplot2)
     print(treeplot2)
     print(upset_plot)
     if (nrow(sig_genes_df) > 0) {
       genes <- sig_genes_df$log2FoldChange
       names(genes) <- rownames(sig_genes_df)
-      go_enrich <- enrichGO(gene = names(genes), universe = names(gene_list), OrgDb = org.Hs.eg.db,
+      go_enrich <- clusterProfiler::enrichGO(gene = names(genes), universe = names(gene_list), OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
                             keyType = 'SYMBOL', readable = TRUE, ont = "BP",
                             pvalueCutoff = 0.05, qvalueCutoff = 0.10)
       go_results <- go_enrich@result
       significant_terms <- go_results[go_results$qvalue < 0.05, ]
       significant_terms <- significant_terms[order(significant_terms$qvalue), ]
-      bar_plot <- ggplot(significant_terms, aes(x = reorder(Description, -Count), y = Count)) +
-        geom_bar(stat = "identity", fill = "skyblue") +
-        labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      bar_plot <- ggplot2::ggplot(significant_terms, ggplot2::aes(x = reorder(Description, -Count), y = Count)) +
+        ggplot2::geom_bar(stat = "identity", fill = "skyblue") +
+        ggplot2::labs(title = "Significant GO Terms", x = "GO Term", y = "Count") +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
       dev.off()
+      pdf("GSEA_analysis_plots2_of_2.pdf", width = 11, height = 14)
+      print(heatplot1)
+      print(heatplot2)
+        dev.off()
 
 
       # Save tables

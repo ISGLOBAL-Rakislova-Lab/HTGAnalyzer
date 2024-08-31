@@ -52,8 +52,8 @@
 #' HTG_QC(counts_data = counts_data_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", save_csv = TRUE)
 #'
 #' @name HTG_QC
-
-
+#'
+utils::globalVariables(c("PC1", "PC2", "Tag", "label", "Componente", "Porcentaje", "pc", "Sample", "LogTPM", "variable", "value"))
 HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
                              threshold_superior_pos = 5,
                              threshold_inferior_pos = 3,
@@ -76,14 +76,6 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
                              n_samples = 3,
                              save_csv = TRUE,
                              csv_file = "QC_results.csv") {
-  # Load required libraries
-  suppressMessages({
-    library(ggplot2)
-    library(ggrepel)
-    library(cowplot)
-    library(reshape2)
-    library(ggpubr)
-  })
 
   # Filter counts_data data
   cat("\033[33mINITIATING DATA FILTERING...\033[0m\n")
@@ -136,73 +128,6 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   )
   write.csv(summary_stats, file = "summary_stats.csv")
   cat("\033[32mSummary statistics saved as 'summary_stats.csv'\033[0m\n")
-
-  cat("\033[33mINITIATING PCA...\033[0m\n")
-
-  pca_result <- prcomp(t(counts_data))
-  pca_data <- as.data.frame(pca_result$x[,1:2])
-  pca_data$label <- rownames(pca_data)
-
-  # Calcular distancia al centro promedio
-  centro_promedio <- colMeans(pca_data[, c("PC1", "PC2")])
-  pca_data$distancia_al_centro <- sqrt((pca_data$PC1 - centro_promedio[1])^2 + (pca_data$PC2 - centro_promedio[2])^2)
-  pca_data <- pca_data[order(-pca_data$distancia_al_centro), ]
-
-  # Seleccionar las muestras a etiquetar
-  muestras_a_etiquetar <- head(pca_data$label, n_samples)
-  pca_data$Tag <- ifelse(pca_data$label %in% muestras_a_etiquetar, "Tag", "No Tag")
-
-  # Calcular el porcentaje de variabilidad explicada
-  porcentaje_explicado <- round(100 * pca_result$sdev^2 / sum(pca_result$sdev^2), 2)
-  titulo_x <- paste0("PC1 (", porcentaje_explicado[1], "%)")
-  titulo_y <- paste0("PC2 (", porcentaje_explicado[2], "%)")
-
-  # Gráfico 1: PCA plot
-  p1 <- ggplot(pca_data, aes(x = PC1, y = PC2, color = Tag)) +
-    geom_point() +
-    ggrepel::geom_text_repel(data = subset(pca_data, Tag == "Tag"), aes(label = label), color = "red") +
-    labs(title = "PCA",
-         x = titulo_x,
-         y = titulo_y) +
-    theme(legend.position = "none",
-          plot.margin = margin(0.5, 1, 0.5, 0.5, "cm")) +
-    scale_color_manual(values = c("Tag" = "red", "No Tag" = "black")) +
-    scale_y_continuous(labels = scales::scientific_format())
-
-  # Gráfico 2: Barras de los primeros 10 componentes principales
-  porcentaje_explicado_10 <- head(porcentaje_explicado, 10)
-  varianza_acumulada <- cumsum(porcentaje_explicado)
-  varianza_acumulada_10 <- head(varianza_acumulada, 10)
-
-  bardata <- data.frame(Componente = factor(paste("PC", 1:10), levels = paste("PC", 1:10)),
-                        Porcentaje = porcentaje_explicado_10)
-
-  p2 <- ggplot(bardata, aes(x = Componente, y = Porcentaje)) +
-    geom_bar(stat = "identity", fill = "#4793AF") +
-    geom_text(aes(label = sprintf("%.2f", varianza_acumulada_10)),
-              vjust = -0.5, size = 3, color = "black") +
-    labs(title = "The First 10 Principal Components",
-         x = "Principal Components",
-         y = "Explained Variability (%)") +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-  # Gráfico 3: Línea de varianza acumulada
-  df <- data.frame(varianza_acumulada_10, pc = factor(paste("PC", 1:10, sep=""), levels = paste("PC", 1:10, sep="")))
-
-  p3 <- ggplot(data = df, aes(x = pc, y = varianza_acumulada_10, group = 1)) +
-    geom_point() +
-    geom_line() +
-    theme_bw() +
-    labs(x = "Principal Component",
-         y = "Explained Variability Accumulated (%)")
-
-  # Combinar gráficos en una sola visualización
-  combined_plot <- grid.arrange(p1, p2, p3, nrow = 1)
-
-  # Guardar el gráfico combinado en un archivo PDF
-  ggsave("plot_PCA.pdf", combined_plot, width = 14, height = 5)
-  cat("\033[32mPCA plots saves as 'plot_PCA.pdf'\033[0m\n")
 
   cat("\033[33mINITIATING QC PLOTS...\033[0m\n")
   # Subsets
@@ -308,44 +233,68 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   bin_df$Sample <- rownames(bin_df)
 
   # Melt the data frame
-  bin_df_melted <- melt(bin_df, id.vars = "Sample")
+  bin_df_melted <- reshape2::melt(bin_df, id.vars = "Sample")
 
   # Create violin plot for counts data
-  counts_data$Gene <- rownames(counts_data)
-  counts_long <- melt(counts_data, id.vars = "Gene", variable.name = "Sample", value.name = "Count")
-  counts_long$LogCount <- log1p(counts_long$Count)
+  # Convert raw counts to TPM
+  tpm_counts <- IOBR::count2tpm(counts_data,
+                          idType = "Symbol",
+                          org = "hsa",
+                          source = "biomart")
 
-  percentile_95 <- aggregate(LogCount ~ Sample, data = counts_long, FUN = function(x) quantile(x, 0.95))
+  # TPM data formatting
+  tpm_counts$Gene <- rownames(tpm_counts)
+  tpm_long <- reshape2::melt(tpm_counts, id.vars = "Gene", variable.name = "Sample", value.name = "TPM")
+  tpm_long$LogTPM <- log1p(tpm_long$TPM)
+
+  # Calculate the 95th percentile threshold for each sample
+  #percentile_95 <- aggregate(LogTPM ~ Sample, data = tpm_long, FUN = function(x) quantile(x, 0.95))
+  percentile_95 <- dplyr::summarise(dplyr::group_by(tpm_long, Sample),
+    percentile_95 = quantile(LogTPM, 0.95))
+
+
   colnames(percentile_95)[2] <- "Threshold"
-  counts_with_threshold <- merge(counts_long, percentile_95, by = "Sample")
-  counts_filtered <- counts_with_threshold[counts_with_threshold$LogCount < counts_with_threshold$Threshold, ]
+  tpm_with_threshold <- merge(tpm_long, percentile_95, by = "Sample")
 
+  # Filter data based on the 95th percentile threshold
+  tpm_filtered <- tpm_with_threshold[tpm_with_threshold$LogTPM < tpm_with_threshold$Threshold, ]
+
+  # Function to create violin plot
   create_violin_plot <- function(data, title) {
-    ggplot(data, aes(x = Sample, y = LogCount)) +
-      geom_violin(trim = FALSE, fill = "#4793AF", color = "black") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      labs(title = title,
-           x = "Sample",
-           y = "Log-Transformed Count")
+    ggplot2::ggplot(data, ggplot2::aes(x = Sample, y = LogTPM)) +
+      ggplot2::geom_violin(trim = FALSE, fill = "#4793AF", color = "black") +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1),
+                     panel.background = ggplot2::element_rect(fill = "white"),
+                     plot.background = ggplot2::element_rect(fill = "white"),
+                     panel.grid.major = ggplot2::element_line(color = "gray80"),
+                     panel.grid.minor = ggplot2::element_line(color = "gray90")) +
+      ggplot2::labs(title = title,
+                    x = "Sample",
+                    y = "Log-Transformed TPM")
   }
 
-  if (length(unique(counts_filtered$Sample)) > 50) {
-    samples <- unique(counts_filtered$Sample)
+  # Check if there are more than 50 unique samples and split if needed
+  if (length(unique(tpm_filtered$Sample)) > 50) {
+    samples <- unique(tpm_filtered$Sample)
     half <- ceiling(length(samples) / 2)
     subset1 <- samples[1:half]
     subset2 <- samples[(half + 1):length(samples)]
-    data1 <- counts_filtered[counts_filtered$Sample %in% subset1, ]
-    data2 <- counts_filtered[counts_filtered$Sample %in% subset2, ]
-    p4 <- create_violin_plot(data1, "Distribution of Log-Transformed Counts (Up to 95th Percentile) - Part 1")
-    p5 <- create_violin_plot(data2, "Distribution of Log-Transformed Counts (Up to 95th Percentile) - Part 2")
-    combined_plot<- ggpubr::ggarrange(p4, p5, ncol = 1, nrow = 2)
+    data1 <- tpm_filtered[tpm_filtered$Sample %in% subset1, ]
+    data2 <- tpm_filtered[tpm_filtered$Sample %in% subset2, ]
+    p4 <- create_violin_plot(data1, "Distribution of Log-Transformed TPM (Up to 95th Percentile) - Part 1")
+    p5 <- create_violin_plot(data2, "Distribution of Log-Transformed TPM (Up to 95th Percentile) - Part 2")
+    combined_plot <- ggpubr::ggarrange(p4, p5, ncol = 1, nrow = 2)
   } else {
-    p6 <- create_violin_plot(counts_filtered, "Distribution of Log-Transformed Counts (Up to 95th Percentile)")
-    combined_plot<- p6
+    p6 <- create_violin_plot(tpm_filtered, "Distribution of Log-Transformed TPM (Up to 95th Percentile)")
+    print(summary(tpm_filtered))
+    combined_plot <- p6
   }
+
+  # Save the violin plot to a PDF
   pdf("QC_plots_violin_plot.pdf", width = 14, height = 10)
   print(combined_plot)
-      dev.off()
+  dev.off()
+
 
   cat("\033[32mViolin plot saved as 'QC_plots_violin_plot.pdf'\033[0m\n")
 
@@ -354,6 +303,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   # Positive controls
   max_value <- max(ratios$`pos/gens`, threshold_line_pos)
+  min_size <- min(ratios$`pos/gens`, threshold_line_pos)
+
   colores_pos <- ifelse(ratios$`pos/gens` < threshold_inferior_pos, "#4793AF",
                         ifelse(ratios$`pos/gens` > threshold_superior_pos, "red", "#FFC470"))
   plot(ratios$`pos/gens`, xlab = "", ylab = "pos/gens", col = colores_pos,
@@ -374,6 +325,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   # Negative controls
   max_value <- max(ratios$`nc/gens`, threshold_line_nc)
+  min_size <- min(ratios$`nc/gens`, threshold_line_nc)
+
   colores_nc <- ifelse(ratios$`nc/gens` < threshold_inferior_nc, "#4793AF",
                        ifelse(ratios$`nc/gens` > threshold_superior_nc, "red", "#FFC470"))
   plot(ratios$`nc/gens`, xlab = "", ylab = "nc/gens", col = colores_nc,
@@ -383,6 +336,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   # Genomic DNA
   max_value <- max(ratios$`gdna/gens`, threshold_line_gdna)
+  min_size <- min(ratios$`gdna/gens`, threshold_line_gdna)
+
   colores_gdna <- ifelse(ratios$`gdna/gens` < threshold_inferior_gdna, "#4793AF",
                          ifelse(ratios$`gdna/gens` > threshold_superior_gdna, "red", "#FFC470"))
   plot(ratios$`gdna/gens`, xlab = "", ylab = "gdna/gens", col = colores_gdna,
@@ -392,6 +347,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   # ERCC
   max_value <- max(ratios$`ERCC/gens`, threshold_line_ercc)
+  min_size <- min(ratios$`ERCC/gens`, threshold_line_ercc)
+
   colores_ercc <- ifelse(ratios$`ERCC/gens` < threshold_inferior_ercc, "#4793AF",
                          ifelse(ratios$`ERCC/gens` > threshold_superior_ercc, "red", "#FFC470"))
   plot(ratios$`ERCC/gens`, xlab = "", ylab = "ERCC", col = colores_ercc,
@@ -402,8 +359,9 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   ## Median
   max_value <- max(ratios$median, threshold_line_median)
-  colores_med <- ifelse(ratios$median < threshold_inferior_median, "#4793AF",
-                        ifelse(ratios$median > threshold_superior_median, "red", "#FFC470"))
+  min_size <- min(ratios$median, threshold_line_median)
+  colores_med <- ifelse(ratios$median > threshold_inferior_median, "#4793AF",
+                        ifelse(ratios$median < threshold_superior_median, "red", "#FFC470"))
   plot(ratios$median, xlab = "", ylab = "Median", col = colores_med,
        xaxt = "n", pch = 19, main = "Median", ylim = c(0, max_value))
   axis(1, at = 1:nrow(ratios), labels = rownames(ratios), las = 2, cex.axis = 0.8)
@@ -413,14 +371,15 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
     cat("\033[32mQC plots saved as 'plot_QC.pdf'\033[0m\n")
 
   # Create the heatmap with ggplot2
-  a<- ggplot(bin_df_melted, aes(x = variable, y = Sample, fill = factor(value))) +
-    geom_tile(color = "white") +
-    scale_fill_manual(values = c("0" = "#FFF9D0", "1" = "red"), labels = c("OK", "Possible Outlier")) +
-    labs(x = "QC Metrics", y = "Samples", fill = "QC Status") +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          axis.text.y = element_text(size = 7),
+  a<- ggplot2::ggplot(bin_df_melted, ggplot2::aes(x = variable, y = Sample, fill = factor(value))) +
+    ggplot2::geom_tile(color = "white") +
+    ggplot2::scale_fill_manual(values = c("0" = "#FFF9D0", "1" = "red"), labels = c("OK", "Possible Outlier")) +
+    ggplot2::labs(x = "QC Metrics", y = "Samples", fill = "QC Status") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+          axis.text.y = ggplot2::element_text(size = 7),
           legend.position = "bottom")
+
   pdf("HTG_QC_heatmap.pdf", width = 10, height = 14)
   print(a)
       dev.off()
@@ -430,7 +389,6 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   rows_with_1 <- suppressWarnings(rownames(bin_matrix)[apply(bin_matrix, 1, any)])
   cat("\033[32m                              ***\033[0m\n")
   cat(paste("\033[32mThese are the samples plotted at least once in the heatmap:\033[0m\n"))
-  print(rows_with_1)
   cat(paste("The number of samples that are outliers are:", length(rows_with_1)))
   return(rows_with_1)
 }

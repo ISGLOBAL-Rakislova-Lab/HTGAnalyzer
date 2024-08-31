@@ -8,6 +8,8 @@
 #' @return A data frame containing summary statistics for each column of the input data. and also will be .csv
 #' @export
 #'
+#' @importFrom utils write.csv
+#'
 #' @examples
 #' summary <- HTG_calculate_summary_stats(counts_data_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 #' @name HTG_calculate_summary_stats

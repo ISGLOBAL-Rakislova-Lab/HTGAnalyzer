@@ -3,7 +3,7 @@
 #' @description This function carries out a comprehensive TME analysis involving TPM normalization and TME using multiple methods (EPIC, quanTIseq, and xCell). It produces several output files containing the results of the normalization and TME processes.
 
 #' @param outliers Vector of outlier sample IDs to be removed from analysis.
-#' @param pattern Regular expression pattern to identify outlier sample IDs.
+#' @param pattern Regular expression pattern to identify outlier sample IDs. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
 #' @param counts_data Count data matrix of gene expression.
 #' @param AnnotData DataFrame containing sample metadata.
 #' @param design_formula Formula specifying the design of the analysis.
@@ -16,6 +16,9 @@
 #' - `imm_epic.csv`, `imm_qti.csv`, `imm_xcell.csv`: Results of TME methods EPIC, quanTIseq, and xCell respectively.
 #'
 #' @export
+#'
+#' @import immunedeconv
+#'
 #' @examples
 #' TME_results <- HTG_TME(
 #'   outliers = outliers_tutorial,
@@ -31,34 +34,27 @@
 #'
 #'
 #'
+utils::globalVariables(c(".data", "mean_value", "Sample", "Cell_Type", "Value", "Average", "Fraction", "shapiro_test"))
+
 HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_formula = NULL ,
                             DEA = NULL, generate_volcano = TRUE, remove_outliers = TRUE) {
-  suppressMessages({
-    library(DESeq2)
-    library(ggplot2)
-    library(ggrepel)
-    library(PoiClaClu)
-    library(EnhancedVolcano)
-    library(clusterProfiler)
-    library(org.Hs.eg.db)
-    library(msigdbr)
-    library(fgsea)
-    library(DOSE)
-    library(enrichplot)
-    library(pheatmap)
-    library(RColorBrewer)
-    library(ggupset)
-    library(grid)
-    library(survival)
-    library(survminer)
-    library(dplyr)
-    library(IOBR)
-    library(immunedeconv)
-    library(tidyverse)
-    library(ggpubr)
-    library(tidyr)
-    library(maxstat)
-  })
+
+  if (!requireNamespace("IOBR", quietly = TRUE)) {
+    stop("Package 'IOBR' is required but not installed.")
+  }
+  if (!requireNamespace("immunedeconv", quietly = TRUE)) {
+    stop("Package 'immunedeconv' is required but not installed.")
+  }
+
+  if (!requireNamespace("EPIC", quietly = TRUE)) {
+    stop("Package 'EPIC' is required but not installed.")
+  }
+
+  if (!requireNamespace("xCell", quietly = TRUE)) {
+    stop("Package 'xCell' is required but not installed.")
+  }
+  utils::data("xCell.data", package = "xCell", envir = environment())
+
 
   if (!is.null(pattern)) {
     # Remove outliers based on pattern
@@ -81,7 +77,7 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   ## Normalización TPM
   cat("\033[32mTPM normalization performed and stored on tpm_counts.csv\033[0m\n")
   suppressWarnings({
-    tpm_counts <- count2tpm(counts_data,
+    tpm_counts <- IOBR::count2tpm(counts_data,
                             idType = "Symbol",
                             org = "hsa",
                             source = "biomart")
@@ -95,8 +91,8 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
 
   if (!is.null(DEA)) {
     cat("\033[32mWe are going to use information from DEA\033[0m\n")
-    dds <- estimateSizeFactors(dds)
-    normalized_counts <- counts(dds, normalized = TRUE)
+    dds <- DESeq2::estimateSizeFactors(dds)
+    normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
   } else {
     cat("Performing normalization.\n")
     design_formul <- as.formula("~ 1")
@@ -109,9 +105,10 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   }
 
   ## Deconvolución
-  imm_epic <- deconvolute(tpm_counts, method = "epic")
-  imm_qti <- deconvolute(tpm_counts, method = "quantiseq")
-  imm_xcell <- deconvolute(tpm_counts, method = "xcell")
+  imm_epic <- immunedeconv::deconvolute(tpm_counts, method = "epic")
+  imm_qti <- immunedeconv::deconvolute(tpm_counts, method = "quantiseq")
+  imm_xcell <- immunedeconv::deconvolute(tpm_counts, method = "xcell")
+
   cat("\033[32mresults of the devonvolution will be stored in imm_epic.csv, imm_qti.csv and imm_xcell.csv \033[0m\n")
   write.csv(imm_epic, file = "imm_epic.csv")
   write.csv(imm_qti, file = "imm_qti.csv")
@@ -163,86 +160,47 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
     colnames(df) <- gsub(" ", "_", colnames(df))
     return(df)
   }
-
   imm_epic <- replace_space_with_underscore(imm_epic)
   imm_qti <- replace_space_with_underscore(imm_qti)
   imm_xcell <- replace_space_with_underscore(imm_xcell)
 
-
   ############# imm_epic
-  design_formula_sym <- sym(design_formula)
+  design_formula_sym <- rlang::sym(design_formula)
   # Vector with column names except the last one
   column_names <- names(imm_epic)[-ncol(imm_epic)]
   # Loop to generate plots for each column
-  for (col_name in column_names) {
-    # Calculate means by design formula
-    means_df <- imm_epic %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
-    # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
-    p_value <- tryCatch({
-      if (n_distinct(imm_epic[[as_label(design_formula_sym)]]) == 2) {
-        t.test(formula, data = imm_epic)$p.value
-      } else {
-        summary(aov(formula, data = imm_epic))[[1]]$`Pr(>F)`[1]
-      }
-    }, error = function(e) {
-      NA  # In case of error, return NA for p-value
-    })
-
-    # Generate plot
-    plot <- ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                 fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
-    print(plot)
-  }
   pdf("plots_imm_EPIC.pdf")
   for (col_name in column_names) {
     # Calculate means by design formula
-    means_df <- imm_epic %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
+    grouped_data <- dplyr::group_by(imm_epic, !!design_formula_sym)
+    means_df <- dplyr::summarize(grouped_data, mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
     # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+    formula <- as.formula(paste0("`", col_name, "` ~ ", rlang::as_label(design_formula_sym)))
     p_value <- tryCatch({
-      if (n_distinct(imm_epic[[as_label(design_formula_sym)]]) == 2) {
+      if (dplyr::n_distinct(imm_epic[[rlang::as_label(design_formula_sym)]]) == 2) {
         t.test(formula, data = imm_epic)$p.value
       } else {
-        summary(aov(formula, data = imm_epic))[[1]]$`Pr(>F)`[1]
+        summary(stats::aov(formula, data = imm_epic))[[1]]$`Pr(>F)`[1]
       }
     }, error = function(e) {
       NA  # In case of error, return NA for p-value
     })
-
     # Generate plot
-    plot <- ggplot(imm_epic, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                 fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
+    plot <- ggplot2::ggplot(imm_epic, ggplot2::aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                                   fill = !!design_formula_sym, color = !!design_formula_sym)) +
+      ggplot2::geom_jitter(alpha = 1, width = 0.3, height = 0) +
+      ggplot2::geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+      ggplot2::geom_point(data = means_df, ggplot2::aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                          shape = 22, color = "black", size = 3, stroke = 1.5,
+                          show.legend = F) +
+      ggplot2::labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_epic") +
+      ggplot2::scale_y_continuous(labels = scales::percent_format(scale = 1),
+                                  limits = c(0, NA)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank()) +
+      ggplot2::annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                        hjust = 1.1, vjust = 1.1, size = 5, color = "red")
     print(plot)
   }
   dev.off()
@@ -250,217 +208,138 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   ############# imm_qti
   # Vector with column names except the last one
   column_names <- names(imm_qti)[-ncol(imm_qti)]
-  # Loop to generate plots for each column
-  for (col_name in column_names) {
-    # Calculate means by design formula
-    means_df <- imm_qti %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
-    # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
-    p_value <- tryCatch({
-      if (n_distinct(imm_qti[[as_label(design_formula_sym)]]) == 2) {
-        t.test(formula, data = imm_qti)$p.value
-      } else {
-        summary(aov(formula, data = imm_qti))[[1]]$`Pr(>F)`[1]
-      }
-    }, error = function(e) {
-      NA  # In case of error, return NA for p-value
-    })
-
-    # Generate plot
-    plot <- ggplot(imm_qti, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_qti") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
-    print(plot)
-  }
   pdf("plots_imm_qti.pdf")
   for (col_name in column_names) {
     # Calculate means by design formula
-    means_df <- imm_qti %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+    grouped_data <- dplyr::group_by(imm_qti, !!design_formula_sym)
+    means_df <- dplyr::summarize(grouped_data, mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
     # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+    formula <- as.formula(paste0("`", col_name, "` ~ ", rlang::as_label(design_formula_sym)))
     p_value <- tryCatch({
-      if (n_distinct(imm_qti[[as_label(design_formula_sym)]]) == 2) {
+      if (dplyr::n_distinct(imm_qti[[rlang::as_label(design_formula_sym)]]) == 2) {
         t.test(formula, data = imm_qti)$p.value
       } else {
-        summary(aov(formula, data = imm_qti))[[1]]$`Pr(>F)`[1]
+        summary(stats::aov(formula, data = imm_qti))[[1]]$`Pr(>F)`[1]
       }
     }, error = function(e) {
       NA  # In case of error, return NA for p-value
     })
 
     # Generate plot
-    plot <- ggplot(imm_qti, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                 fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_qti") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
+    plot <- ggplot2::ggplot(imm_qti, ggplot2::aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                                  fill = !!design_formula_sym, color = !!design_formula_sym)) +
+      ggplot2::geom_jitter(alpha = 1, width = 0.3, height = 0) +
+      ggplot2::geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+      ggplot2::geom_point(data = means_df, ggplot2::aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                          shape = 22, color = "black", size = 3, stroke = 1.5,
+                          show.legend = F) +
+      ggplot2::labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_qti") +
+      ggplot2::scale_y_continuous(labels = scales::percent_format(scale = 1),
+                                  limits = c(0, NA)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank()) +
+      ggplot2::annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                        hjust = 1.1, vjust = 1.1, size = 5, color = "red")
     print(plot)
   }
   dev.off()
-
-
 
   ############# imm_xcell
   # Vector with column names except the last one
   column_names <- names(imm_xcell)[-ncol(imm_xcell)]
-  # Loop to generate plots for each column
-  for (col_name in column_names) {
-    # Calculate means by design formula
-    means_df <- imm_xcell %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
-
-    # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
-    p_value <- tryCatch({
-      if (n_distinct(imm_xcell[[as_label(design_formula_sym)]]) == 2) {
-        t.test(formula, data = imm_xcell)$p.value
-      } else {
-        summary(aov(formula, data = imm_xcell))[[1]]$`Pr(>F)`[1]
-      }
-    }, error = function(e) {
-      NA  # In case of error, return NA for p-value
-    })
-
-    # Generate plot
-    plot <- ggplot(imm_xcell, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                  fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_xcell") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
-    print(plot)
-  }
   pdf("plots_imm_xcell.pdf")
   for (col_name in column_names) {
     # Calculate means by design formula
-    means_df <- imm_xcell %>%
-      group_by(!!design_formula_sym) %>%
-      summarize(mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
+    grouped_data <- dplyr::group_by(imm_xcell, !!design_formula_sym)
+    means_df <- dplyr::summarize(grouped_data, mean_value = mean(.data[[col_name]] * 100, na.rm = TRUE), .groups = "drop")
 
     # Perform t-test or ANOVA
-    formula <- as.formula(paste0("`", col_name, "` ~ ", as_label(design_formula_sym)))
+    formula <- as.formula(paste0("`", col_name, "` ~ ", rlang::as_label(design_formula_sym)))
     p_value <- tryCatch({
-      if (n_distinct(imm_xcell[[as_label(design_formula_sym)]]) == 2) {
+      if (dplyr::n_distinct(imm_xcell[[rlang::as_label(design_formula_sym)]]) == 2) {
         t.test(formula, data = imm_xcell)$p.value
       } else {
-        summary(aov(formula, data = imm_xcell))[[1]]$`Pr(>F)`[1]
+        summary(stats::aov(formula, data = imm_xcell))[[1]]$`Pr(>F)`[1]
       }
     }, error = function(e) {
       NA  # In case of error, return NA for p-value
     })
-
     # Generate plot
-    plot <- ggplot(imm_xcell, aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
-                                  fill = !!design_formula_sym, color = !!design_formula_sym)) +
-      geom_jitter(alpha = 1, width = 0.3, height = 0) +
-      geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
-      geom_point(data = means_df, aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
-                 shape = 22, color = "black", size = 3, stroke = 1.5,
-                 show.legend = F) +
-      labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_xcell") +
-      scale_y_continuous(labels = scales::percent_format(scale = 1),
-                         limits = c(0, NA)) +
-      theme(axis.text.x = element_blank()) +
-      annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
-               hjust = 1.1, vjust = 1.1, size = 5, color = "red")
-
+    plot <- ggplot2::ggplot(imm_xcell, ggplot2::aes(x = !!design_formula_sym , y = .data[[col_name]] * 100,
+                                                    fill = !!design_formula_sym, color = !!design_formula_sym)) +
+      ggplot2::geom_jitter(alpha = 1, width = 0.3, height = 0) +
+      ggplot2::geom_boxplot(fill = "white", alpha = 0.5, outlier.alpha = 1) +
+      ggplot2::geom_point(data = means_df, ggplot2::aes(x = !!design_formula_sym, y = mean_value, fill = !!design_formula_sym),
+                          shape = 22, color = "black", size = 3, stroke = 1.5,
+                          show.legend = F) +
+      ggplot2::labs(x = NULL, y = "Abundance (%)", title = col_name, subtitle = "imm_xcell") +
+      ggplot2::scale_y_continuous(labels = scales::percent_format(scale = 1),
+                                  limits = c(0, NA)) +
+      ggplot2::theme(axis.text.x = ggplot2::element_blank()) +
+      ggplot2::annotate("text", x = Inf, y = Inf, label = paste("p-value:", format(p_value, digits = 3)),
+                        hjust = 1.1, vjust = 1.1, size = 5, color = "red")
     print(plot)
   }
   dev.off()
-
-
-
   # Composición celular del TME i por grupo
-
   # Function to generate the bar plot for each sample
   plot_bar <- function(df, paleta, titulo, legend.position) {
-    df <- df %>%
-      rownames_to_column(var = "Sample") %>%
-      pivot_longer(cols = colnames(df)[2:(ncol(df) - 1)],
-                   names_to = "Cell_Type", values_to = "Value") %>%
-      mutate(Sample = factor(Sample, levels = rev(unique(Sample))),
-             Cell_Type = factor(Cell_Type, levels = rev(unique(Cell_Type))))
+    # Convertir las filas en una columna llamada "Sample"
+    df <- tibble::rownames_to_column(df, var = "Sample")
+    df <- tidyr::pivot_longer(
+      df, cols = colnames(df)[2:(ncol(df) - 1)],
+      names_to = "Cell_Type", values_to = "Value")
+    df <- dplyr::mutate(df,
+                        Sample = factor(Sample, levels = rev(unique(Sample))),
+                        Cell_Type = factor(Cell_Type, levels = rev(unique(Cell_Type))))
 
-    p <- ggplot(df, aes(x = Sample, y = Value, fill = Cell_Type)) +
-      geom_bar(stat = "identity") +
-      labs(title = titulo,
-           x = "Samples",
-           y = "Cell Fraction (%)") +
-      coord_flip() +
-      guides(fill = guide_legend(reverse = TRUE)) +
-      scale_fill_manual(values = paleta) +
-      theme_minimal() +
-      theme(legend.position = legend.position,
-            axis.text.y = element_text(size = 5)) +
-      scale_y_continuous(labels = scales::percent)
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = Sample, y = Value, fill = Cell_Type)) +
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::labs(title = titulo,
+                    x = "Samples",
+                    y = "Cell Fraction (%)") +
+      ggplot2::coord_flip() +
+      ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+      ggplot2::scale_fill_manual(values = paleta) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(legend.position = legend.position,
+                     axis.text.y = ggplot2::element_text(size = 5)) +
+      ggplot2::scale_y_continuous(labels = scales::percent)
 
     return(p)
   }
 
-  # Function to generate the average bar plot by group (e.g., HPV status)
   plot_bar_group <- function(df, paleta, titulo, design_formula, legend_position = "right") {
     suppressWarnings({
-      design_formula_sym <- sym(design_formula)
+      design_formula_sym <- rlang::sym(design_formula)
       niveles_tipo_cel <- colnames(df)[1:(ncol(df) - 1)]
-
-      promedios <- df %>%
-        rownames_to_column(var = "Sample") %>%
-        pivot_longer(cols = niveles_tipo_cel,
-                     names_to = "Cell_Type", values_to = "Value") %>%
-        group_by(!!design_formula_sym, Cell_Type) %>%
-        summarise(Average = mean(Value, na.rm = TRUE), .groups = "drop") %>%
-        ungroup() %>%
-        mutate(!!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
-               Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
-
-      p <- ggplot(promedios, aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
-        geom_bar(stat = "identity") +
-        labs(title = titulo,
-             x = design_formula,
-             y = "Average Cell Fraction (%)") +
-        coord_flip() +
-        guides(fill = guide_legend(reverse = TRUE)) +
-        scale_fill_manual(values = paleta) +
-        theme_minimal() +
-        theme(legend.position = legend_position,
-              axis.text.y = element_text(size = 7)) +
-        scale_y_continuous(labels = scales::percent)
-
+      df_rownames <- tibble::rownames_to_column(df, var = "Sample")
+      df_long <- tidyr::pivot_longer(
+        df_rownames,
+        cols = niveles_tipo_cel,
+        names_to = "Cell_Type",
+        values_to = "Value")
+      df_grouped <- dplyr::group_by(df_long, !!design_formula_sym, Cell_Type)
+      df_summarised <- dplyr::summarise(df_grouped,
+                                        Average = mean(Value, na.rm = TRUE),
+                                        .groups = "drop")
+      df_ungrouped <- dplyr::ungroup(df_summarised)
+      promedios <- dplyr::mutate(df_ungrouped,
+                                 !!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
+                                 Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
+      p <- ggplot2::ggplot(promedios, ggplot2::aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::labs(title = titulo,
+                      x = "Samples",
+                      y = "Cell Fraction (%)") +
+        ggplot2::coord_flip() +
+        ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+        ggplot2::scale_fill_manual(values = paleta) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(legend.position = legend_position,
+                       axis.text.y = ggplot2::element_text(size = 5)) +
+        ggplot2::scale_y_continuous(labels = scales::percent)
       return(p)
     })
   }
@@ -470,8 +349,7 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
     p1 <- plot_bar(df, paleta, titulo_individual, legend_position)
     p2 <- plot_bar_group(df, paleta, titulo_grupo, design_formula, legend_position)
 
-
-    combined_plot <- ggarrange(p1, p2, ncol = 1, nrow = 2, heights = c(1, 1))
+    combined_plot <- ggpubr::ggarrange(p1, p2, ncol = 1, nrow = 2, heights = c(1, 1))
     return(combined_plot)
   }
 
@@ -486,36 +364,25 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
                         "#FF7F0E","#FDB462","#FFB1D9","#B3DE69")
   # Assuming 'imm_epic', 'imm_qti', and 'imm_xcell' dataframes are already loaded
   combined_plot_EPIC <- plot_combined(imm_epic, paleta_imm, "EPIC Individual", "EPIC Average", design_formula, "right")
-  print(combined_plot_EPIC)
-
   combined_plot_quanTIseq <- plot_combined(imm_qti, paleta_qti, "quanTIseq Individual", "quanTIseq Average", design_formula, "right")
-  print(combined_plot_quanTIseq)
-
   combined_plot_xCell <- plot_combined(imm_xcell, paleta_extendida, "xCell Individual", "xCell Average", design_formula, "right")
-  print(combined_plot_xCell)
 
   pdf("plot_cell_fraction_Average_cell_fraction_EPIC.pdf", width = 11, height = 14)
   print(combined_plot_EPIC)
   dev.off()
 
-
-
   pdf("plot_cell_fraction_Average_cell_fraction_quanTIseq.pdf", width = 11, height = 14)
   print(combined_plot_quanTIseq)
   dev.off()
-
-
 
   pdf("plot_cell_fraction_Average_cell_fraction_xCell.pdf", width = 11, height = 14)
   print(combined_plot_xCell)
   dev.off()
 
-
-
   ########################
   trans_formato_largo <- function(df, design_formula_sym) {
-    df_largo <- df %>%
-      pivot_longer(-all_of(design_formula_sym), names_to = "Cell_Type", values_to = "Fraction")
+    df_largo <- tidyr::pivot_longer(df, cols = -dplyr::all_of(design_formula_sym), names_to = "Cell_Type",
+                                    values_to = "Fraction")
     return(df_largo)
   }
 
@@ -523,10 +390,9 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   prueba_norm <- function(df, design_formula_sym) {
     df_largo <- trans_formato_largo(df, design_formula_sym)
 
-    resultados_normalidad <- df_largo %>%
-      group_by(Cell_Type) %>%
-      summarise(shapiro_test = list(shapiro.test(Fraction))) %>%
-      mutate(p.value = map_dbl(shapiro_test, "p.value"))
+    df_grouped <- dplyr::group_by(df_largo, Cell_Type)
+    df_summarised <- dplyr::summarise(df_grouped, shapiro_test = list(stats::shapiro.test(Fraction)))
+    resultados_normalidad <- dplyr::mutate(df_summarised, p.value = purrr::map_dbl(shapiro_test, "p.value"))
 
     return(resultados_normalidad)
   }
@@ -541,8 +407,8 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   filter_valid_columns <- function(df, design_formula_sym, dataset_name) {
     cat("\033[32mChecking if All Values in Each Column Are Equal in dataset:", dataset_name, "\033[0m\n")
 
-    equality_results <- sapply(df, check_column_equal)
-    unequal_columns_count <- sum(!equality_results)
+    equality_results <- base::sapply(df, check_column_equal)
+    unequal_columns_count <- base::sum(!equality_results)
 
     if (unequal_columns_count > 0) {
       cat("\033[33mIn dataset", dataset_name, "the following columns have the same value in all rows and will be excluded from the analysis:\033[0m\n")
@@ -566,8 +432,9 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
 
     for (cell_type in cell_types) {
 
-      df_cell_type <- df_largo %>% dplyr::filter(Cell_Type == cell_type)
+      df_cell_type <- dplyr::filter(df_largo, Cell_Type == cell_type)
       groups <- unique(df_cell_type[[design_formula_sym]])
+
 
       if (length(groups) == 2) {
         # Perform t-test
@@ -575,21 +442,22 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
         results[[cell_type]] <- list(Test = "t-test", p.value = t_test_result$p.value)
       } else {
         # Perform ANOVA
-        anova_result <- aov(Fraction ~ df_cell_type[[design_formula_sym]], data = df_cell_type)
+        anova_result <- stats::aov(Fraction ~ df_cell_type[[design_formula_sym]], data = df_cell_type)
         p_value <- summary(anova_result)[[1]]$`Pr(>F)`[1]
         results[[cell_type]] <- list(Test = "ANOVA", p.value = p_value)
       }
     }
 
-    results_df <- bind_rows(lapply(names(results), function(cell_type) {
+    results_df <- dplyr::bind_rows(lapply(names(results), function(cell_type) {
       result <- results[[cell_type]]
-      tibble(Cell_Type = cell_type, Test = result$Test, p.value = result$p.value)
+      tibble::tibble(Cell_Type = cell_type, Test = result$Test, p.value = result$p.value)
     }))
 
     return(results_df)
   }
 
   # Apply the filtering and normality test for each dataset
+  cat("\033[33mApply the filtering and normality test for each dataset\033[0m\n")
   imm_qti_filtered <- filter_valid_columns(imm_qti, design_formula_sym, "quanTIseq")
   imm_epic_filtered <- filter_valid_columns(imm_epic, design_formula_sym, "EPIC")
   imm_xcell_filtered <- filter_valid_columns(imm_xcell, design_formula_sym, "xcell")
@@ -631,8 +499,6 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
     cat("\033[31mCan't perform Shapiro-Wilk test for xcell. No valid columns available.\033[0m\n")
   }
 
-
-
   ############# Heatmaps
   # Transponer y estandarizar por filas
   h_imm_epic <- as.data.frame(t(imm_epic))
@@ -672,8 +538,8 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   xcell_row_delete <- c('Common lymphoid progenitor', 'Common myeloid progenitor',
                         'Granulocyte-monocyte progenitor', 'Hematopoietic stem cell')
 
-  h_imm_xcell <- h_imm_xcell %>%
-    dplyr::filter(!row.names(.) %in% xcell_row_delete)  # Eliminar filas
+  h_imm_xcell <- dplyr::filter(h_imm_xcell, !rownames(h_imm_xcell) %in% xcell_row_delete)
+
 
   rn_himmxcell <- rownames(h_imm_xcell)
   cl_himmxcell <- colnames(h_imm_xcell)
@@ -687,160 +553,147 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   AnnotData[[design_formula]] <- as.factor(AnnotData[[design_formula]])
 
   ################################### HEATMAP
+  cat("\033[33mGENERATING HEATMAPS\033[0m\n")
   remove_nan_rows <- function(df) {
     # Remove rows with any NaN values
     df_cleaned <- df[!apply(df, 1, function(row) any(is.nan(row))), ]
     return(df_cleaned)
   }
 
-  #### EPIC
+
+  # Generar el heatmap para h_imm_epic
   combined_data <- remove_nan_rows(h_imm_epic)
 
   if (ncol(combined_data) < 3) {
     cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
   } else {
-    # Check if there are still any NaN values
     if (any(is.na(combined_data))) {
       cat("Cannot generate the heatmap because there are NaN values in the data.\n")
     } else {
-      # Ensure col_ann_data has the same dimensions as combined_data
       col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
 
       if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        col_ann_data <- as.data.frame(col_ann_data)
       } else {
         stop("Dimensions of col_ann_data and combined_data do not match")
       }
 
-      # Annotations
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 9),
-        show_legend = TRUE
+      annotation_col <- as.data.frame(col_ann_data[, design_formula, drop = FALSE])
+      rownames(annotation_col) <- colnames(combined_data)
+
+      HeatmapEPIC <- pheatmap::pheatmap(
+        as.matrix(combined_data),
+        cluster_rows = TRUE,
+        cluster_cols = TRUE,
+        annotation_col = annotation_col,
+        fontsize = 9,
+        color = colorRampPalette(c("#4793AF", "white", "#013649"))(50),
+        border_color = "grey60",
+        main = "Heatmap EPIC",
+        legend = TRUE,
+        angle_col = 45,
+        silent = TRUE
       )
-      combined_data <- as.matrix(combined_data)
-
-    # Generar Heatmap
-    HeatmapEPIC <- Heatmap(combined_data,
-                           column_title = "Heatmap EPIC",
-                           cluster_rows = TRUE,
-                           cluster_columns = TRUE,
-                           column_names_gp = gpar(fontsize = 9),
-                           row_names_gp = gpar(fontsize = 9),
-                           rect_gp = gpar(col = "grey60", lwd = 1),
-                           name = 'Z-score',
-                           top_annotation = col_ann)
-
-    print(HeatmapEPIC)
     }
   }
-  ###### qti
+
+  # Generar el heatmap para h_imm_qti
   combined_data <- remove_nan_rows(h_imm_qti)
 
-  # Verificar si hay NaN en combined_data
   if (ncol(combined_data) < 3) {
     cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
   } else {
-    # Check if there are still any NaN values
     if (any(is.na(combined_data))) {
       cat("Cannot generate the heatmap because there are NaN values in the data.\n")
     } else {
-      # Ensure col_ann_data has the same dimensions as combined_data
       col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
 
       if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        col_ann_data <- as.data.frame(col_ann_data)
       } else {
         stop("Dimensions of col_ann_data and combined_data do not match")
       }
 
-      # Annotations
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 9),
-        show_legend = TRUE
-      )
-      combined_data <- as.matrix(combined_data)
+      annotation_col <- as.data.frame(col_ann_data[, design_formula, drop = FALSE])
+      rownames(annotation_col) <- colnames(combined_data)
 
-    # Generar Heatmap
-    Heatmap_qti <- Heatmap(combined_data,
-                           column_title = "Heatmap qti",
-                           cluster_rows = TRUE,
-                           cluster_columns = TRUE,
-                           column_names_gp = gpar(fontsize = 9),
-                           row_names_gp = gpar(fontsize = 9),
-                           rect_gp = gpar(col = "grey60", lwd = 1),
-                           name = 'Z-score',
-                           top_annotation = col_ann)
-    print(Heatmap_qti)
+      Heatmap_qti <- pheatmap::pheatmap(
+        as.matrix(combined_data),
+        cluster_rows = TRUE,
+        cluster_cols = TRUE,
+        annotation_col = annotation_col,
+        fontsize = 9,
+        color = colorRampPalette(c("#4793AF", "white", "#013649"))(50),
+        border_color = "grey60",
+        main = "Heatmap QTI",
+        legend = TRUE,
+        angle_col = 45,
+        silent = TRUE
+      )
     }
   }
-  ####### h_imm_xcell
+
+  # Generar el heatmap para h_imm_xcell
   combined_data <- remove_nan_rows(h_imm_xcell)
 
-  # Verificar si hay NaN en combined_data
   if (ncol(combined_data) < 3) {
     cat("Cannot generate the heatmap because the dataset has less than 3 columns after removing rows with NaN values.\n")
   } else {
-    # Check if there are still any NaN values
     if (any(is.na(combined_data))) {
       cat("Cannot generate the heatmap because there are NaN values in the data.\n")
     } else {
-      # Ensure col_ann_data has the same dimensions as combined_data
       col_ann_data <- AnnotData[colnames(combined_data), , drop = FALSE]
 
       if (ncol(combined_data) == nrow(col_ann_data)) {
-        col_ann_data <- as.data.frame(col_ann_data)  # Convert to data frame
+        col_ann_data <- as.data.frame(col_ann_data)
       } else {
         stop("Dimensions of col_ann_data and combined_data do not match")
       }
 
-      # Annotations
-      col_ann <- HeatmapAnnotation(
-        df = col_ann_data[, design_formula, drop = FALSE],
-        gp = gpar(col = "grey60", lwd = 1),
-        annotation_name_gp = gpar(fontsize = 9),
-        show_legend = TRUE
-      )
-      combined_data <- as.matrix(combined_data)
+      annotation_col <- as.data.frame(col_ann_data[, design_formula, drop = FALSE])
+      rownames(annotation_col) <- colnames(combined_data)
 
-    # Generar Heatmap
-    Heatmap_xcell <- Heatmap(combined_data,
-                             column_title = "Heatmap xcell",
-                             cluster_rows = TRUE,
-                             cluster_columns = TRUE,
-                             column_names_gp = gpar(fontsize = 9),
-                             row_names_gp = gpar(fontsize = 9),
-                             rect_gp = gpar(col = "grey60", lwd = 1),
-                             name = 'Z-score',
-                             top_annotation = col_ann)
-    print(Heatmap_xcell)
+      Heatmap_xcell <- pheatmap::pheatmap(
+        as.matrix(combined_data),
+        cluster_rows = TRUE,
+        cluster_cols = TRUE,
+        annotation_col = annotation_col,
+        fontsize = 9,
+        color = colorRampPalette(c("#4793AF", "white", "#013649"))(50),
+        border_color = "grey60",
+        main = "Heatmap XCELL",
+        legend = TRUE,
+        angle_col = 45,
+        silent = TRUE
+      )
     }
   }
 
   cat("\033[32mHeatmap of qti, EPIC and xcell will be stored on plots_TME_heatmap.pdf\033[0m\n")
-  pdf("plots_TME_heatmap.pdf", width = 11, height = 14)
+
   if (exists("Heatmap_qti")) {
+    pdf("plots_TME_Heatmap_qti.pdf", width = 11, height = 14)
     print(Heatmap_qti)
+    dev.off()
   } else {
     cat("Heatmap_qti object does not exist.\n")
   }
+
   if (exists("HeatmapEPIC")) {
+    pdf("plots_TME_HeatmapEPIC.pdf", width = 11, height = 14)
     print(HeatmapEPIC)
+    dev.off()
   } else {
     cat("HeatmapEPIC object does not exist.\n")
   }
-
   if (exists("Heatmap_xcell")) {
+    pdf("plots_TME_Heatmap_xcell.pdf", width = 11, height = 14)
     print(Heatmap_xcell)
+    dev.off()
   } else {
-    cat("Heatmapxcell object does not exist.\n")
+    cat("Heatmap_xcell object does not exist.\n")
   }
-  dev.off()
 
-
-  data_table_list<- list(EPIC= imm_epic, QTI = imm_qti, XCELL= imm_xcell)
+  data_table_list <- list(EPIC = imm_epic, QTI = imm_qti, XCELL = imm_xcell)
   return(data_table_list)
 }

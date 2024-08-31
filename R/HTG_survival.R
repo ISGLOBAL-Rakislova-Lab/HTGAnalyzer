@@ -1,9 +1,9 @@
 #' Perform Survival Analysis
 #'
 #' This function performs survival analysis based on the provided data. The function uses parameters in a hierarchical manner:
-#' if `res` is provided, it uses the top genes from `res`; if `genes_to_use` is provided, it uses those specific genes;
-#' if `TME` is provided, it uses the genes from `TME`. If multiple parameters are provided, `res` takes precedence over
-#' `genes_to_use`, and `genes_to_use` takes precedence over `TME`.
+#' if `genes_to_use` is provided, it uses those specific genes; if `res` is provided, it uses the top genes from `res`;
+#' if `TME` is provided, it uses the genes from `TME`. If multiple parameters are provided, `genes_to_use` takes precedence over
+#' `res`, and `res` takes precedence over `TME`.
 #'
 #' @param variable_01 Character. The name of the survival event variable (e.g., "Recurrence_01").
 #' @param time Character. The name of the time variable (e.g., "Time_to_death_surv").
@@ -19,27 +19,34 @@
 #'
 #' @return Generates Kaplan-Meier survival plots and saves them as PDF files. The plots are saved in the current working directory.
 #' @export
+#'
 #' @examples
+#'
+#' # USING DEA RESULTS:
 #' HTG_survival(variable_01 = "Recurrence_01",
 #'              time = "Time_to_death_surv",
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = res_tutorial,
 #'              genes_to_use = NULL,
+#'              TME = NULL,
 #'              outliers = outliers_tutorial,
 #'              pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 #'              remove_outliers = TRUE)
 #'
+#' # USING SPECIFIC GENES
 #' HTG_survival(variable_01 = "Recurrence_01",
 #'              time = "Time_to_death_surv",
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
-#'              res = res_tutorial,
+#'              res = NULL,
 #'              genes_to_use = c("LCP1", "OMA1"),
+#'              TME = NULL,
 #'              outliers = outliers_tutorial,
 #'              pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 #'              remove_outliers = TRUE)
 #'
+#' # USING TME DATA
 #' HTG_survival(variable_01 = "Recurrence_01",
 #'              time = "Time_to_death_surv",
 #'              col_data = AnnotData_tutorial,
@@ -54,12 +61,6 @@
 #' @name HTG_survival
 HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, res = NULL, genes_to_use = NULL,
                          outliers = NULL, pattern = NULL, remove_outliers = TRUE, TME = NULL) {
-  library(dplyr)
-  library(survival)
-  library(maxstat)
-  library(survminer)
-  library(ggplot2)
-  library(gridExtra)
 
 
   if (is.null(variable_01) || is.null(time)) {
@@ -121,15 +122,89 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
   # Filter data
   cat("\033[32mFiltering data.\033[0m\n")
-  subset_data <- col_data %>% dplyr::filter(id %in% ids_data)
+  subset_data <- dplyr::filter(col_data, id %in% ids_data)
 
   df_ta <- as.data.frame(df_t)
   df_ta$id <- rownames(df_ta)
 
-
-
   # Selecting genes
-  if (!is.null(res)) {
+  if (!is.null(genes_to_use)) {
+  cat("\033[32mUsing provided genes\033[0m\n")
+  top_genes <- genes_to_use
+  selected_df_t <- df_t[, top_genes, drop = FALSE]
+  selected_df_t <- as.data.frame(selected_df_t)
+  selected_df_t$id <- rownames(selected_df_t)
+  col_data$id <- rownames(col_data)
+  merged_data <- merge(col_data, selected_df_t, by = "id")
+  merged_data[[time]] <- as.numeric(merged_data[[time]])
+
+
+  cat("\033[32mStarting survival analysis.\033[0m\n")
+
+
+  # Replace special characters in top_genes
+  top_genes_clean <- clean_column_names(top_genes)
+  pdf("survival_analysis_plots_SELECTED_GENES.pdf")
+  # Perform survival analysis for each gene
+  for (i in top_genes_clean) {
+    if (!is.numeric(merged_data[[i]])) {
+      next
+    }
+
+    cat("\n")
+    cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
+
+    # Perform MAXSTAT test
+    merged_data$time <- merged_data[[time]]
+    merged_data$variable_01 <- merged_data[[variable_01]]
+    gene_column <- get(i, merged_data)  # Access the column dynamically
+    MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
+                                     smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+    cut.off <- MAXSTAT$estimate
+    cat("\033[32mCUT OFF\033[0m\n")
+    print(cut.off)
+
+    # Create a new variable based on the cutoff
+    new_column_name <- paste0(i, "_mRNA_expression")
+    merged_data[[new_column_name]] <- ifelse(gene_column > cut.off, "High", "Low")
+    merged_data[[new_column_name]] <- factor(merged_data[[new_column_name]])
+
+    # Fit survival model
+    cat("\033[32mFitting survival model\033[0m\n")
+    surv_object <- survival::Surv(merged_data$time, merged_data$variable_01)
+    surv_formula <- as.formula(paste("surv_object ~", new_column_name))
+
+    fit1 <- survival::survfit(surv_formula, data = merged_data)
+
+    # Summary of the fit
+    cat("\033[32mSummary of the fit\033[0m\n")
+    print(summary(fit1))
+
+    # Log-rank test and p-value
+    cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
+    surv_diff <- survival::survdiff(surv_formula, data = merged_data)
+    p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+
+    print(surv_diff)
+    cat("\033[32mP-value\033[0m\n")
+    print(p_value)
+
+    # Generate Kaplan-Meier plot
+    cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
+    palette <- c("#9A3449", "#D4A8B1")
+    plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
+
+    # Add a legend
+    legend("topright",
+           legend = c("High", "Low"),
+           lty = 1,
+           col = palette,
+           lwd = 4)
+    cat("\033[32mPlots saved in survival_analysis_plots_SELECTED_GENES.pdf\033[0m\n")
+  }
+  dev.off()
+
+} else if (!is.null(res)) {
     cat("\033[32mSelecting TOP 10 genes with the lowest padj\033[0m\n")
     top_genes <- rownames(head(res[order(res$padj), ], 10))
     selected_df_t <- df_t[, top_genes, drop = FALSE]
@@ -145,7 +220,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
     # Replace special characters in top_genes
     top_genes_clean <- clean_column_names(top_genes)
 
-    pdf("survival_analysis_plots.pdf")
+    pdf("survival_analysis_plots_top_10.pdf")
 
     # Perform survival analysis for each gene
     for (i in top_genes_clean) {
@@ -160,7 +235,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       merged_data$time <- merged_data[[time]]
       merged_data$variable_01 <- merged_data[[variable_01]]
       gene_column <- get(i, merged_data)  # Access the column dynamically
-      MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ gene_column, data = merged_data,
+      MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
                               smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
       cut.off <- MAXSTAT$estimate
       cat("\033[32mCUT OFF\033[0m\n")
@@ -173,10 +248,10 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
       # Fit survival model
       cat("\033[32mFitting survival model\033[0m\n")
-      surv_object <- Surv(merged_data$time, merged_data$variable_01)
+      surv_object <- survival::Surv(merged_data$time, merged_data$variable_01)
       surv_formula <- as.formula(paste("surv_object ~", new_column_name))
 
-      fit1 <- survfit(surv_formula, data = merged_data)
+      fit1 <- survival::survfit(surv_formula, data = merged_data)
 
       # Summary of the fit
       cat("\033[32mSummary of the fit\033[0m\n")
@@ -184,8 +259,8 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
       # Log-rank test and p-value
       cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
-      surv_diff <- survdiff(surv_formula, data = merged_data)
-      p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+      surv_diff <- survival::survdiff(surv_formula, data = merged_data)
+      p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
       print(surv_diff)
       cat("\033[32mP-value\033[0m\n")
@@ -202,87 +277,9 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
              lty = 1,
              col = palette,
              lwd = 4)
-      cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
+      cat("\033[32mPlots saved in survival_analysis_plots_top_10.pdf\033[0m\n")
     }
     dev.off()
-
-
-  } else if (!is.null(genes_to_use)) {
-    cat("\033[32mUsing provided genes\033[0m\n")
-    top_genes <- genes_to_use
-    selected_df_t <- df_t[, top_genes, drop = FALSE]
-    selected_df_t <- as.data.frame(selected_df_t)
-    selected_df_t$id <- rownames(selected_df_t)
-    col_data$id <- rownames(col_data)
-    merged_data <- merge(col_data, selected_df_t, by = "id")
-    merged_data[[time]] <- as.numeric(merged_data[[time]])
-
-
-    cat("\033[32mStarting survival analysis.\033[0m\n")
-
-
-    # Replace special characters in top_genes
-    top_genes_clean <- clean_column_names(top_genes)
-    pdf("survival_analysis_plots_SELECTED_GENES.pdf")
-    # Perform survival analysis for each gene
-    for (i in top_genes_clean) {
-      if (!is.numeric(merged_data[[i]])) {
-        next
-      }
-
-      cat("\n")
-      cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
-
-      # Perform MAXSTAT test
-      merged_data$time <- merged_data[[time]]
-      merged_data$variable_01 <- merged_data[[variable_01]]
-      gene_column <- get(i, merged_data)  # Access the column dynamically
-      MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ gene_column, data = merged_data,
-                              smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-      cut.off <- MAXSTAT$estimate
-      cat("\033[32mCUT OFF\033[0m\n")
-      print(cut.off)
-
-      # Create a new variable based on the cutoff
-      new_column_name <- paste0(i, "_mRNA_expression")
-      merged_data[[new_column_name]] <- ifelse(gene_column > cut.off, "High", "Low")
-      merged_data[[new_column_name]] <- factor(merged_data[[new_column_name]])
-
-      # Fit survival model
-      cat("\033[32mFitting survival model\033[0m\n")
-      surv_object <- Surv(merged_data$time, merged_data$variable_01)
-      surv_formula <- as.formula(paste("surv_object ~", new_column_name))
-
-      fit1 <- survfit(surv_formula, data = merged_data)
-
-      # Summary of the fit
-      cat("\033[32mSummary of the fit\033[0m\n")
-      print(summary(fit1))
-
-      # Log-rank test and p-value
-      cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
-      surv_diff <- survdiff(surv_formula, data = merged_data)
-      p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
-
-      print(surv_diff)
-      cat("\033[32mP-value\033[0m\n")
-      print(p_value)
-
-      # Generate Kaplan-Meier plot
-      cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
-      palette <- c("#9A3449", "#D4A8B1")
-      plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
-
-      # Add a legend
-      legend("topright",
-             legend = c("High", "Low"),
-             lty = 1,
-             col = palette,
-             lwd = 4)
-      cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
-    }
-    dev.off()
-
 
   } else if (!is.null(TME)) {
     cat("\033[32mUsing rownames from TME\033[0m\n")
@@ -311,7 +308,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       # Perform MAXSTAT test
       merged_data$time<- merged_data[[time]]
       merged_data$variable_01<- merged_data[[variable_01]]
-      MAXSTAT <- maxstat.test(Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
+      MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
                               smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
       cut.off <- MAXSTAT$estimate
       cat("\033[32mCUT OFF\033[0m\n")
@@ -326,10 +323,10 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       # Fit survival model
       cat("\033[32mFitting survival model\033[0m\n")
       column_name <- paste0(i)
-      surv_object <- Surv( merged_data$time , merged_data$variable_01)
+      surv_object <- survival::Surv( merged_data$time , merged_data$variable_01)
       surv_formula <- as.formula(paste("surv_object ~", column_name))
 
-      fit1 <- survfit(surv_formula, data = merged_data)
+      fit1 <- survival::survfit(surv_formula, data = merged_data)
       # Summary of the fit
 
       cat("\033[32mSummary of the fit\033[0m\n")
@@ -337,8 +334,8 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
       # Log-rank test and p-value
       cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
-      surv_diff <- survdiff(surv_formula, data = merged_data)
-      p_value <- 1 - pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
+      surv_diff <- survival::survdiff(surv_formula, data = merged_data)
+      p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
       print(surv_diff)
       cat("\033[32mP-value\033[0m\n")
@@ -355,11 +352,9 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
              lty = 1,
              col = palette,
              lwd = 4)
-      cat("\033[32mPlots saved in survival_analysis_plots.pdf\033[0m\n")
+      cat("\033[32mPlots saved in survival_analysis_plots_TME.pdf\033[0m\n")
     }
     dev.off()
-
-
 
   } else {
     stop("Either 'res', 'genes_to_use', or 'TME' must be provided.")
