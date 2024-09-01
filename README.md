@@ -64,8 +64,8 @@ imagine that your AnnotData looks like this:
 
 Then:
 ```{r}
-FOR HTG:
-HTG_auto <- function("~/counts.xlsx",
+# FOR HTG:
+HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      file_type = "HTG",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
@@ -73,11 +73,16 @@ HTG_auto <- function("~/counts.xlsx",
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
-                     time = "Time_to_death_surv")
+                     time = "Time_to_death_surv",
+                     DEA = TRUE,
+                     remove_outliers = TRUE,
+                     GSEA = TRUE,
+                     generate_heatmap = TRUE,
+                     TME = TRUE,
+                     survival_analysis = TRUE)
 
-
-FOR RNAseq:
-HTG_auto <- function("~/counts.xlsx",
+# FOR RNAseq:
+HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      file_type = "RNAseq",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
@@ -85,7 +90,13 @@ HTG_auto <- function("~/counts.xlsx",
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
-                     time = "Time_to_death_surv")
+                     time = "Time_to_death_surv",
+                     DEA = TRUE,
+                     remove_outliers = TRUE,
+                     GSEA = TRUE,
+                     generate_heatmap = TRUE,
+                     TME = TRUE,
+                     survival_analysis = TRUE)
 ```
 
 For HTG data, setting QC = TRUE is essential to ensure quality control, which identifies and manages outliers before further analysis. With quality control enabled, the function performs Differential Expression Analysis (DEA) based on HPV_status, comparing positive and negative samples to identify significantly differentially expressed genes.
@@ -97,6 +108,47 @@ The DEA results will then be used for Gene Set Enrichment Analysis (GSEA) to det
 Additionally, DEA findings will inform Tumor Microenvironment (TME) analysis, shedding light on tumor-environment interactions and their impact on gene expression and tumor biology.
 
 Finally, a survival analysis will be conducted using the top genes from DEA and survival variables Recurrence_01 and Time_to_death_surv. This analysis evaluates the impact of gene expression on patient outcomes, providing valuable prognostic information.
+
+If you didn't wanted to perform TME analysis or survival_analysis
+
+**** IS VERY IMPORTANT THAT THE SAMPLE NAME IN AnnotData.xlsx HAS TO BE "id" ****
+
+```{r}
+# WITHOUT TME
+HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
+                     file_type = "HTG",
+                     "~/AnnotData.xlsx",
+                     design_formula = "HPV_status",
+                     QC = TRUE,
+                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     contrast = c("HPV_status", "Positive", "Negative"),
+                     variable_01 = NULL,  #As you will not need this variable. You can keep it as NULL
+                     time = "Time_to_death_surv",
+                     DEA = TRUE,
+                     remove_outliers = TRUE,
+                     GSEA = TRUE,
+                     generate_heatmap = TRUE,
+                     TME = FALSE, #Keep it false. 
+                     survival_analysis = TRUE)
+
+# WITHOUT SURVIVAL
+HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
+                     file_type = "HTG",
+                     "~/AnnotData.xlsx",
+                     design_formula = "HPV_status",
+                     QC = TRUE,
+                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     contrast = c("HPV_status", "Positive", "Negative"),
+                     variable_01 = "Recurrence_01",  
+                     time = NULL, #As you will not need this variable. You can keep it as NULL
+                     DEA = TRUE,
+                     remove_outliers = TRUE,
+                     GSEA = TRUE,
+                     generate_heatmap = TRUE,
+                     TME = TRUE,
+                     survival_analysis = FALSE) # Keep it false
+
+```
 
 
 ## 2.2 IN-DEPTH GUIDE
@@ -183,31 +235,28 @@ We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?
 #### 2.2.3.1 HTG_QC
 This function performs various quality control (QC) checks tailored for the HTG EdgeSeq transcriptomic panel, though thresholds can be adjusted as needed. QC checks include:
 
-* **QC0**: % of positive values > 4%.
+* **QC0**: % of positive values < 4%.
 * **QC1**: Library size > 7e+06.
-* **QC2**: Negative control threshold > 0.045.
-* **QC3**: Genomic DNA threshold > 0.02.
-* **QC4**: ERCC threshold > 0.025.
+* **QC2**: Negative control threshold < 0.045.
+* **QC3**: Genomic DNA threshold < 0.02.
+* **QC4**: ERCC threshold < 0.025.
+* **QC5**: Median threshold < 5.
 
 The function generates a data frame (which can be saved as a .csv file, with a preview shown in the R console) with:
-* Sum of each probe for each sample (total genes, positive, negative, gdna, ercc).
+* Sum of each probe for each sample (total genes, positive, negative, gdna, ercc, median).
 * Ratios for each sample.
 * Sample sizes.
-* A PCA column indicating samples furthest from the center.
 Additionally, a statistical .csv is generated with columns for Min, Max, Mean, Median, Mode, SD, Variance, Range, Q1, Q3, IQR, Skewness, Kurtosis, Missing, and CV.
 
-The function includes a heatmap to highlight potential outliers, which will be saved in a vector. Additionally, it performs a PCA analysis that identifies and highlights the specified number of samples that are furthest from the center. The PCA results include plots showing the explained variability and the cumulative explained variability.
+The function includes a heatmap to highlight potential outliers, which will be saved in a vector. 
 
 ```{r}
 outliers<- HTG_QC(counts_data_tutorial)
 outliers
 ```
 
-#### 2.2.3.2 HTG_plotPCA and HTG_calculate_summary_stats
-This QC process is designed primarily for HTG data, assuming that RNAseq data has already passed the necessary controls. However, should additional checks be needed, we use two secondary functions:
-
-1. **`HTG_plotPCA`**: Performs Principal Component Analysis (PCA).
-2. **`HTG_calculate_summary_stats`**: Calculates detailed summary statistics.
+#### 2.2.3.2 HTG_calculate_summary_stats
+This QC process is designed primarily for HTG data, assuming that RNAseq data has already passed the necessary controls. However, should additional checks be needed,you can use **`HTG_calculate_summary_stats`** to calculates detailed summary statistics.
 
 The summary statistics include columns for:
 - **Min**: Minimum value
@@ -227,16 +276,12 @@ The summary statistics include columns for:
 - **CV**: Coefficient of Variation (SD / Mean)
 
 ```{r}
-# PCA FOR HTG
-PCA_HTG<- HTG_plotPCA(counts_data_tutorial, n_samples = 0,pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
-PCA_HTG
+# HTG
 summary <- HTG_calculate_summary_stats(counts_data_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-")
 summary
 
 
-# PCA FOR RNAseq
-PCA_RNAseq<- HTG_plotPCA(counts_data_tutorial, n_samples = 0,pattern = NULL)
-PCA_RNAseq
+# RNAseq
 summary <- HTG_calculate_summary_stats(counts_data_tutorial)
 summary
 ```
@@ -275,7 +320,6 @@ Since HTG data may have outliers while RNA-seq data typically does not, we will 
 
 #### 2.2.4.5 HTG_analysis
 All these analyses can be performed using the `HTG_analysis` function.  This function facilitates the execution of differential expression analysis, Gene Set Enrichment Analysis (GSEA), tumor microenvironment analysis, and survival analysis. In the two examples provided in this tutorial, the function is configured to perform all analyses. However, you can customize the function to execute only the analyses you require by setting the relevant parameters to `TRUE` or `FALSE`.
-
 
 ```{r}
 # EXAMPLE HTG:
