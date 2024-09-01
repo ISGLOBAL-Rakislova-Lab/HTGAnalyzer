@@ -13,6 +13,78 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library (HTGAnalyzer)
 ```
+It is possible that your code may not install correctly on the first attempt, so you may need to download this first:
+```{r}
+# List of required CRAN packages
+required_packages <- c(
+  "ggplot2", "data.table", "ggrepel", "ggridges", "scales", "ggupset", "pheatmap", 
+  "RColorBrewer", "survival", "dplyr", "ggpubr", "tidyr", "maxstat", "readxl", 
+  "purrr", "reshape2", "rlang", "tibble"
+)
+
+# Function to install a package if it's not already installed and load it
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg, dependencies = TRUE) # Install the package if not present
+  }
+  library(pkg, character.only = TRUE) # Load the package
+}
+
+# Install and load all required CRAN packages
+invisible(sapply(required_packages, install_if_missing))
+
+# Check if BiocManager is installed; if not, install it
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+
+# List of required Bioconductor packages
+bioc_packages <- c(
+  "SummarizedExperiment", "DESeq2", "PoiClaClu", "clusterProfiler", 
+  "enrichplot", "ComplexHeatmap", "IOBR", "immunedeconv", "apeglm"
+)
+
+# Install the Bioconductor packages
+BiocManager::install(bioc_packages, dependencies = TRUE)
+
+# Check if remotes package is installed; if not, install it
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
+}
+
+# List of GitHub packages to be installed
+github_packages <- c(
+  "omnideconv/immunedeconv", "dviraran/xCell", "GfellerLab/EPIC", 
+  "IOBR/IOBR", "kevinblighe/EnhancedVolcano"
+)
+
+# Install the GitHub packages
+invisible(sapply(github_packages, function(pkg) {
+  remotes::install_github(pkg)
+}))
+
+# Install specific versions of certain packages
+remotes::install_version("rms", version = "6.8-1")
+install.packages(c("riskRegression", "pec"))
+
+# Combine all packages (CRAN, Bioconductor, GitHub) into one list
+all_packages <- c(required_packages, bioc_packages, gsub(".*\\/", "", github_packages))
+
+# Load all packages; notify if any package could not be loaded
+invisible(sapply(all_packages, function(pkg) {
+  if (requireNamespace(pkg, quietly = TRUE)) {
+    library(pkg, character.only = TRUE) # Load the package
+  } else {
+    message(paste("Package", pkg, "could not be loaded.")) # Notify if the package could not be loaded
+  }
+}))
+
+# Install and load the HTGAnalyzer package from GitHub
+remotes::install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+library(HTGAnalyzer)
+```
+
+
 # 2. TUTORIAL.
 Once installed, you can start with the tutorial. This package, HTG_Analyzer, was originally designed for analyzing HTG Edge files. However, following the closure of the company, only certain quality control features were fully disclosed, particularly those not related to the transcriptomic panel. To address this, our package provides a simplified approach for users who may not have a background in bioinformatics. The primary function, HTG_auto, automates the entire analysis process—from data import and quality control to detailed analyses, complete with plots and tables. Every aspect is customizable, allowing users to easily modify and tailor the analyses to their specific needs. Although it was initially created for HTG, the package is also compatible with RNAseq data. Additionally, there are individual functions like HTG_DEA, HTG_survival, HTG_QC, and HTG_TME that offer more flexibility and precision for advanced users looking to perform specific analyses.
 
