@@ -1,3 +1,7 @@
+# TUTORIAL
+
+
+
 Here you will find a tutorial to perform a complete analysis for HTG Edge results and RNAseq with HTGAnalyzer.
 
 Having the results of HTG Edge Reveal or RNAseq, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis.
@@ -391,11 +395,32 @@ survival_TME<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death
 
 FOR RNAseq: 
 # Survival from Top10 genes
-survival_res<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, res = res_tutorial)
+survival_res<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+ count_data = counts_data_tutorial,
+res = res_tutorial)
                          
 # Survial of CCND1 gene
-survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, genes_to_use = "CCND1")
+survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+count_data = counts_data_tutorial,
+genes_to_use = "CCND1")
 
 # Survival of EPIC TME results.
-survival_TME<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial, count_data = counts_data_tutorial, TME = TME_data_tutorial$EPIC)
+survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+count_data = counts_data_tutorial,
+TME = TME_data_tutorial$EPIC)
+```
+<div style="display: flex; justify-content: space-between;">
+    <img src="https://github.com/user-attachments/assets/ecf90cb3-9d11-46f7-8b63-cc5c3596902d" alt="ISGlobal Logo" width="300"/>
+    <img src="https://github.com/user-attachments/assets/25dbac67-84eb-4c58-af88-b7e67fdaec33" alt="Image 1" width="300"/>
+    <img src="https://github.com/user-attachments/assets/e2680f9a-38e4-4966-bb66-741d2cf58391" alt="Image 2" width="300"/>
+</div>
+
+
+
 
