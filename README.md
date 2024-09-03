@@ -379,19 +379,36 @@ The `HTG_survival` function is designed for performing survival analysis and off
 ```{r}
 
 # Survial of CCND1 gene
-survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
-              count_data = counts_data_tutorial, res = res_tutorial, genes_to_use = c("LCP1", "OMA1"),
-              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
+survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+count_data = counts_data_tutorial,
+res = res_tutorial,
+genes_to_use = c("LCP1", "OMA1"),
+outliers = outliers_tutorial,
+pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+remove_outliers = TRUE)
 
 # Survival from Top10 genes
-survival_res<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
-              count_data = counts_data_tutorial, res = res_tutorial, genes_to_use = NULL,
-              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
+survival_res<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+count_data = counts_data_tutorial,
+ res = res_tutorial,
+genes_to_use = NULL,
+outliers = outliers_tutorial,
+pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+remove_outliers = TRUE)
 
 # Survival of EPIC TME results.
-survival_TME<- HTG_survival(variable_01 = "Recurrence_01", time = "Time_to_death_surv", col_data = AnnotData_tutorial,
-              count_data = counts_data_tutorial, res = NULL, genes_to_use = NULL, TME = TME_data_tutorial$EPIC,
-              outliers = outliers_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", remove_outliers = TRUE)
+survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv", col_data = AnnotData_tutorial,
+count_data = counts_data_tutorial,
+res = NULL, genes_to_use = NULL,
+TME = TME_data_tutorial$EPIC,
+outliers = outliers_tutorial,
+pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
+ remove_outliers = TRUE)
 
 FOR RNAseq: 
 # Survival from Top10 genes
