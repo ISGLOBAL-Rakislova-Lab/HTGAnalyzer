@@ -29,6 +29,9 @@ Visit their GitHub pages for installation instructions.
 Once installed, you can start with the tutorial. This package, HTG_Analyzer, was originally designed for analyzing HTG Edge files. However, following the closure of the company, only certain quality control features were fully disclosed, particularly those not related to the transcriptomic panel. To address this, our package provides a simplified approach for users who may not have a background in bioinformatics. The primary function, HTG_auto, automates the entire analysis process—from data import and quality control to detailed analyses, complete with plots and tables. Every aspect is customizable, allowing users to easily modify and tailor the analyses to their specific needs. Although it was initially created for HTG, the package is also compatible with RNAseq data. Additionally, there are individual functions like HTG_DEA, HTG_survival, HTG_QC, and HTG_TME that offer more flexibility and precision for advanced users looking to perform specific analyses.
 
 ## 2.0 DATA IMPUT:
+To use this package, you'll need:
+* An Excel file containing data counts, either from HTG or RNAseq,
+* An Excel file with annotation or clinical data.
 
 
 ## 2.1. QUICK START.
