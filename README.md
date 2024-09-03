@@ -410,7 +410,7 @@ outliers = outliers_tutorial,
 pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
  remove_outliers = TRUE)
 
-FOR RNAseq: 
+####   FOR RNAseq: 
 # Survival from Top10 genes
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
