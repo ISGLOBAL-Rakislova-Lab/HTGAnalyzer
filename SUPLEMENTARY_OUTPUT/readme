@@ -41,3 +41,4 @@ result <- HTG_auto(
     TME = TRUE,
     survival_analysis = TRUE
 )
+```
