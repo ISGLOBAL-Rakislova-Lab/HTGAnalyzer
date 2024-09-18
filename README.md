@@ -27,10 +27,8 @@ library (HTGAnalyzer)
 
 Visit their GitHub pages for installation instructions.
 
-
-
 # 2. TUTORIAL.
-Once installed, you can start with the tutorial. This package, HTG_Analyzer, was originally designed for analyzing HTG Edge files. However, following the closure of the company, only certain quality control features were fully disclosed, particularly those not related to the transcriptomic panel. To address this, our package provides a simplified approach for users who may not have a background in bioinformatics. The primary function, HTG_auto, automates the entire analysis process—from data import and quality control to detailed analyses, complete with plots and tables. Every aspect is customizable, allowing users to easily modify and tailor the analyses to their specific needs. Although it was initially created for HTG, the package is also compatible with RNAseq data. Additionally, there are individual functions like HTG_DEA, HTG_survival, HTG_QC, and HTG_TME that offer more flexibility and precision for advanced users looking to perform specific analyses.
+The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge files, the package now supports RNAseq data and addresses the gap left by the closure of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting differential expression analysis (DEA), tumor microenvironment (TME) analysis, survival analysis, and quality control (QC) for transcriptomic panels.
 
 ## 2.0 DATA IMPUT:
 To use this package, you'll need:
@@ -40,9 +38,11 @@ To use this package, you'll need:
 
 ## 2.1. QUICK START.
 
-HTGAnalyzer has a functions called HTG_auto which provide an easy way to perform all the analyses. Let's start by discussing HTG_auto.
+HTGAnalyzer has a functions called `HTG_auto` which provide an easy way to perform all the analyses.
 
 ### 2.1.1 HTG_auto.
+#### 2.1.1.1 HTG_auto: all the analysis
+
 The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analyses including Quality Control (QC), Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
   
 EXAMPLE:
@@ -65,6 +65,9 @@ imagine that your AnnotData looks like this:
 
 Then:
 ```{r}
+##### Replace "~/counts.xlsx" and "~/AnnotData.xlsx" with your authentic file paths.
+##### You can find the example Excel files in the SUPPLEMENTARY_OUTPUT folder on GitHub.
+
 # FOR HTG:
 HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      file_type = "HTG",
@@ -100,17 +103,10 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      survival_analysis = TRUE)
 ```
 
-For HTG data, setting QC = TRUE is essential to ensure quality control, which identifies and manages outliers before further analysis. With quality control enabled, the function performs Differential Expression Analysis (DEA) based on HPV_status, comparing positive and negative samples to identify significantly differentially expressed genes.
+The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HTPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Ciclina_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and Time_to_death_surv, to evaluate their impact on patient outcomes.
 
-Following DEA, a heatmap will be generated using HPV_status and Ciclina_D1, providing insights into how well the data separates based on these variables. This visualization helps in understanding key distinguishing factors between the groups.
-
-The DEA results will then be used for Gene Set Enrichment Analysis (GSEA) to determine if specific gene sets are enriched in differentially expressed genes, offering deeper biological insights.
-
-Additionally, DEA findings will inform Tumor Microenvironment (TME) analysis, shedding light on tumor-environment interactions and their impact on gene expression and tumor biology.
-
-Finally, a survival analysis will be conducted using the top genes from DEA and survival variables Recurrence_01 and Time_to_death_surv. This analysis evaluates the impact of gene expression on patient outcomes, providing valuable prognostic information.
-
-If you didn't wanted to perform TME analysis or survival_analysis
+#### 2.1.1.2 HTG_auto:skiping TME analysis.
+If you want to skip an analysis, simply set the value to FALSE.
 
 ```{r}
 # WITHOUT TME
@@ -146,16 +142,17 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      generate_heatmap = TRUE,
                      TME = TRUE,
                      survival_analysis = FALSE) # Keep it false
-
 ```
-
 
 ## 2.2 IN-DEPTH GUIDE
 
-For this part of the tutorial, we will combine principal and secondary functions to explore their capabilities. Primary and secondary functions are designed to give you greater control over the analysis, ensuring maximum precision in your results.
+If you prefer to have more control over the analysis process or if you have already completed some analyses, and `HTG_auto` does not fully meet your needs, we offer additional options to tailor your workflow.
 
 ### 2.2.2 DATA IMPORT.
 **NOTE**: We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
+```
+counts<- HTG_import_counts(file_path, file_type)
+```
 
 #### 2.2.2.1 HTG_import_counts
 
