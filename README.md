@@ -17,7 +17,7 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library (HTGAnalyzer)
 ```
- **Note**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
+ **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
 
 - [omnideconv/immunedeconv](https://github.com/omnideconv/immunedeconv)
 - [dviraran/xCell](https://github.com/dviraran/xCell)
@@ -42,7 +42,7 @@ HTGAnalyzer has a functions called `HTG_auto` which provide an easy way to perfo
 #### 2.1.1.1 HTG_auto: all the analysis
 The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analysis including Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis**. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
   
-EXAMPLE:
+**EXAMPLE:**
 imagine that your AnnotData looks like this: 
 
 ** **IS VERY IMPORTANT THAT THE SAMPLE NAME IN AnnotData.xlsx HAS TO BE "id"** **
@@ -238,14 +238,14 @@ The `HTG_subset` function is a versatile tool for quickly extracting specific ge
 
 # Extracting a Specific Gene (AAAS) from Counts Data
 # Subset AAAS gene from counts data without normalization
-counts_AAAS <- HTG_subset(counts_data_tutorial, "AAAS")
+  counts_AAAS <- HTG_subset(counts_data_tutorial, "AAAS")
 
 # Subset AAAS gene from counts data with normalization
-counts_AAAS_normalize <- HTG_subset(counts_data_tutorial, "AAAS", normalize = TRUE)
+  counts_AAAS_normalize <- HTG_subset(counts_data_tutorial, "AAAS", normalize = TRUE)
 
 # Extracting a Specific Gene (AAAS) from Differential Expression Results
 # Subset AAAS gene from differential expression results
-res_AAAS <- HTG_subset(res_tutorial, "AAAS")
+  res_AAAS <- HTG_subset(res_tutorial, "AAAS")
 ```
 
 ### 2.2.4 ANALYSIS
@@ -262,7 +262,11 @@ Since HTG data may have outliers while RNA-seq data typically does not, we will 
 
 
 #### 2.2.4.1 HTG_analysis
-All these analysis can be performed using the `HTG_analysis` function.  This function facilitates the execution of differential expression analysis, Gene Set Enrichment Analysis (GSEA), tumor microenvironment analysis, and survival analysis. In the two examples provided in this tutorial, the function is configured to perform all analysis. However, you can customize the function to execute only the analysis you require by setting the relevant parameters to `TRUE` or `FALSE`.
+All these analysis can be performed using the `HTG_analysis` function.  This function facilitates the execution of differential expression analysis, Gene Set Enrichment Analysis (GSEA), tumor microenvironment analysis, and survival analysis. 
+
+In the two examples provided in this tutorial, the function is configured to perform all analysis. However, you can customize the function to execute only the analysis you require by setting the relevant parameters to `TRUE` or `FALSE`.
+
+**NOTE**: if you don't have a column and is used for an analysis that you will not perform you can put `NULL` on that column
 
 ```{r}
 # EXAMPLE HTG:
@@ -277,7 +281,11 @@ ALL_analysis <- HTG_analysis(
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
   time = "Time_to_death_surv", 
-  GSEA = TRUE, 
+  DEA = TRUE,
+  remove_outliers = TRUE,
+  GSEA = TRUE,
+  generate_heatmap = TRUE,
+  TME = TRUE,
   survival_analysis = TRUE)
 
 
@@ -291,7 +299,11 @@ ALL_analysis <- HTG_analysis(
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
   time = "Time_to_death_surv", 
-  GSEA = TRUE, 
+  DEA = TRUE,
+  remove_outliers = TRUE,
+  GSEA = TRUE,
+  generate_heatmap = TRUE,
+  TME = TRUE,
   survival_analysis = TRUE)
 ```
 
@@ -378,7 +390,7 @@ The `HTG_survival` function is designed for performing survival analysis and off
 survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
-count_data = counts_data_tutorial,
+counts_data = counts_data_tutorial,
 res = res_tutorial,
 genes_to_use = c("LCP1", "OMA1"),
 outliers = outliers_tutorial,
@@ -389,8 +401,8 @@ remove_outliers = TRUE)
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
-count_data = counts_data_tutorial,
- res = res_tutorial,
+counts_data = counts_data_tutorial,
+res = res_tutorial,
 genes_to_use = NULL,
 outliers = outliers_tutorial,
 pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
@@ -398,35 +410,42 @@ remove_outliers = TRUE)
 
 # Survival of EPIC TME results.
 survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv", col_data = AnnotData_tutorial,
-count_data = counts_data_tutorial,
-res = NULL, genes_to_use = NULL,
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+counts_data = counts_data_tutorial,
+res = NULL,
+genes_to_use = NULL,
 TME = TME_data_tutorial$EPIC,
 outliers = outliers_tutorial,
 pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
- remove_outliers = TRUE)
+remove_outliers = TRUE)
 
 ####   FOR RNAseq: 
+                 
+# Survial of of CCND1 gene
+survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
+time = "Time_to_death_surv",
+col_data = AnnotData_tutorial,
+counts_data = counts_data_tutorial,
+genes_to_use = "CCND1")
+
 # Survival from Top10 genes
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
- count_data = counts_data_tutorial,
+counts_data = counts_data_tutorial,
 res = res_tutorial)
-                         
-# Survial of of LCP1 and OMA1 gene
-survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
-col_data = AnnotData_tutorial,
-count_data = counts_data_tutorial,
-genes_to_use = "CCND1")
 
 # Survival of EPIC TME results.
 survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
-count_data = counts_data_tutorial,
-TME = TME_data_tutorial$EPIC)
+counts_data = counts_data_tutorial,
+res = NULL,
+genes_to_use = NULL,
+TME = TME_data_tutorial$EPIC,
+outliers = outliers_tutorial,
+remove_outliers = TRUE)
 ```
 <div style="display: flex; justify-content: space-between;">
     <img src="https://github.com/user-attachments/assets/25dbac67-84eb-4c58-af88-b7e67fdaec33" alt="Image 1" width="300"/>
