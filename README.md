@@ -3,8 +3,7 @@
 Here you will find a tutorial to perform a complete analysis for HTG Edge results and RNAseq with HTGAnalyzer.
 
 Having the results of **HTG Edge Reveal** or **RNAseq**, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis.
-![FIGURE_1 (1)](https://github.com/user-attachments/assets/851cfdf0-3097-4c98-866c-8489ec4e46f2)
-
+![FIGURE_1](https://github.com/user-attachments/assets/49a47a9b-c6ae-4231-938f-9654c44995a3)
 
 # 1. INSTALATION:
 To use this R package you have to perform the following code.
