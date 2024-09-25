@@ -25,6 +25,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libxml2-dev libssl-dev
     
+    - name: Set GitHub PAT
+      env:
+        GITHUB_PAT: ${{ secrets.GH_PAT }}
+    
     - name: Install R dependencies from CRAN
       run: |
         Rscript -e "install.packages('remotes')"
@@ -32,11 +36,11 @@ jobs:
     
     - name: Install GitHub packages
       run: |
-        Rscript -e "remotes::install_github('omnideconv/immunedeconv')"
-        Rscript -e "remotes::install_github('dviraran/xCell')"
-        Rscript -e "remotes::install_github('GfellerLab/EPIC')"
-        Rscript -e "remotes::install_github('IOBR/IOBR')"
-        Rscript -e "remotes::install_github('kevinblighe/EnhancedVolcano')"
+        Rscript -e "remotes::install_github('omnideconv/immunedeconv', auth_token = Sys.getenv('GITHUB_PAT'))"
+        Rscript -e "remotes::install_github('dviraran/xCell', auth_token = Sys.getenv('GITHUB_PAT'))"
+        Rscript -e "remotes::install_github('GfellerLab/EPIC', auth_token = Sys.getenv('GITHUB_PAT'))"
+        Rscript -e "remotes::install_github('IOBR/IOBR', auth_token = Sys.getenv('GITHUB_PAT'))"
+        Rscript -e "remotes::install_github('kevinblighe/EnhancedVolcano', auth_token = Sys.getenv('GITHUB_PAT'))"
     
     - name: Build vignettes
       run: |
