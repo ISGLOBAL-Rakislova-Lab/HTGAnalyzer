@@ -8,12 +8,23 @@ Description: The HTGAnalyzer package provides tools for analyzing HTG EdgeSeq da
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset,pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, clusterProfiler, enrichplot, RColorBrewer, ComplexHeatmap, survival, dplyr, IOBR, immunedeconv, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
+Imports: ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset,pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
 RoxygenNote: 7.3.2
-Depends: EPIC, xCell, org.Hs.eg.db, R(>= 4.3.0)
+Depends: R(>= 4.3.0)
 Suggests: 
+ EnhancedVolcano,
+    clusterProfiler,
+    enrichplot,
+    ComplexHeatmap,
+    IOBR,
+    immunedeconv,
+    EPIC,
+    xCell,
+    org.Hs.eg.db,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+
+
