@@ -22,28 +22,6 @@ HTGAnalyzer has a functions called HTG_auto which provide an easy way to perform
 
 ### 2.1.1 HTG_auto.
 The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analyses including Quality Control (QC), Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
-```{r}
-HTG_auto <- function(counts_file_path,
-                     file_type,  
-                     AnnotData_file_path,
-                     design_formula,
-                     QC = TRUE,
-                     heatmap_columns = NULL,
-                     contrast = NULL,
-                     variable_01 = NULL,
-                     time = NULL)
-```
-It has more parameters that can be modified, but to keep things simple, let's focus on these:
-
-* `counts_file_path` (Character): Path to the file containing the HTG counts data in Excel format.
-* `file_type` (Character): Type of file being imported, either "HTG" or "RNAseq".
-* `AnnotData_file_path` (Character): Path to the file containing the annotation data in Excel format.
-* `QC` Indicates whether to perform quality control on the data. Default is TRUE. If set to FALSE, the QC step is skipped (for RNAseq data).
-* `design_formula` (Character): The design formula for DESeq2 analysis, specified as a string without the tilde (~).
-* `heatmap_columns` (Character vector): Specifies columns to be used for annotations in the heatmap.
-* `contrast` (Character vector): Specifies the contrast for differential expression analysis. Default is NULL.
-* `variable_01` (Character): Name of the survival event variable (e.g., "Recurrence_01"). Required for survival analysis.
-* `time` (Character): Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis.
   
 EXAMPLE:
 imagine that your AnnotData looks like this: 
