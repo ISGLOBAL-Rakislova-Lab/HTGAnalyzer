@@ -41,6 +41,13 @@ NULL
 #' @source Generated for tutorial purposes.
 NULL
 
+#' @name counts_data_RNAseq
+#' @title RNAseq Gene Expression Counts Data
+#' @description A matrix of gene expression counts obtained from RNA sequencing, with genes as rows and samples as columns.
+#' @format A matrix with dimensions 20000 x 15.
+#' @source Generated for tutorial purposes.
+NULL
+
 #' @name AnnotData_tutorial
 #' @title Sample Annotation Data
 #' @description A data frame containing annotation data for samples, including HPV status, FIGO stage, and recurrence information.

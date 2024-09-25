@@ -11,7 +11,6 @@
 #' @param pattern A regular expression pattern to filter out unwanted genes from the count data. For HTG, this could be "^NC-|^POS-|^GDNA-|^ERCC-". If NULL, the pattern will not be applied.
 #' @param remove_outliers A logical value indicating whether to remove outliers specified in `outliers`.
 #' @param percentage_gene A numeric value specifying the minimum percentage of samples a gene must be expressed in to be kept.
-#' @param percentage_zero A numeric value specifying the maximum percentage of samples a gene can be zero in to be kept.
 #' @param threshold_gene A numeric value specifying the minimum count for a gene to be considered expressed.
 #' @param threshold_subject A numeric value specifying the minimum number of subjects a gene must be expressed in to be kept.
 #' @param pCutoff A numeric value specifying the p-value cutoff for significance in the volcano plot.
@@ -33,7 +32,6 @@
 #'   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 #'   remove_outliers = TRUE,
 #'   percentage_gene = 0.2,
-#'   percentage_zero = 0.2,
 #'   threshold_gene = 200,
 #'   threshold_subject = 10,
 #'   pCutoff = 5e-2,
@@ -45,7 +43,7 @@
 #'
 utils::globalVariables(c("SampleID", "status"))
 HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heatmap_columns, contrast,
-                    pattern = NULL, remove_outliers = TRUE, percentage_gene = 0.2, percentage_zero = 0.2, threshold_gene = 200,
+                    pattern = NULL, remove_outliers = TRUE, percentage_gene = 0.2, threshold_gene = 200,
                     threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = FALSE, extract_shrinkage = FALSE) {
 
 
@@ -85,7 +83,7 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   if (apply_filtering) {
     n_genes <- nrow(DESeq2::counts(dds))
     n_subj <- ncol(DESeq2::counts(dds))
-    zero_threshold <- ceiling(n_subj * percentage_zero)
+    zero_threshold <- ceiling(n_subj * 0.2)
     keep_genes <- rowSums(DESeq2::counts(dds) == 0) <= zero_threshold
     smallest_group_size <- ceiling(n_subj * percentage_gene)
     keep_genes <- keep_genes & (rowSums(DESeq2::counts(dds) >= threshold_gene) >= smallest_group_size)

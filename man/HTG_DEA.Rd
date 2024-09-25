@@ -22,8 +22,6 @@
 
 \item{percentage_gene}{A numeric value specifying the minimum percentage of samples a gene must be expressed in to be kept.}
 
-\item{percentage_zero}{A numeric value specifying the maximum percentage of samples a gene can be zero in to be kept.}
-
 \item{threshold_gene}{A numeric value specifying the minimum count for a gene to be considered expressed.}
 
 \item{threshold_subject}{A numeric value specifying the minimum number of subjects a gene must be expressed in to be kept.}
@@ -53,7 +51,6 @@ results <- HTG_DEA(
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   remove_outliers = TRUE,
   percentage_gene = 0.2,
-  percentage_zero = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
   pCutoff = 5e-2,

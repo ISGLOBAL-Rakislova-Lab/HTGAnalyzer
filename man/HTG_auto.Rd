@@ -11,29 +11,21 @@ HTG_auto(
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   QC = TRUE,
   threshold_superior_pos = 5,
-  threshold_inferior_pos = 3,
   threshold_line_pos = 4,
-  threshold_superior_lib = 8e+06,
   threshold_inferior_lib = 5e+06,
   threshold_lib = 7e+06,
   threshold_superior_nc = 0.05,
-  threshold_inferior_nc = 0.035,
   threshold_line_nc = 0.045,
   threshold_superior_gdna = 0.025,
-  threshold_inferior_gdna = 0.015,
   threshold_line_gdna = 0.02,
   threshold_superior_ercc = 0.03,
-  threshold_inferior_ercc = 0.015,
   threshold_line_ercc = 0.025,
-  threshold_superior_median = 7,
   threshold_inferior_median = 3,
   threshold_line_median = 5,
-  n_samples = 3,
   save_csv = TRUE,
   csv_file = "QC_results.csv",
   design_formula = NULL,
   percentage_gene = 0.2,
-  percentage_zero = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),
@@ -55,7 +47,7 @@ HTG_auto(
 
 \item{file_type}{Character. Type of file being imported, either "HTG" or "RNAseq".}
 
-\item{AnnotData_file_path}{Character. Path to the file containing the annotation data in Excel format.}
+\item{AnnotData_file_path}{Character. Path to the file containing the annotation data in Excel format. Sample id column have to be named "id"}
 
 \item{pattern}{Character. A regular expression pattern to identify control probes in the count data. Default is "^NC-|^POS-|^GDNA-|^ERCC-" but for RNAseq it should be NULL.}
 
@@ -63,11 +55,7 @@ HTG_auto(
 
 \item{threshold_superior_pos}{Numeric. Upper limit threshold for positive control ratio. Default is 5.}
 
-\item{threshold_inferior_pos}{Numeric. Lower limit threshold for positive control ratio. Default is 3.}
-
 \item{threshold_line_pos}{Numeric. Threshold line for positive control ratio. Default is 4.}
-
-\item{threshold_superior_lib}{Numeric. Upper limit threshold for library size. Default is 8e+06.}
 
 \item{threshold_inferior_lib}{Numeric. Lower limit threshold for library size. Default is 5e+06.}
 
@@ -75,29 +63,19 @@ HTG_auto(
 
 \item{threshold_superior_nc}{Numeric. Upper limit threshold for negative control ratio. Default is 0.05.}
 
-\item{threshold_inferior_nc}{Numeric. Lower limit threshold for negative control ratio. Default is 0.035.}
-
 \item{threshold_line_nc}{Numeric. Threshold line for negative control ratio. Default is 0.045.}
 
 \item{threshold_superior_gdna}{Numeric. Upper limit threshold for genomic DNA ratio. Default is 0.025.}
-
-\item{threshold_inferior_gdna}{Numeric. Lower limit threshold for genomic DNA ratio. Default is 0.015.}
 
 \item{threshold_line_gdna}{Numeric. Threshold line for genomic DNA ratio. Default is 0.02.}
 
 \item{threshold_superior_ercc}{Numeric. Upper limit threshold for ERCC control ratio. Default is 0.03.}
 
-\item{threshold_inferior_ercc}{Numeric. Lower limit threshold for ERCC control ratio. Default is 0.015.}
-
 \item{threshold_line_ercc}{Numeric. Threshold line for ERCC control ratio. Default is 0.025.}
-
-\item{threshold_superior_median}{Numeric. Upper limit threshold for median ratio. Default is 7.}
 
 \item{threshold_inferior_median}{Numeric. Lower limit threshold for median ratio. Default is 3.}
 
 \item{threshold_line_median}{Numeric. Threshold line for median ratio. Default is 5.}
-
-\item{n_samples}{Numeric. Number of samples to label as outliers in plots. Default is 3.}
 
 \item{save_csv}{Logical. Whether to save the QC results as a CSV file. Default is TRUE.}
 
@@ -106,8 +84,6 @@ HTG_auto(
 \item{design_formula}{Character. The design formula for DESeq2 analysis, specified as a string without the tilde (~).}
 
 \item{percentage_gene}{Numeric. Minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.}
-
-\item{percentage_zero}{Numeric. Maximum fraction of samples in which a gene can have zero counts to be retained. Default is 0.2.}
 
 \item{threshold_gene}{Numeric. Minimum count threshold per gene. Default is 200.}
 
@@ -121,9 +97,9 @@ HTG_auto(
 
 \item{pCutoff}{Numeric. The p-value cutoff for generating the volcano plot. Default is 0.05.}
 
-\item{variable_01}{Character. Name of the survival event variable (e.g., "Recurrence_01"). Required for survival analysis.}
+\item{variable_01}{Character. Name of the survival event variable (e.g., "Recurrence_01"). Required for TME. Set NULL if you don't have it and turn FALSE TME}
 
-\item{time}{Character. Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis.}
+\item{time}{Character. Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis}
 
 \item{DEA}{Logical. Indicates whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.}
 
@@ -133,9 +109,9 @@ HTG_auto(
 
 \item{generate_heatmap}{Logical. Indicates whether to generate a heatmap. Default is TRUE.}
 
-\item{TME}{Logical. Indicates whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE.}
+\item{TME}{Logical. Indicates whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE. Parameter variable_01 will be needed.}
 
-\item{survival_analysis}{Logical. Indicates whether to perform survival analysis. Default is TRUE.}
+\item{survival_analysis}{Logical. Indicates whether to perform survival analysis. Default is TRUE. Parameter time will be needed.}
 }
 \value{
 This function performs the complete analysis pipeline, including:
@@ -160,7 +136,6 @@ result <- HTG_auto(
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   design_formula = "Group",
   percentage_gene = 0.2,
-  percentage_zero = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),

@@ -30,21 +30,19 @@
 
 \item{generate_heatmap}{A logical value indicating whether to generate a heatmap. Default is TRUE.}
 
-\item{TME}{A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE.}
+\item{TME}{A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE. Parameter variable_01 will be needed.}
 
-\item{survival_analysis}{A logical value indicating whether to perform survival analysis. Default is FALSE.}
+\item{survival_analysis}{A logical value indicating whether to perform survival analysis. Default is FALSE. Parameter time will be needed.}
 
 \item{percentage_gene}{A numeric value between 0 and 1 indicating the minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.}
-
-\item{percentage_zero}{A numeric value between 0 and 1 indicating the maximum fraction of samples in which a gene can be zero to be retained. Default is 0.2.}
 
 \item{genes_to_use}{A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").}
 
 \item{DEA}{A logical value indicating whether to perform DESeq2 analysis with filtering and without LFC shrinkage. Default is TRUE.}
 
-\item{variable_01}{A character string specifying the event/censoring variable used in the survival analysis.}
+\item{variable_01}{A character string specifying the event/censoring variable used in the survival analysis. Set NULL if you don't have it and turn FALSE TME}
 
-\item{time}{A character string specifying the time variable used in the survival analysis.}
+\item{time}{A character string specifying the time variable used in the survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis}
 }
 \value{
 Returns an object with the results of the specified contrast and saves an Excel file with the results, along with PDF files of the generated plots.
@@ -60,7 +58,6 @@ ALL_done <- HTG_analysis(
   col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   percentage_gene = 0.2,
-  percentage_zero = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),

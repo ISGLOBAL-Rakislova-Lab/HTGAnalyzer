@@ -363,6 +363,77 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
   # Assuming 'imm_epic', 'imm_qti', and 'imm_xcell' dataframes are already loaded
   combined_plot_EPIC <- plot_combined(imm_epic, paleta_imm, "EPIC Individual", "EPIC Average", design_formula, "right")
   combined_plot_quanTIseq <- plot_combined(imm_qti, paleta_qti, "quanTIseq Individual", "quanTIseq Average", design_formula, "right")
+  # Mensaje de atención en rojo
+  cat("\033[33mAttention: plot_cell_fraction_Average_cell_fraction will work for all methods. For xCell, it will display Enrichment Scores instead of percentages.\033[0m\n")
+
+  plot_bar <- function(df, paleta, titulo, legend.position) {
+    # Convertir las filas en una columna llamada "Sample"
+    df <- tibble::rownames_to_column(df, var = "Sample")
+    df <- tidyr::pivot_longer(
+      df, cols = colnames(df)[2:(ncol(df) - 1)],
+      names_to = "Cell_Type", values_to = "Value")
+    df <- dplyr::mutate(df,
+                        Sample = factor(Sample, levels = rev(unique(Sample))),
+                        Cell_Type = factor(Cell_Type, levels = rev(unique(Cell_Type))))
+
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = Sample, y = Value, fill = Cell_Type)) +
+      ggplot2::geom_bar(stat = "identity") +
+      ggplot2::labs(title = titulo,
+                    x = "Samples",
+                    y = "Enrichment Scores") +
+      ggplot2::coord_flip() +
+      ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+      ggplot2::scale_fill_manual(values = paleta) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(legend.position = legend.position,
+                     axis.text.y = ggplot2::element_text(size = 5)) +
+      ggplot2::scale_y_continuous(labels = scales::percent)
+
+    return(p)
+  }
+
+  plot_bar_group <- function(df, paleta, titulo, design_formula, legend_position = "right") {
+    suppressWarnings({
+      design_formula_sym <- rlang::sym(design_formula)
+      niveles_tipo_cel <- colnames(df)[1:(ncol(df) - 1)]
+      df_rownames <- tibble::rownames_to_column(df, var = "Sample")
+      df_long <- tidyr::pivot_longer(
+        df_rownames,
+        cols = niveles_tipo_cel,
+        names_to = "Cell_Type",
+        values_to = "Value")
+      df_grouped <- dplyr::group_by(df_long, !!design_formula_sym, Cell_Type)
+      df_summarised <- dplyr::summarise(df_grouped,
+                                        Average = mean(Value, na.rm = TRUE),
+                                        .groups = "drop")
+      df_ungrouped <- dplyr::ungroup(df_summarised)
+      promedios <- dplyr::mutate(df_ungrouped,
+                                 !!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
+                                 Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
+      p <- ggplot2::ggplot(promedios, ggplot2::aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::labs(title = titulo,
+                      x = "Samples",
+                      y = "Enrichment Scores") +
+        ggplot2::coord_flip() +
+        ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+        ggplot2::scale_fill_manual(values = paleta) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(legend.position = legend_position,
+                       axis.text.y = ggplot2::element_text(size = 5)) +
+        ggplot2::scale_y_continuous(labels = scales::percent)
+      return(p)
+    })
+  }
+
+  # Function to combine both plots into one
+  plot_combined <- function(df, paleta, titulo_individual, titulo_grupo, design_formula, legend_position = "right") {
+    p1 <- plot_bar(df, paleta, titulo_individual, legend_position)
+    p2 <- plot_bar_group(df, paleta, titulo_grupo, design_formula, legend_position)
+
+    combined_plot <- ggpubr::ggarrange(p1, p2, ncol = 1, nrow = 2, heights = c(1, 1))
+    return(combined_plot)
+  }
   combined_plot_xCell <- plot_combined(imm_xcell, paleta_extendida, "xCell Individual", "xCell Average", design_formula, "right")
 
   pdf("plot_cell_fraction_Average_cell_fraction_EPIC.pdf", width = 11, height = 14)

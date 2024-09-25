@@ -16,6 +16,8 @@
 HTG_calculate_summary_stats <- function(counts_data, pattern = NULL) {
   if (!is.null(pattern)) {
     counts_filtered <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
+  } else {
+    counts_filtered <- counts_data
   }
   min_values <- apply(counts_filtered, 2, min)
   max_values <- apply(counts_filtered, 2, max)

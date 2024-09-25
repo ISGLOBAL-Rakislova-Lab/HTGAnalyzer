@@ -10,11 +10,7 @@
 
 \item{threshold_superior_pos}{Threshold for upper limit of positive control ratio.}
 
-\item{threshold_inferior_pos}{Threshold for lower limit of positive control ratio.}
-
 \item{threshold_line_pos}{Threshold line for positive control ratio.}
-
-\item{threshold_superior_lib}{Threshold for upper limit of library size.}
 
 \item{threshold_inferior_lib}{Threshold for lower limit of library size.}
 
@@ -22,36 +18,26 @@
 
 \item{threshold_superior_nc}{Threshold for upper limit of negative control ratio.}
 
-\item{threshold_inferior_nc}{Threshold for lower limit of negative control ratio.}
-
 \item{threshold_line_nc}{Threshold line for negative control ratio.}
 
 \item{threshold_superior_gdna}{Threshold for upper limit of genomic DNA ratio.}
-
-\item{threshold_inferior_gdna}{Threshold for lower limit of genomic DNA ratio.}
 
 \item{threshold_line_gdna}{Threshold line for genomic DNA ratio.}
 
 \item{threshold_superior_ercc}{Threshold for upper limit of ERCC control ratio.}
 
-\item{threshold_inferior_ercc}{Threshold for lower limit of ERCC control ratio.}
-
 \item{threshold_line_ercc}{Threshold line for ERCC control ratio.}
-
-\item{threshold_superior_median}{Threshold for upper limit of median ratio.}
 
 \item{threshold_inferior_median}{Threshold for lower limit of median ratio.}
 
 \item{threshold_line_median}{Threshold line for median ratio.}
-
-\item{n_samples}{Number of samples to label as outliers in plots.}
 
 \item{save_csv}{Logical, whether to save the ratios as a CSV file. Default is FALSE.}
 
 \item{csv_file}{The name of the CSV file to save the ratios if save_csv is TRUE. Default is "QC_results.csv".}
 }
 \value{
-This function generates multiple plots displaying various QC metrics, including PCA and violin plots, and saves an Excel file with all the ratios. Additionally, it identifies and returns the most probable outliers based on the QC analysis.
+This function generates multiple plots displaying various QC metrics, including a violin plots, and saves an Excel file with all the ratios. Additionally, it identifies and returns the most probable outliers based on the QC analysis.
 }
 \description{
 This function performs various quality control (QC) checks for HTG EdgeSeq transcriptomic panel data. The QC checks include:

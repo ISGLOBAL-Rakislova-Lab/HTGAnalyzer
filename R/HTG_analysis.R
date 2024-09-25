@@ -15,14 +15,13 @@
 #' @param remove_outliers A logical value indicating whether to remove outliers. Default is TRUE. Note: For RNA-seq data, this should be set to FALSE.
 #' @param GSEA A logical value indicating whether to perform Gene Set Enrichment Analysis. Default is FALSE.
 #' @param generate_heatmap A logical value indicating whether to generate a heatmap. Default is TRUE.
-#' @param TME A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE.
-#' @param survival_analysis A logical value indicating whether to perform survival analysis. Default is FALSE.
+#' @param TME A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE. Parameter variable_01 will be needed.
+#' @param survival_analysis A logical value indicating whether to perform survival analysis. Default is FALSE. Parameter time will be needed.
 #' @param percentage_gene A numeric value between 0 and 1 indicating the minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.
-#' @param percentage_zero A numeric value between 0 and 1 indicating the maximum fraction of samples in which a gene can be zero to be retained. Default is 0.2.
 #' @param genes_to_use A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").
 #' @param DEA A logical value indicating whether to perform DESeq2 analysis with filtering and without LFC shrinkage. Default is TRUE.
-#' @param variable_01 A character string specifying the event/censoring variable used in the survival analysis.
-#' @param time A character string specifying the time variable used in the survival analysis.
+#' @param variable_01 A character string specifying the event/censoring variable used in the survival analysis. Set NULL if you don't have it and turn FALSE TME
+#' @param time A character string specifying the time variable used in the survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis
 #'
 #' @return Returns an object with the results of the specified contrast and saves an Excel file with the results, along with PDF files of the generated plots.
 #' @export
@@ -55,7 +54,6 @@
 #'   col_data = AnnotData_tutorial,
 #'   design_formula = "HPV_status",
 #'   percentage_gene = 0.2,
-#'   percentage_zero = 0.2,
 #'   threshold_gene = 200,
 #'   threshold_subject = 10,
 #'   genes_to_use = c("CCND1", "MMP10", "CTTN"),
@@ -73,7 +71,7 @@
 #' )
 #' @name HTG_analysis
 utils::globalVariables(c("PC1", "PC2", "Tag", "Sample", "padj", "Description", "Count", ".data", "mean_value", "Cell_Type", "Value", "Average", "Fraction", "shapiro_test", "id"))
-HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2, percentage_zero = 0.2,
+HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2,
                         threshold_gene = 200, threshold_subject = 10, genes_to_use = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
                         contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL,
                         DEA = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, TME = TRUE,
@@ -141,7 +139,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
   cat("\033[32m\033[0m\n")
   n_genes <- nrow(DESeq2::counts(dds))
   n_subj <- ncol(DESeq2::counts(dds))
-  zero_threshold <- ceiling(n_subj * percentage_zero)
+  zero_threshold <- ceiling(n_subj * 0.2)
   keep_genes <- rowSums(DESeq2::counts(dds) == 0) <= zero_threshold
   smallest_group_size <- ceiling(n_subj * percentage_gene)
   keep_genes <- keep_genes & (rowSums(DESeq2::counts(dds) >= threshold_gene) >= smallest_group_size)
@@ -166,13 +164,24 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
   if (generate_heatmap) {
     cat("\033[33mGENERATING HEATMAP\033[0m\n")
     if (is.null(heatmap_columns)) {
-      stop("heatmap_columns are required for genereting the heatmap.")
+      stop("heatmap_columns are required for generating the heatmap.")
     }
     pdf("HEATMAP_analysis.pdf", width = 12, height = 10)
+
+    # Seleccionar las filas con los 500 genes más expresados
     selecto <- order(rowMeans(DESeq2::counts(dds, normalized = TRUE)), decreasing = TRUE)[1:500]
+
+    # Crear un data frame para las anotaciones de columnas
     df <- as.data.frame(SummarizedExperiment::colData(dds)[, heatmap_columns])
-    pheatmap::pheatmap(SummarizedExperiment::assay(vsd)[selecto,], cluster_rows = FALSE, show_rownames = FALSE,
-             cluster_cols = TRUE, annotation_col = df)
+
+    # Generar el heatmap con nombres de columnas (muestras) y nombres de filas si se desea
+    a<-pheatmap::pheatmap(SummarizedExperiment::assay(vsd)[selecto,],
+                       cluster_rows = FALSE,
+                       show_rownames = FALSE,  # set TRUE to show the gene names
+                       show_colnames = TRUE,    # Sample names.
+                       cluster_cols = TRUE,
+                       annotation_col = df)
+    print(a)
     dev.off()
   }
 
@@ -195,44 +204,86 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
   stats::qqline(z_scores, col = "red", lwd = 2)
 
   # Plots
+  # dds <- DESeq2::estimateSizeFactors(dds)
+  # plot(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)),
+  #      xlab = "Size Factors", ylab = "Column Sums of Counts",
+  #      main = "Size Factors vs. Column Sums")
+  # text(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)), labels = colnames(DESeq2::counts(dds)), pos = 3, cex = 0.7)
+  # abline(lm(colSums(DESeq2::counts(dds)) ~ DESeq2::sizeFactors(dds) + 0))
+  #
+  # vsd_cor <- stats::cor(SummarizedExperiment::assay(vsd))
+  # rownames(vsd_cor) <- paste(vsd$SampleID)
+  # colnames(vsd_cor) <- paste(vsd$HTG_RUN)
+  # # pheatmap::pheatmap(vsd_cor)
+  # pheatmap::pheatmap(vsd_cor,
+  #                    main = "Sample-to-Sample Correlation Heatmap",
+  #                    display_numbers = TRUE)
   dds <- DESeq2::estimateSizeFactors(dds)
   plot(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)),
        xlab = "Size Factors", ylab = "Column Sums of Counts",
        main = "Size Factors vs. Column Sums")
   text(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)), labels = colnames(DESeq2::counts(dds)), pos = 3, cex = 0.7)
   abline(lm(colSums(DESeq2::counts(dds)) ~ DESeq2::sizeFactors(dds) + 0))
-
   vsd_cor <- stats::cor(SummarizedExperiment::assay(vsd))
-  rownames(vsd_cor) <- paste(vsd$SampleID)
-  colnames(vsd_cor) <- paste(vsd$HTG_RUN)
-  # pheatmap::pheatmap(vsd_cor)
+  sample_ids <- vsd$id
+  annotation_col <- data.frame(SampleID = sample_ids)
+  rownames(annotation_col) <- colnames(vsd_cor)  # Asegúrate de que los nombres coincidan
   pheatmap::pheatmap(vsd_cor,
                      main = "Sample-to-Sample Correlation Heatmap",
-                     display_numbers = TRUE)
+                     display_numbers = FALSE,
+                     annotation_col = annotation_col,
+                     annotation_legend = FALSE)
 
+  # pois_distance <- PoiClaClu::PoissonDistance(t(DESeq2::counts(dds, normalized = TRUE)))
+  # samplePoisDistMatrix <- as.matrix(pois_distance$dd)
+  # sample_ids <- SummarizedExperiment::colData(dds)$SampleID
+  # colnames(samplePoisDistMatrix) <- sample_ids
+  # rownames(samplePoisDistMatrix) <- sample_ids
+  #  colors <- grDevices::colorRampPalette(c("white", "#4793AF", "#013649"))(255)
+  #
+  # cat("\033[33mGENERATING POISSON DISTANCES PLOT\033[0m\n")
+  #
+  # pheatmap::pheatmap(samplePoisDistMatrix,
+  #          clustering_distance_rows = pois_distance$dd,
+  #          clustering_distance_cols = pois_distance$dd,
+  #          col = colors,
+  #          main = "Poisson Distances Heatmap",
+  #          width = 800,
+  #          height = 600,
+  #          display_numbers = TRUE)
+  #
+  #
+
+
+  # Calcular la distancia de Poisson
   pois_distance <- PoiClaClu::PoissonDistance(t(DESeq2::counts(dds, normalized = TRUE)))
   samplePoisDistMatrix <- as.matrix(pois_distance$dd)
-  colnames(samplePoisDistMatrix) <- SummarizedExperiment::colData(dds)$SampleID
-  rownames(samplePoisDistMatrix) <- SummarizedExperiment::colData(dds)$SampleID
-   colors <- grDevices::colorRampPalette(c("white", "#4793AF", "#013649"))(255)
+  sample_ids <- dds$id
+  colnames(samplePoisDistMatrix) <- sample_ids
+  rownames(samplePoisDistMatrix) <- sample_ids
+  colors <- grDevices::colorRampPalette(c("white", "#4793AF", "#013649"))(255)
 
   cat("\033[33mGENERATING POISSON DISTANCES PLOT\033[0m\n")
 
   pheatmap::pheatmap(samplePoisDistMatrix,
-           clustering_distance_rows = pois_distance$dd,
-           clustering_distance_cols = pois_distance$dd,
-           col = colors,
-           main = "Poisson Distances Heatmap",
-           width = 800,
-           height = 600,
-           display_numbers = TRUE)
+                     clustering_distance_rows = pois_distance$dd,
+                     clustering_distance_cols = pois_distance$dd,
+                     color = colors,
+                     main = "Poisson Distances Heatmap",
+                     width = 800,
+                     height = 600,
+                     display_numbers = FALSE,
+                     number_format = "%.2f",
+                     angle_col = 45)  # Ajuste opcional para rotar etiquetas de columnas
+
+
 
   sampleDists <- stats::dist(t(SummarizedExperiment::assay(vsd)))
   sampleDistMatrix <- as.matrix(sampleDists)
-  rownames(sampleDistMatrix) <- paste(SummarizedExperiment::colData(vsd)$SampleID, sep = " - ")
+  rownames(sampleDistMatrix) <- paste(vsd$id, sep = " - ")
   colnames(sampleDistMatrix) <- rownames(sampleDistMatrix)
 
-   colors <- grDevices::colorRampPalette(c("white", "#4793AF"))(255)
+  colors <- grDevices::colorRampPalette(c("white", "#4793AF"))(255)
   cat("\033[33mGENERATING VSD DISTANCE HEATMAP\033[0m\n")
 
   pheatmap::pheatmap(
@@ -242,12 +293,12 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     col = colors,
     fontsize = 8,
     main = "Sample Distance Heatmap",
-    display_numbers = TRUE)
+    display_numbers = FALSE)
 
   cat("\033[33mGENERATING VSD BOXPLOT\033[0m\n")
   graphics::boxplot(SummarizedExperiment::assay(vsd), las = 2, main = "vsd", cex.axis = 0.6)
 
-  DESeq2::plotMA(res, main = "PLOT MA OF RESULTS")
+
   res_sorted <- res[order(res$padj), ]
   top_genes_indices <- head(row.names(res_sorted), 10)
 
@@ -260,14 +311,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
 
     # Define colors based on status
      levels_design_formula <- unique(col_data[[design_formula]])
-  #   palette <- colorRampPalette(brewer.pal(length(levels_design_formula), "Set1"))
-  #   colors <- palette(length(levels_design_formula))
-  #   group_colors <- colors[as.numeric(factor(col_data[[design_formula]], levels = levels_design_formula))]
-  #   plot(gen_a2m_ordered$`SummarizedExperiment::assay(vsd)[gene_index, ]`, xlab = "", ylab = gene_index, col = group_colors,
-  #        xaxt = "n", pch = 19)
-  #   axis(1, at = 1:nrow(gen_a2m_ordered), labels = rownames(gen_a2m_ordered), las = 2, cex.axis = 0.6)
-  #   legend("topright", legend = levels_design_formula, fill = colors)
-  # }
+
     num_colors <- length(levels_design_formula)
     palette <- colorRampPalette(c("red", "orange", "yellow", "green", "purple", "#4793AF"))(num_colors)
     colors <- palette
@@ -285,6 +329,28 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
         legend("topright", legend = levels_design_formula, fill = colors)
   }
 
+  cat("\033[33mGENERATING PCA PLOT\033[0m\n")
+
+  normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
+  pca_result <- prcomp(t(normalized_counts), scale. = TRUE)
+  pca_data <- as.data.frame(pca_result$x)
+  pca_data$Sample <- SummarizedExperiment::colData(dds)$id
+  pca_data$Tag <- SummarizedExperiment::colData(dds)[[design_formula]]
+
+  tag_levels <- unique(pca_data$Tag)
+  color_palette <- scales::hue_pal()(length(tag_levels))
+  names(color_palette) <- tag_levels
+  pca_plot <- ggplot2::ggplot(pca_data, ggplot2::aes(x = PC1, y = PC2, color = Tag)) +
+    ggplot2::geom_point(size = 3) +
+    ggrepel::geom_text_repel(ggplot2::aes(label = Sample), size = 3, max.overlaps = 15) +
+    ggplot2::labs(title = "PCA of Normalized Counts",
+                  x = "Principal Component 1",
+                  y = "Principal Component 2") +
+    ggplot2::theme_minimal() +
+    ggplot2::scale_color_manual(values = color_palette) +
+    ggplot2::theme(legend.position = "right")
+  print(pca_plot)
+
 
     cat("\033[33mGENERATING VOLCANO PLOT\033[0m\n")
     suppressWarnings(invisible(print(EnhancedVolcano::EnhancedVolcano(res,
@@ -292,25 +358,12 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
                                                                       x = 'log2FoldChange',
                                                                       y = 'padj',
                                                                       pCutoff = pCutoff))))
-    normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
-    pca_result <- prcomp(t(normalized_counts), scale. = TRUE)
-    pca_data <- as.data.frame(pca_result$x)
-    pca_data$Sample <- SummarizedExperiment::colData(dds)$id
-    pca_data$Tag <- SummarizedExperiment::colData(dds)[[design_formula]]
 
-    tag_levels <- unique(pca_data$Tag)
-    color_palette <- scales::hue_pal()(length(tag_levels))
-    names(color_palette) <- tag_levels
-    pca_plot <- ggplot2::ggplot(pca_data, ggplot2::aes(x = PC1, y = PC2, color = Tag)) +
-      ggplot2::geom_point(size = 3) +
-      ggrepel::geom_text_repel(ggplot2::aes(label = Sample), size = 3, max.overlaps = 15) +
-      ggplot2::labs(title = "PCA of Normalized Counts",
-                    x = "Principal Component 1",
-                    y = "Principal Component 2") +
-      ggplot2::theme_minimal() +
-      ggplot2::scale_color_manual(values = color_palette) +
-      ggplot2::theme(legend.position = "right")
-    print(pca_plot)
+    cat("\033[33mGENERATING MA PLOT\033[0m\n")
+
+    DESeq2::plotMA(res, main = "PLOT MA OF RESULTS")
+
+    cat("\033[33mGENERATING DISPERSION PLOT\033[0m\n")
 
   DESeq2::plotDispEsts(dds, main = "DIPERSION PLOT")
   dev.off()
@@ -478,7 +531,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
           ggplot2::theme_minimal() +
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
         dev.off()
-        pdf("GSEA_analysis_plots2_of_2.pdf", width = 11, height = 14)
+        pdf("GSEA_analysis_plots2_of_2.pdf", width = 25, height = 15)
         print(heatplot1)
         print(heatplot2)
         dev.off()
@@ -806,6 +859,75 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     # Assuming 'imm_epic', 'imm_qti', and 'imm_xcell' dataframes are already loaded
     combined_plot_EPIC <- plot_combined(imm_epic, paleta_imm, "EPIC Individual", "EPIC Average", design_formula, "right")
     combined_plot_quanTIseq <- plot_combined(imm_qti, paleta_qti, "quanTIseq Individual", "quanTIseq Average", design_formula, "right")
+    plot_bar <- function(df, paleta, titulo, legend.position) {
+      # Convertir las filas en una columna llamada "Sample"
+      df <- tibble::rownames_to_column(df, var = "Sample")
+      df <- tidyr::pivot_longer(
+        df, cols = colnames(df)[2:(ncol(df) - 1)],
+        names_to = "Cell_Type", values_to = "Value")
+      df <- dplyr::mutate(df,
+                          Sample = factor(Sample, levels = rev(unique(Sample))),
+                          Cell_Type = factor(Cell_Type, levels = rev(unique(Cell_Type))))
+
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = Sample, y = Value, fill = Cell_Type)) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::labs(title = titulo,
+                      x = "Samples",
+                      y = "Enrichment Scores") +
+        ggplot2::coord_flip() +
+        ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+        ggplot2::scale_fill_manual(values = paleta) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(legend.position = legend.position,
+                       axis.text.y = ggplot2::element_text(size = 5)) +
+        ggplot2::scale_y_continuous(labels = scales::percent)
+
+      return(p)
+    }
+
+    plot_bar_group <- function(df, paleta, titulo, design_formula, legend_position = "right") {
+      suppressWarnings({
+        design_formula_sym <- rlang::sym(design_formula)
+        niveles_tipo_cel <- colnames(df)[1:(ncol(df) - 1)]
+        df_rownames <- tibble::rownames_to_column(df, var = "Sample")
+        df_long <- tidyr::pivot_longer(
+          df_rownames,
+          cols = niveles_tipo_cel,
+          names_to = "Cell_Type",
+          values_to = "Value")
+        df_grouped <- dplyr::group_by(df_long, !!design_formula_sym, Cell_Type)
+        df_summarised <- dplyr::summarise(df_grouped,
+                                          Average = mean(Value, na.rm = TRUE),
+                                          .groups = "drop")
+        df_ungrouped <- dplyr::ungroup(df_summarised)
+        promedios <- dplyr::mutate(df_ungrouped,
+                                   !!design_formula_sym := factor(!!design_formula_sym, levels = rev(unique(!!design_formula_sym))),
+                                   Cell_Type = factor(Cell_Type, levels = rev(niveles_tipo_cel)))
+        p <- ggplot2::ggplot(promedios, ggplot2::aes(x = !!design_formula_sym, y = Average, fill = Cell_Type)) +
+          ggplot2::geom_bar(stat = "identity") +
+          ggplot2::labs(title = titulo,
+                        x = "Samples",
+                        y = "Enrichment Scores") +
+          ggplot2::coord_flip() +
+          ggplot2::guides(fill = ggplot2::guide_legend(reverse = TRUE)) +
+          ggplot2::scale_fill_manual(values = paleta) +
+          ggplot2::theme_minimal() +
+          ggplot2::theme(legend.position = legend_position,
+                         axis.text.y = ggplot2::element_text(size = 5)) +
+          ggplot2::scale_y_continuous(labels = scales::percent)
+        return(p)
+      })
+    }
+
+    # Function to combine both plots into one
+    plot_combined <- function(df, paleta, titulo_individual, titulo_grupo, design_formula, legend_position = "right") {
+      p1 <- plot_bar(df, paleta, titulo_individual, legend_position)
+      p2 <- plot_bar_group(df, paleta, titulo_grupo, design_formula, legend_position)
+
+      combined_plot <- ggpubr::ggarrange(p1, p2, ncol = 1, nrow = 2, heights = c(1, 1))
+      return(combined_plot)
+    }
+    combined_plot_xCell <- plot_combined(imm_xcell, paleta_extendida, "xCell Individual", "xCell Average", design_formula, "right")
     combined_plot_xCell <- plot_combined(imm_xcell, paleta_extendida, "xCell Individual", "xCell Average", design_formula, "right")
 
     pdf("plot_cell_fraction_Average_cell_fraction_EPIC.pdf", width = 11, height = 14)
@@ -1114,7 +1236,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     cat("\033[32mHeatmap of qti, EPIC and xcell will be stored on plots_TME_heatmap.pdf\033[0m\n")
 
     if (exists("Heatmap_qti")) {
-      pdf("plots_TME_Heatmap_qti.pdf", width = 11, height = 14)
+      pdf("plots_TME_Heatmap_qti.pdf", width = 15, height = 14)
       print(Heatmap_qti)
       dev.off()
     } else {
@@ -1122,14 +1244,14 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     }
 
     if (exists("HeatmapEPIC")) {
-      pdf("plots_TME_HeatmapEPIC.pdf", width = 11, height = 14)
+      pdf("plots_TME_HeatmapEPIC.pdf", width = 15, height = 14)
       print(HeatmapEPIC)
       dev.off()
     } else {
       cat("HeatmapEPIC object does not exist.\n")
     }
     if (exists("Heatmap_xcell")) {
-      pdf("plots_TME_Heatmap_xcell.pdf", width = 11, height = 14)
+      pdf("plots_TME_Heatmap_xcell.pdf", width = 15, height = 14)
       print(Heatmap_xcell)
       dev.off()
     } else {
@@ -1154,7 +1276,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     } else {
       filtered <- counts_data
     }
-
+cat("a")
     if (remove_outliers) {
       counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
       AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
@@ -1176,7 +1298,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     clean_column_names <- function(names) {
       gsub("[^[:alnum:]_]", "_", names)
     }
-
+cat("b")
     # Create DESeqDataSet object
     if (!exists("dds")) {
       rownames(col_data) <- col_data$id
@@ -1201,7 +1323,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
     # Filter data
     cat("\033[32mFiltering data.\033[0m\n")
     subset_data <- dplyr::filter(col_data, id %in% ids_data)
-
+cat("c")
     df_ta <- as.data.frame(df_t)
     df_ta$id <- rownames(df_ta)
 
@@ -1233,7 +1355,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
       if (!is.numeric(merged_data[[i]])) {
         next
       }
-
+cat("d")
       cat("\n")
       cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
       # Perform MAXSTAT test
@@ -1291,3 +1413,4 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
       cat("\033[32mSkipping survival analysis.\033[0m\n")
     }
   }
+
