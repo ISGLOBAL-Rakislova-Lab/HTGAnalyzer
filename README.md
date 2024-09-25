@@ -87,13 +87,13 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      file_type = "RNAseq",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
-                     QC = TRUE,
+                     QC = FALSE, #it uses probes which are not in RNAseq data. 
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
                      time = "Time_to_death_surv",
                      DEA = TRUE,
-                     remove_outliers = TRUE,
+                     remove_outliers = FALSE,
                      GSEA = TRUE,
                      generate_heatmap = TRUE,
                      TME = TRUE,
@@ -132,7 +132,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      file_type = "HTG",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
-                     QC = TRUE,
+                     QC = FALSE,
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",  
@@ -299,7 +299,7 @@ ALL_analysis <- HTG_analysis(
   variable_01 = "Recurrence_01", 
   time = "Time_to_death_surv", 
   DEA = TRUE,
-  remove_outliers = TRUE,
+  remove_outliers = FALSE,
   GSEA = TRUE,
   generate_heatmap = TRUE,
   TME = TRUE,
@@ -384,6 +384,7 @@ The `HTG_survival` function is designed for performing survival analysis and off
 
 
 ```{r}
+####   FOR HTG:
 
 # Survial of LCP1 and OMA1 gene
 survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
@@ -426,14 +427,16 @@ survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_RNAseq,
-genes_to_use = "CCND1")
+genes_to_use = "CCND1",
+remove_outliers = FALSE)
 
 # Survival from Top10 genes
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
 time = "Time_to_death_surv",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_RNAseq,
-res = res_tutorial)
+res = res_tutorial,
+remove_outliers = FALSE)
 
 # Survival of EPIC TME results.
 survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
@@ -444,7 +447,7 @@ res = NULL,
 genes_to_use = NULL,
 TME = TME_data_tutorial$EPIC,
 outliers = outliers_tutorial,
-remove_outliers = TRUE)
+remove_outliers = FALSE)
 ```
 <div style="display: flex; justify-content: space-between;">
     <img src="https://github.com/user-attachments/assets/25dbac67-84eb-4c58-af88-b7e67fdaec33" alt="Image 1" width="300"/>
