@@ -4,8 +4,7 @@ Description: The HTGAnalyzer package provides tools for analyzing HTG EdgeSeq da
 Version: 0.1.0
 Authors@R: c(
     person("Laia", "Diez", role=c("aut", "cre"), email="laia.diez@isglobal.org"),
-    person("Aaron", "Marcen", role=c("aut"))
-)
+    person("Aaron", "Marcen", role=c("aut")))
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
