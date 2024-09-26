@@ -34,6 +34,8 @@ jobs:
         Rscript -e 'BiocManager::install(c("org.Hs.eg.db", "SummarizedExperiment", "DESeq2", "EnhancedVolcano", "clusterProfiler", "enrichplot", "ComplexHeatmap", "apeglm", "AnnotationDbi", "GO.db", "httr2"))'
 
     - name: Install GitHub dependencies
+      env:
+        GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}
       run: |
         Rscript -e 'remotes::install_github("dviraran/xCell")'
         Rscript -e 'remotes::install_github("GfellerLab/EPIC")'
