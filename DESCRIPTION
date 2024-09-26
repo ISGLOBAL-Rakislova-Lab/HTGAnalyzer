@@ -1,18 +1,45 @@
 Package: HTGAnalyzer
-Type: Package
-Title: HTGAnalyzer
-Version: 0.1.0
-Author: Laia Diez-Ahijado and Aarón Marcén del Rincón
-Maintainer: Laia Diez-Ahijado <laia.diez@isglobal.org>
+Title: Analysis Tools for HTG EdgeSeq Data
 Description: The HTGAnalyzer package provides tools for analyzing HTG EdgeSeq data, specifically addressing data from the HTG transcriptomic panel (HTP) and related assays. It includes functionalities for quality control (QC), differential gene expression analysis (DGEA), and visualization of results. The package supports various QC methods, including those based on the HTG Reveal software, ERCC probes, and median library size. It also offers unsupervised expression analysis and visualization tools such as heatmaps and volcano plots. The package integrates with clinical data and has been validated to ensure reliable performance. This package is designed to be user-friendly, making it accessible even to users without prior bioinformatics experience.
+Version: 0.1.0
+Authors@R: c(
+    person("Laia", "Diez-Ahijado", role=c("aut", "cre"), email="laia.diez@isglobal.org"),
+    person("Aarón", "Marcén del Rincón", role=c("aut"))
+)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset,pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
-RoxygenNote: 7.3.2
-Depends: R(>= 4.3.0)
+Depends: 
+    R (>= 4.3.0)
+Imports: 
+    ggplot2,
+    stats,
+    apeglm,
+    data.table,
+    SummarizedExperiment,
+    ggrepel,
+    ggridges,
+    scales,
+    ggupset,
+    pheatmap,
+    DESeq2,
+    PoiClaClu,
+    EnhancedVolcano,
+    RColorBrewer,
+    survival,
+    dplyr,
+    ggpubr,
+    tidyr,
+    maxstat,
+    readxl,
+    utils,
+    graphics,
+    grDevices,
+    purrr,
+    reshape2,
+    rlang,
+    tibble
 Suggests: 
- EnhancedVolcano,
     clusterProfiler,
     enrichplot,
     ComplexHeatmap,
@@ -24,7 +51,15 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+Remotes:
+    omnideconv/immunedeconv,
+    dviraran/xCell,
+    GfellerLab/EPIC,
+    IOBR/IOBR,
+    kevinblighe/EnhancedVolcano
 VignetteBuilder: knitr
+RoxygenNote: 7.3.2
 Config/testthat/edition: 3
+
 
 
