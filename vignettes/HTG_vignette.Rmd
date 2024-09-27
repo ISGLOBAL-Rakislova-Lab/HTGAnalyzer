@@ -23,10 +23,6 @@ library(HTGAnalyzer)
 This is a detailed tutorial to guide you through the usage of the
 'HTGAnalyzer' package. The first step is to load the library:
 
-```{r setup}
-library(HTGAnalyzer)
-```
-
 ## HTG technology:
 
 ### HTG_auto() for HTG:
