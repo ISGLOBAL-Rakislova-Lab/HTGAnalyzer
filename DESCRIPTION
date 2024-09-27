@@ -3,14 +3,12 @@ Title: Analysis Tools for HTG EdgeSeq Data
 Description: The HTGAnalyzer package provides tools for analyzing HTG EdgeSeq data, specifically addressing data from the HTG transcriptomic panel (HTP) and related assays. It includes functionalities for quality control (QC), differential gene expression analysis (DGEA), and visualization of results. The package supports various QC methods, including those based on the HTG Reveal software, ERCC probes, and median library size. It also offers unsupervised expression analysis and visualization tools such as heatmaps and volcano plots. The package integrates with clinical data and has been validated to ensure reliable performance. This package is designed to be user-friendly, making it accessible even to users without prior bioinformatics experience.
 Version: 0.1.0
 Authors@R: c(person("Laia", "Diez", role = c("aut", "cre"), email = "laia.diez@isglobal.org"), person("Aaron", "Marcen", role = c("aut")))
-Author: Laia Diez [aut, cre], Aaron Marcen [aut]
-Maintainer: Laia Diez <laia.diez@isglobal.org>
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.3.0)
-Imports: ComplexHeatmap, EPIC, IOBR, immunedeconv, org.Hs.eg.db,  xCell, ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, clusterProfiler, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
-Suggests: clusterProfiler, enrichplot, ComplexHeatmap,org.Hs.eg.db, knitr, rmarkdown, testthat (>= 3.0.0)
+Depends: R (>= 4.3.0), immunedeconv, xCell, EPIC, IOBR, EnhancedVolcano
+Imports: ComplexHeatmap, org.Hs.eg.db, ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap, DESeq2, PoiClaClu, clusterProfiler, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
+Suggests: clusterProfiler, enrichplot, ComplexHeatmap,org.Hs.eg.db, knitr, devtools, rmarkdown, testthat (>= 3.0.0)
 Remotes: omnideconv/immunedeconv, dviraran/xCell, GfellerLab/EPIC, IOBR/IOBR, kevinblighe/EnhancedVolcano
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
