@@ -9,7 +9,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.3.0)
-Imports: ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, clusterProfiler, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
+Imports: ComplexHeatmap, EPIC, IOBR, immunedeconv, org.Hs.eg.db,  xCell, ggplot2, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap, DESeq2, PoiClaClu, EnhancedVolcano, clusterProfiler, RColorBrewer, survival, dplyr, ggpubr, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble
 Suggests: clusterProfiler, enrichplot, ComplexHeatmap,org.Hs.eg.db, knitr, rmarkdown, testthat (>= 3.0.0)
 Remotes: omnideconv/immunedeconv, dviraran/xCell, GfellerLab/EPIC, IOBR/IOBR, kevinblighe/EnhancedVolcano
 VignetteBuilder: knitr
