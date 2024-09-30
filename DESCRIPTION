@@ -2,9 +2,7 @@ Package: HTGAnalyzer
 Title: Analysis Tools for HTG EdgeSeq Data
 Description: The HTGAnalyzer package provides tools for analyzing HTG EdgeSeq data, specifically addressing data from the HTG transcriptomic panel (HTP) and related assays. It includes functionalities for quality control (QC), differential gene expression analysis (DGEA), and visualization of results. The package supports various QC methods, including those based on the HTG Reveal software, ERCC probes, and median library size. It also offers unsupervised expression analysis and visualization tools such as heatmaps and volcano plots. The package integrates with clinical data and has been validated to ensure reliable performance. This package is designed to be user-friendly, making it accessible even to users without prior bioinformatics experience.
 Version: 0.1.0
-Authors@R: c(
-    person("Laia", "Diez", email="laia.diez@isglobal.org", role=c("aut", "cre")),
-    person("Aaron", "Marcen", email="laiadiez@hotmail.com", role = "aut"))
+Author: Laia Diez [aut, cre], Aaron Marcen [aut]
 Maintainer: Laia Diez <laia.diez@isglobal.org>
 License: GPL-3
 Encoding: UTF-8
