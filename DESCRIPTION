@@ -5,6 +5,7 @@ Version: 0.1.0
 Authors@R: c(
     person("Laia", "Diez", email="laia.diez@isglobal.org", role=c("aut", "cre")),
     person("Aaron", "Marcen", email="laiadiez@hotmail.com", role = "aut"))
+Maintainer: Laia Diez <laia.diez@isglobal.org>
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
