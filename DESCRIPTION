@@ -25,12 +25,6 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-Remotes: 
-    omnideconv/immunedeconv,
-    dviraran/xCell,
-    GfellerLab/EPIC,
-    IOBR/IOBR,
-    kevinblighe/EnhancedVolcano
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
