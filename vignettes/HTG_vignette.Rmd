@@ -14,14 +14,54 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(HTGAnalyzer)
-```
-
 # DETAILED TUTURAL
 
 This is a detailed tutorial to guide you through the usage of the
 'HTGAnalyzer' package. The first step is to load the library:
+
+```{r setup, echo=FALSE}
+# Lista de paquetes de Imports
+imports <- c(
+  "ggplot2", "stats", "apeglm", "data.table", "SummarizedExperiment", "ggrepel", 
+  "ggridges", "scales", "ggupset", "pheatmap", "DESeq2", "PoiClaClu", 
+  "EnhancedVolcano", "clusterProfiler", "RColorBrewer", "survival", "dplyr", 
+  "ggpubr", "tidyr", "maxstat", "readxl", "utils", "graphics", "grDevices", 
+  "purrr", "reshape2", "rlang", "tibble"
+)
+
+# Lista de paquetes de Suggests
+suggests <- c(
+  "clusterProfiler", "enrichplot", "ComplexHeatmap", "IOBR", "immunedeconv", 
+  "EPIC", "xCell", "org.Hs.eg.db", "knitr", "rmarkdown", "testthat"
+)
+
+# Lista de paquetes de Remotes
+remotes <- c(
+  "omnideconv/immunedeconv", "dviraran/xCell", "GfellerLab/EPIC", 
+  "IOBR/IOBR", "kevinblighe/EnhancedVolcano"
+)
+
+# Función para cargar un paquete de manera condicional
+load_package <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    message(paste("El paquete", pkg, "no está instalado."))
+  } else {
+    library(pkg, character.only = TRUE)
+  }
+}
+
+# Cargar los paquetes de Imports
+for (pkg in imports) {
+  load_package(pkg)
+}
+
+# Cargar los paquetes de Suggests
+for (pkg in suggests) {
+  load_package(pkg)
+}
+library(HTGAnalyzer)
+
+```
 
 ## HTG technology:
 
