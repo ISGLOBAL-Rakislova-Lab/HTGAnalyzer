@@ -30,13 +30,9 @@ jobs:
         Rscript -e 'install.packages("remotes")'
         Rscript -e 'install.packages("BiocManager")'
 
-    - name: Install Bioconductor dependencies
-      run: |
-        Rscript -e 'BiocManager::install(c("org.Hs.eg.db", "SummarizedExperiment", "DESeq2", "EnhancedVolcano", "clusterProfiler", "enrichplot", "ComplexHeatmap", "apeglm", "AnnotationDbi", "GO.db", "httr2"))'
-
-    - name: Install GitHub dependencies
+    - name: Install GitHub dependencies with PAT
       env:
-        GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }} # Aquí se usa el token
+        GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }} # Asegúrate de que el token esté correctamente configurado
       run: |
         Rscript -e 'remotes::install_github("dviraran/xCell")'
         Rscript -e 'remotes::install_github("GfellerLab/EPIC")'
@@ -45,8 +41,6 @@ jobs:
         Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano")'
 
     - name: Install remaining R package dependencies
-      env:
-        GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }} # Aquí también se usa el token
       run: Rscript -e "remotes::install_deps(dependencies = TRUE)"
 
     - name: Check the package
