@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} # Cambiado para coincidir con tu secreto
+      GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}  # Asegúrate de que esto se configure correctamente
 
     steps:
       - uses: actions/checkout@v3
@@ -33,17 +33,13 @@ jobs:
           Rscript -e 'install.packages("remotes")'
           Rscript -e 'install.packages("BiocManager")'
 
-      - name: Install Bioconductor dependencies
-        run: |
-          Rscript -e 'BiocManager::install(c("org.Hs.eg.db", "SummarizedExperiment", "DESeq2", "EnhancedVolcano", "clusterProfiler", "enrichplot", "ComplexHeatmap", "apeglm", "AnnotationDbi", "GO.db", "httr2"))'
-
       - name: Install GitHub dependencies
         run: |
-          Rscript -e 'remotes::install_github("dviraran/xCell")'
-          Rscript -e 'remotes::install_github("GfellerLab/EPIC")'
-          Rscript -e 'remotes::install_github("IOBR/IOBR")'
-          Rscript -e 'remotes::install_github("omnideconv/immunedeconv")'
-          Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano")'
+          Rscript -e 'remotes::install_github("dviraran/xCell", auth_token = Sys.getenv("GITHUB_PAT"))'
+          Rscript -e 'remotes::install_github("GfellerLab/EPIC", auth_token = Sys.getenv("GITHUB_PAT"))'
+          Rscript -e 'remotes::install_github("IOBR/IOBR", auth_token = Sys.getenv("GITHUB_PAT"))'
+          Rscript -e 'remotes::install_github("omnideconv/immunedeconv", auth_token = Sys.getenv("GITHUB_PAT"))'
+          Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano", auth_token = Sys.getenv("GITHUB_PAT"))'
 
       - name: Install devtools
         run: Rscript -e 'install.packages("devtools")'
@@ -53,4 +49,5 @@ jobs:
 
       - name: Check the package
         run: R CMD check --as-cran .
+
 
