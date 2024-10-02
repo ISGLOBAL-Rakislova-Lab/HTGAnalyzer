@@ -7,27 +7,24 @@ Maintainer: Laia Diez <laia.diez@isglobal.org>
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.3.0)
-Imports: ggplot2 (>= 3.0.0),
-    stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap,
-    DESeq2, PoiClaClu, RColorBrewer, survival, dplyr, ggpubr,
-    tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble, ComplexHeatmap,
-    org.Hs.eg.db
-Suggests:
-    immunedeconv,
-    xCell,
-    EPIC,
-    IOBR,
-    EnhancedVolcano
-    clusterProfiler,
-    enrichplot,
-    devtools,
-    knitr,
-    rmarkdown,
+Depends: R (>= 4.3.0), xCell, EPIC, IOBR
+Imports: ggplot2 (>= 3.0.0),EnhancedVolcano, stats, apeglm, data.table, SummarizedExperiment, ggrepel, ggridges, scales, ggupset, pheatmap, DESeq2, PoiClaClu, RColorBrewer, survival, dplyr, ggpubr, immunedeconv, tidyr, maxstat, readxl, utils, graphics, grDevices, purrr, reshape2, rlang, tibble, ComplexHeatmap, org.Hs.eg.db
+Suggests: 
+    clusterProfiler, 
+    enrichplot, 
+    devtools, 
+    knitr, 
+    rmarkdown, 
     testthat (>= 3.0.0)
+Remotes:
+    dviraran/xCell,
+    IOBR/IOBR,
+    omnideconv/immunedeconv,
+    GfellerLab/EPIC
 VignetteBuilder: knitr
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
+
 
 
 
