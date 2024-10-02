@@ -12,36 +12,45 @@ jobs:
   R-CMD-check:
     runs-on: ubuntu-latest
 
+    env:
+      MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} # Cambiado para coincidir con tu secreto
+
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
-      with:
-        version: 'latest'
+      - uses: actions/checkout@v3
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3.3'
 
-    - name: Install remotes and BiocManager
-      run: |
-        Rscript -e 'install.packages("remotes")'
-        Rscript -e 'install.packages("BiocManager")'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev
 
-    - name: Install GitHub dependencies with PAT
-      env:
-        GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }} # Asegúrate de que el token esté correctamente configurado
-      run: |
-        Rscript -e 'remotes::install_github("dviraran/xCell")'
-        Rscript -e 'remotes::install_github("GfellerLab/EPIC")'
-        Rscript -e 'remotes::install_github("IOBR/IOBR")'
-        Rscript -e 'remotes::install_github("omnideconv/immunedeconv")'
-        Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano")'
+      - name: Install remotes and BiocManager
+        run: |
+          Rscript -e 'install.packages("remotes")'
+          Rscript -e 'install.packages("BiocManager")'
 
-    - name: Install remaining R package dependencies
-      run: Rscript -e "remotes::install_deps(dependencies = TRUE)"
+      - name: Install Bioconductor dependencies
+        run: |
+          Rscript -e 'BiocManager::install(c("org.Hs.eg.db", "SummarizedExperiment", "DESeq2", "EnhancedVolcano", "clusterProfiler", "enrichplot", "ComplexHeatmap", "apeglm", "AnnotationDbi", "GO.db", "httr2"))'
 
-    - name: Check the package
-      run: R CMD check --as-cran .
+      - name: Install GitHub dependencies
+        run: |
+          Rscript -e 'remotes::install_github("dviraran/xCell")'
+          Rscript -e 'remotes::install_github("GfellerLab/EPIC")'
+          Rscript -e 'remotes::install_github("IOBR/IOBR")'
+          Rscript -e 'remotes::install_github("omnideconv/immunedeconv")'
+          Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano")'
+
+      - name: Install devtools
+        run: Rscript -e 'install.packages("devtools")'
+
+      - name: Install remaining R package dependencies
+        run: Rscript -e "remotes::install_deps(dependencies = TRUE)"
+
+      - name: Check the package
+        run: R CMD check --as-cran .
+
