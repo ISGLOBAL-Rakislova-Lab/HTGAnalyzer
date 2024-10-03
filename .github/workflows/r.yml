@@ -32,7 +32,7 @@ jobs:
         run: |
           Rscript -e 'install.packages("remotes")'
           Rscript -e 'install.packages("BiocManager")'
-          Rscript -e 'BiocManager::install("devtools")'  # Cambiado aquí
+          Rscript -e 'BiocManager::install("devtools")'
 
       - name: Install GitHub dependencies
         run: |
@@ -47,6 +47,7 @@ jobs:
 
       - name: Check the package
         run: R CMD check --as-cran .
+
 
 
 
