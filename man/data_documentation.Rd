@@ -11,7 +11,8 @@ The datasets provided are used for demonstrating various data analysis technique
 \details{
 The following datasets are included:
 \itemize{
-  \item \code{counts_data_tutorial}: A matrix of gene expression counts.
+  \item \code{counts_data_tutorial}: A matrix of gene expression counts in HTG format.
+  \item \code{counts_data_RNAseq}: A matrix of gene expression counts in RNAseq format
   \item \code{AnnotData_tutorial}: Annotation data for the samples.
   \item \code{outliers_tutorial}: A character vector of outlier sample IDs.
   \item \code{res_tutorial}: Results from differential expression analysis.
@@ -21,6 +22,7 @@ The following datasets are included:
 \examples{
 # Load data
 data(counts_data_tutorial)
+data(counts_data_RNAseq)
 data(AnnotData_tutorial)
 data(outliers_tutorial)
 data(res_tutorial)
@@ -28,6 +30,7 @@ data(TME_data_tutorial)
 
 # Inspect data
 head(counts_data_tutorial)
+head(counts_data_RNAseq)
 head(AnnotData_tutorial)
 head(outliers_tutorial)
 head(res_tutorial)

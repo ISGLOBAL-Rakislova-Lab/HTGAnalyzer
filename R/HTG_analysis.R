@@ -71,10 +71,25 @@
 #' )
 #' @name HTG_analysis
 utils::globalVariables(c("PC1", "PC2", "Tag", "Sample", "padj", "Description", "Count", ".data", "mean_value", "Cell_Type", "Value", "Average", "Fraction", "shapiro_test", "id"))
-HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data, design_formula = NULL , percentage_gene = 0.2,
-                        threshold_gene = 200, threshold_subject = 10, genes_to_use = c("CCND1", "MMP10", "CTTN"), heatmap_columns = NULL,
-                        contrast = NULL, pCutoff = 5e-2,variable_01 = NULL, time = NULL,
-                        DEA = TRUE, remove_outliers = TRUE, GSEA = FALSE, generate_heatmap = TRUE, TME = TRUE,
+HTG_analysis <- function(outliers = NULL,
+                         pattern = NULL,
+                         counts_data,
+                         col_data,
+                         design_formula = NULL ,
+                         percentage_gene = 0.2,
+                        threshold_gene = 200,
+                        threshold_subject = 10,
+                        genes_to_use = c("CCND1", "MMP10", "CTTN"),
+                        heatmap_columns = NULL,
+                        contrast = NULL,
+                        pCutoff = 5e-2,
+                        variable_01 = NULL,
+                        time = NULL,
+                        DEA = TRUE,
+                        remove_outliers = TRUE,
+                        GSEA = FALSE,
+                        generate_heatmap = TRUE,
+                        TME = TRUE,
                         survival_analysis = FALSE) {
   if (!requireNamespace("IOBR", quietly = TRUE)) {
     stop("Package 'IOBR' is required but not installed.")
@@ -531,7 +546,7 @@ HTG_analysis <- function(outliers = NULL, pattern = NULL, counts_data, col_data,
           ggplot2::theme_minimal() +
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
         dev.off()
-        pdf("GSEA_analysis_plots2_of_2.pdf", width = 25, height = 15)
+        pdf("GSEA_analysis_plots2_of_2.pdf", width = 35, height = 15)
         print(heatplot1)
         print(heatplot2)
         dev.off()

@@ -4,7 +4,7 @@
 \alias{counts_data_RNAseq}
 \title{RNAseq Gene Expression Counts Data}
 \format{
-A matrix with dimensions 20000 x 15.
+A matrix with dimensions 19394 x 11.
 }
 \source{
 Generated for tutorial purposes.

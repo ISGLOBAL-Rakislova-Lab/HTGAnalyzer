@@ -6,7 +6,8 @@
 #' @details
 #' The following datasets are included:
 #' \itemize{
-#'   \item \code{counts_data_tutorial}: A matrix of gene expression counts.
+#'   \item \code{counts_data_tutorial}: A matrix of gene expression counts in HTG format.
+#'   \item \code{counts_data_RNAseq}: A matrix of gene expression counts in RNAseq format
 #'   \item \code{AnnotData_tutorial}: Annotation data for the samples.
 #'   \item \code{outliers_tutorial}: A character vector of outlier sample IDs.
 #'   \item \code{res_tutorial}: Results from differential expression analysis.
@@ -20,6 +21,7 @@
 #' @examples
 #' # Load data
 #' data(counts_data_tutorial)
+#' data(counts_data_RNAseq)
 #' data(AnnotData_tutorial)
 #' data(outliers_tutorial)
 #' data(res_tutorial)
@@ -27,6 +29,7 @@
 #'
 #' # Inspect data
 #' head(counts_data_tutorial)
+#' head(counts_data_RNAseq)
 #' head(AnnotData_tutorial)
 #' head(outliers_tutorial)
 #' head(res_tutorial)
@@ -44,7 +47,7 @@ NULL
 #' @name counts_data_RNAseq
 #' @title RNAseq Gene Expression Counts Data
 #' @description A matrix of gene expression counts obtained from RNA sequencing, with genes as rows and samples as columns.
-#' @format A matrix with dimensions 20000 x 15.
+#' @format A matrix with dimensions 19394 x 11.
 #' @source Generated for tutorial purposes.
 NULL
 

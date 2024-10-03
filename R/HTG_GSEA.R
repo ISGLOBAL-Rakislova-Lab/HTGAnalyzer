@@ -176,7 +176,7 @@ HTG_GSEA <- function(res) {
         ggplot2::theme_minimal() +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
       dev.off()
-      pdf("GSEA_analysis_plots2_of_2.pdf", width = 11, height = 14)
+      pdf("GSEA_analysis_plots2_of_2.pdf", width = 35, height = 15)
       print(heatplot1)
       print(heatplot2)
         dev.off()
