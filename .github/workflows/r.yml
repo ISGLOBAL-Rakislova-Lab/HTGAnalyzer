@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
@@ -31,11 +31,8 @@ jobs:
       - name: Install remotes and BiocManager
         run: |
           Rscript -e 'install.packages("remotes")'
-          Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'
-
-      - name: Install Bioconductor dependencies
-        run: |
-          Rscript -e 'BiocManager::install(c("DESeq2", "apeglm", "ComplexHeatmap", "org.Hs.eg.db", "clusterProfiler", "enrichplot"))'
+          Rscript -e 'install.packages("BiocManager")'
+          Rscript -e 'BiocManager::install("devtools")'  # Cambiado aquí
 
       - name: Install GitHub dependencies
         run: |
