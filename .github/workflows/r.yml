@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +31,11 @@ jobs:
       - name: Install remotes and BiocManager
         run: |
           Rscript -e 'install.packages("remotes")'
-          Rscript -e 'install.packages("BiocManager")'
+          Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'
+
+      - name: Install Bioconductor dependencies
+        run: |
+          Rscript -e 'BiocManager::install(c("DESeq2", "apeglm", "ComplexHeatmap", "org.Hs.eg.db", "clusterProfiler", "enrichplot"))'
 
       - name: Install GitHub dependencies
         run: |
@@ -40,9 +44,6 @@ jobs:
           Rscript -e 'remotes::install_github("IOBR/IOBR", auth_token = Sys.getenv("GITHUB_PAT"))'
           Rscript -e 'remotes::install_github("omnideconv/immunedeconv", auth_token = Sys.getenv("GITHUB_PAT"))'
           Rscript -e 'remotes::install_github("kevinblighe/EnhancedVolcano", auth_token = Sys.getenv("GITHUB_PAT"))'
-
-      - name: Install devtools
-        run: Rscript -e 'install.packages("devtools")'
 
       - name: Install remaining R package dependencies
         run: Rscript -e "remotes::install_deps(dependencies = TRUE)"
