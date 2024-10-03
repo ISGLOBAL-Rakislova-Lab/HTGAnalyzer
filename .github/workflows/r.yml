@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}  # Asegúrate de que esto se configure correctamente
+      GITHUB_PAT: ${{ secrets.MY_GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
@@ -49,5 +49,6 @@ jobs:
 
       - name: Check the package
         run: R CMD check --as-cran .
+
 
 
