@@ -36,7 +36,8 @@ jobs:
 
       - name: Install Bioconductor dependencies
         run: |
-          Rscript -e 'BiocManager::install(c("DESeq2", "ComplexHeatmap", "org.Hs.eg.db"))'
+          Rscript -e 'BiocManager::install(c("DESeq2", "ComplexHeatmap", "org.Hs.eg.db", "apeglm"))'
+
 
       - name: Install GitHub dependencies
         run: |
