@@ -10,6 +10,7 @@
 #' @param col_data Data frame. Annotation data containing the survival event and time variables.
 #' @param counts_data Matrix. Raw count data for the genes.
 #' @param DEA DESeqDataSet object or NULL. Pre-existing DESeqDataSet object. If NULL, a new DESeqDataSet will be created from `counts_data` and `col_data`. Which is necesary to obtain normalized_counts.
+#' @param method Method for determining cutoff (maxstat, median, or quartiles).
 #' @param res Data frame or NULL. Result data with `padj` values to identify top genes. Used if `genes_to_use` is NULL.
 #' @param genes_to_use Character vector or NULL. Specific genes to use for survival analysis. Takes precedence over `res`.
 #' @param TME Data frame or NULL. Data with gene expressions used if neither `res` nor `genes_to_use` are provided.
@@ -28,6 +29,7 @@
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = res_tutorial,
+#'              method = "median",
 #'              genes_to_use = NULL,
 #'              TME = NULL,
 #'              outliers = outliers_tutorial,
@@ -40,6 +42,7 @@
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = NULL,
+#'              method = "median",
 #'              genes_to_use = c("LCP1", "OMA1"),
 #'              TME = NULL,
 #'              outliers = outliers_tutorial,
@@ -52,6 +55,7 @@
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = NULL,
+#'              method = "median",
 #'              genes_to_use = NULL,
 #'              TME = TME_data_tutorial$EPIC,
 #'              outliers = outliers_tutorial,
@@ -59,7 +63,7 @@
 #'              remove_outliers = TRUE)
 #'
 #' @name HTG_survival
-HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, res = NULL, genes_to_use = NULL,
+HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, res = NULL, method= "maxstat", genes_to_use = NULL,
                          outliers = NULL, pattern = NULL, remove_outliers = TRUE, TME = NULL) {
 
 
@@ -158,11 +162,35 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
     merged_data$time <- merged_data[[time]]
     merged_data$variable_01 <- merged_data[[variable_01]]
     gene_column <- get(i, merged_data)  # Access the column dynamically
-    MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
-                                     smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-    cut.off <- MAXSTAT$estimate
-    cat("\033[32mCUT OFF\033[0m\n")
-    print(cut.off)
+    # MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
+    #                                  smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+    # cut.off <- MAXSTAT$estimate
+    # cat("\033[32mCUT OFF\033[0m\n")
+    # print(cut.off)
+    if (method == "maxstat") {
+      # Perform MAXSTAT test
+      cat("\033[32mUsing MAXSTAT to determine cutoff...\033[0m\n")
+      MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
+                                       smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+      cut.off <- MAXSTAT$estimate
+      cat("\033[32mMAXSTAT CUT OFF:\033[0m\n")
+      print(cut.off)
+
+    } else if (method == "median") {
+      # Use median to define cutoff
+      cat("\033[32mUsing Median to determine cutoff...\033[0m\n")
+      cut.off <- median(gene_column, na.rm = TRUE)
+      cat("\033[32mMEDIAN CUT OFF:\033[0m\n")
+      print(cut.off)
+
+    } else if (method == "quartiles") {
+      # Use quartiles to define cutoff (Q1 and Q3)
+      cat("\033[32mUsing Quartiles to determine cutoff...\033[0m\n")
+      Q1 <- quantile(gene_column, 0.25, na.rm = TRUE)
+      Q3 <- quantile(gene_column, 0.75, na.rm = TRUE)
+      cat("\033[32mQuartile 1 (Q1):\033[0m ", Q1, "\n")
+      cat("\033[32mQuartile 3 (Q3):\033[0m ", Q3, "\n")
+    }
 
     # Create a new variable based on the cutoff
     new_column_name <- paste0(i, "_mRNA_expression")

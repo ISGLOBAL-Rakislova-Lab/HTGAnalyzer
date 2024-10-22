@@ -30,7 +30,7 @@ HTG_import_counts <- function(file_path, file_type) {
     rownames(htg_db) <- rownames_db
 
     cts <- htg_db
-    if (grepl("^Well", rownames(cts)[1])) {
+    if (grepl("^Sample ID", rownames(cts)[1])) {
       cts <- cts[-c(1:4), ]
       cts <- apply(cts, 2, as.numeric)
       rownames(cts) <- rownames(htg_db)[-c(1:4)]

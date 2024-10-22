@@ -77,20 +77,20 @@ HTG_analysis <- function(outliers = NULL,
                          col_data,
                          design_formula = NULL ,
                          percentage_gene = 0.2,
-                        threshold_gene = 200,
-                        threshold_subject = 10,
-                        genes_to_use = c("CCND1", "MMP10", "CTTN"),
-                        heatmap_columns = NULL,
-                        contrast = NULL,
-                        pCutoff = 5e-2,
-                        variable_01 = NULL,
-                        time = NULL,
-                        DEA = TRUE,
-                        remove_outliers = TRUE,
-                        GSEA = FALSE,
-                        generate_heatmap = TRUE,
-                        TME = TRUE,
-                        survival_analysis = FALSE) {
+                         threshold_gene = 200,
+                         threshold_subject = 10,
+                         genes_to_use = c("CCND1", "MMP10", "CTTN"),
+                         heatmap_columns = NULL,
+                         contrast = NULL,
+                         pCutoff = 5e-2,
+                         variable_01 = NULL,
+                         time = NULL,
+                         DEA = TRUE,
+                         remove_outliers = TRUE,
+                         GSEA = FALSE,
+                         generate_heatmap = TRUE,
+                         TME = TRUE,
+                         survival_analysis = FALSE) {
   if (!requireNamespace("IOBR", quietly = TRUE)) {
     stop("Package 'IOBR' is required but not installed.")
   }
@@ -131,7 +131,9 @@ HTG_analysis <- function(outliers = NULL,
     if (is.null(design_formula)) {
       stop("Design formula is required for DESeq2 analysis.")
     }
+    print(design_formula)
     design_formul <- as.formula(paste("~", " ", design_formula))
+    print(design_formul)
 
   ### Variables should not have spaces
   colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
@@ -145,7 +147,16 @@ HTG_analysis <- function(outliers = NULL,
 
   # Create DESeqDataSet object
   rownames(col_data)<- col_data$id  #important that the columns is called id
+  print(contrast[1])
   col_data[[contrast[1]]] <- as.factor(col_data[[contrast[1]]])
+  print("borrar2")
+  print(head(counts_filtered))
+  counts_filtered<- as.data.frame(counts_filtered)
+  print(head(counts_filtered))
+  print(class(counts_filtered))
+  print(class(col_data))
+  print(design_formul)
+  print(class(design_formul))
 
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
   cat("\033[32m\033[0m\n")
@@ -1291,7 +1302,7 @@ HTG_analysis <- function(outliers = NULL,
     } else {
       filtered <- counts_data
     }
-cat("a")
+
     if (remove_outliers) {
       counts_filtered <- filtered[, !colnames(filtered) %in% outliers]
       AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
@@ -1313,7 +1324,7 @@ cat("a")
     clean_column_names <- function(names) {
       gsub("[^[:alnum:]_]", "_", names)
     }
-cat("b")
+
     # Create DESeqDataSet object
     if (!exists("dds")) {
       rownames(col_data) <- col_data$id
@@ -1338,7 +1349,7 @@ cat("b")
     # Filter data
     cat("\033[32mFiltering data.\033[0m\n")
     subset_data <- dplyr::filter(col_data, id %in% ids_data)
-cat("c")
+cat("borrar c")
     df_ta <- as.data.frame(df_t)
     df_ta$id <- rownames(df_ta)
 
