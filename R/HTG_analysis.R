@@ -58,7 +58,7 @@
 #'   threshold_subject = 10,
 #'   genes_to_use = c("CCND1", "MMP10", "CTTN"),
 #'   heatmap_columns = c("HPV_status", "Ciclina_D1"),
-#'   contrast = c("HPV_status", "Positive", "Negative"),
+#'   contrast = c("HPV_status", "Associated", "Independent"),
 #'   pCutoff = 5e-2,
 #'   variable_01 = "Recurrence_01",
 #'   time = "Time_to_death_surv",
@@ -156,7 +156,7 @@ HTG_analysis <- function(outliers = NULL,
   print(class(counts_filtered))
   print(class(col_data))
   print(design_formul)
-  print(class(design_formul))
+
 
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
   cat("\033[32m\033[0m\n")
@@ -359,23 +359,37 @@ HTG_analysis <- function(outliers = NULL,
 
   normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
   pca_result <- prcomp(t(normalized_counts), scale. = TRUE)
+
   pca_data <- as.data.frame(pca_result$x)
   pca_data$Sample <- SummarizedExperiment::colData(dds)$id
-  pca_data$Tag <- SummarizedExperiment::colData(dds)[[design_formula]]
+  pca_data$Condition_Group <- SummarizedExperiment::colData(dds)[[design_formula]]
 
-  tag_levels <- unique(pca_data$Tag)
-  color_palette <- scales::hue_pal()(length(tag_levels))
-  names(color_palette) <- tag_levels
-  pca_plot <- ggplot2::ggplot(pca_data, ggplot2::aes(x = PC1, y = PC2, color = Tag)) +
+  color_palette <- c("#4793AF", "#E57373")
+  names(color_palette) <- unique(pca_data$Condition_Group)
+
+  pca_plot <- ggplot2::ggplot(pca_data, ggplot2::aes(x = PC1, y = PC2, color = Condition_Group)) +
     ggplot2::geom_point(size = 3) +
-    ggrepel::geom_text_repel(ggplot2::aes(label = Sample), size = 3, max.overlaps = 15) +
+    ggrepel::geom_text_repel(ggplot2::aes(label = Sample), size = 8, max.overlaps = 15) +  # Aumenta el tamaño de las etiquetas de muestra
     ggplot2::labs(title = "PCA of Normalized Counts",
                   x = "Principal Component 1",
                   y = "Principal Component 2") +
     ggplot2::theme_minimal() +
     ggplot2::scale_color_manual(values = color_palette) +
-    ggplot2::theme(legend.position = "right")
+    ggplot2::theme(
+      legend.position = "right",
+      plot.title = ggplot2::element_text(size = 25),          # Título del gráfico
+      axis.title.x = ggplot2::element_text(size = 25),        # Título del eje X
+      axis.title.y = ggplot2::element_text(size = 25),        # Título del eje Y
+      axis.text = ggplot2::element_text(size = 20),           # Texto de los ejes
+      legend.title = ggplot2::element_text(size = 25),        # Título de la leyenda
+      legend.text = ggplot2::element_text(size = 20)          # Texto de los elementos de la leyenda
+    )
+
   print(pca_plot)
+
+
+
+
 
 
     cat("\033[33mGENERATING VOLCANO PLOT\033[0m\n")
@@ -1218,7 +1232,7 @@ HTG_analysis <- function(outliers = NULL,
           main = "Heatmap QTI",
           legend = TRUE,
           angle_col = 45,
-          silent = TRUE
+          silent = FALSE
         )
       }
     }
