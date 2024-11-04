@@ -133,7 +133,6 @@ HTG_analysis <- function(outliers = NULL,
     }
     print(design_formula)
     design_formul <- as.formula(paste("~", " ", design_formula))
-    print(design_formul)
 
   ### Variables should not have spaces
   colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
@@ -147,16 +146,8 @@ HTG_analysis <- function(outliers = NULL,
 
   # Create DESeqDataSet object
   rownames(col_data)<- col_data$id  #important that the columns is called id
-  print(contrast[1])
   col_data[[contrast[1]]] <- as.factor(col_data[[contrast[1]]])
-  print("borrar2")
-  print(head(counts_filtered))
   counts_filtered<- as.data.frame(counts_filtered)
-  print(head(counts_filtered))
-  print(class(counts_filtered))
-  print(class(col_data))
-  print(design_formul)
-
 
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
   cat("\033[32m\033[0m\n")
@@ -1423,6 +1414,28 @@ cat("d")
       # Summary of the fit
       cat("\033[32mSummary of the fit\033[0m\n")
       print(summary(fit1))
+      fit1_df <- data.frame(
+        time = fit1$time,
+        n_risk = fit1$n.risk,
+        n_event = fit1$n.event,
+        n_censor = fit1$n.censor,
+        survival = fit1$surv,
+        std_err = fit1$std.err,
+        cumhaz = fit1$cumhaz,
+        std_chaz = fit1$std.chaz,
+        lower = fit1$lower,
+        upper = fit1$upper
+      )
+      fit1_df$strata <- rep(names(fit1$strata), times = fit1$strata)
+      merged_data_subset <- data.frame(
+        time = merged_data$time,
+        n_event = merged_data$variable_01,
+        id = merged_data$id
+      )
+      fit1_df <- merge(fit1_df, merged_data_subset, by = c("time", "n_event"), all.x = TRUE)
+      csv_filename <- paste0("Summary_of_the_fit_", new_column_name, ".csv")
+      write.csv(fit1_df, file = csv_filename, row.names = FALSE)
+
 
       # Log-rank test and p-value
       cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
@@ -1430,6 +1443,17 @@ cat("d")
       p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
       print(surv_diff)
+      surv_diff_df <- data.frame(
+        group = attr(surv_diff$n, "dimnames")[[1]],
+        N = as.vector(surv_diff$n),
+        Observed = surv_diff$obs,
+        Expected = surv_diff$exp,
+        `O-E^2/E` = (surv_diff$obs - surv_diff$exp)^2 / surv_diff$exp,
+        `Chisq` = rep(surv_diff$chisq, 2),  # chi-cuadrado repetido dos veces
+        p_value = rep(surv_diff$pvalue, 2)    # p-valor repetido dos veces
+      )
+      csv_filename <- paste0("surv_diff_summary_", new_column_name, ".csv")
+      write.csv(surv_diff_df, file = csv_filename, row.names = FALSE)
       cat("\033[32mP-value\033[0m\n")
       print(p_value)
 

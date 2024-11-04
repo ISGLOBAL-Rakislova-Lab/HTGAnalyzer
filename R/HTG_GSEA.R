@@ -148,7 +148,7 @@ HTG_GSEA <- function(res) {
     cat("\033[31mNo significant genes found for GO enrichment analysis.\033[0m\n")
   }
 
-    pdf("GSEA_analysis_plots1_of_2.pdf", width = 11, height = 14)
+    pdf("GSEA_analysis_plots1_of_2.pdf", width = 15, height = 14)
     print(dotplot1)
     print(dotplot2)
     print(emapplot1)
@@ -176,7 +176,7 @@ HTG_GSEA <- function(res) {
         ggplot2::theme_minimal() +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1))
       dev.off()
-      pdf("GSEA_analysis_plots2_of_2.pdf", width = 35, height = 15)
+      pdf("GSEA_analysis_plots2_of_2.pdf", width = 39, height = 15)
       print(heatplot1)
       print(heatplot2)
         dev.off()

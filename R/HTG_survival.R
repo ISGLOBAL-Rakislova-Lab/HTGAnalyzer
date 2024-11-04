@@ -29,7 +29,7 @@
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = res_tutorial,
-#'              method = "median",
+#'              method = "maxstat",
 #'              genes_to_use = NULL,
 #'              TME = NULL,
 #'              outliers = outliers_tutorial,
@@ -42,7 +42,7 @@
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = NULL,
-#'              method = "median",
+#'              method = "quartiles",
 #'              genes_to_use = c("LCP1", "OMA1"),
 #'              TME = NULL,
 #'              outliers = outliers_tutorial,
@@ -102,12 +102,10 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
   }
 
   # Create DESeqDataSet object
-  if (is.null(DEA)) {
     cat("\033[33mOBTAINING NORMALIEZ COUNTS...\033[0m\n")
     rownames(col_data) <- col_data$id
     dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = ~ 1)
     dds <- DESeq2::estimateSizeFactors(dds)
-  }
   normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
   df_t <- t(normalized_counts)
 
@@ -161,12 +159,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
     # Perform MAXSTAT test
     merged_data$time <- merged_data[[time]]
     merged_data$variable_01 <- merged_data[[variable_01]]
-    gene_column <- get(i, merged_data)  # Access the column dynamically
-    # MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
-    #                                  smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-    # cut.off <- MAXSTAT$estimate
-    # cat("\033[32mCUT OFF\033[0m\n")
-    # print(cut.off)
+    gene_column <- get(i, merged_data)
     if (method == "maxstat") {
       # Perform MAXSTAT test
       cat("\033[32mUsing MAXSTAT to determine cutoff...\033[0m\n")
@@ -190,6 +183,8 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       Q3 <- quantile(gene_column, 0.75, na.rm = TRUE)
       cat("\033[32mQuartile 1 (Q1):\033[0m ", Q1, "\n")
       cat("\033[32mQuartile 3 (Q3):\033[0m ", Q3, "\n")
+      cat("\033[32mUsing Q3 Quartile to determine cutoff...\033[0m\n")
+      cut.off <- quantile(gene_column, 0.75, na.rm = TRUE)
     }
 
     # Create a new variable based on the cutoff
@@ -207,6 +202,28 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
     # Summary of the fit
     cat("\033[32mSummary of the fit\033[0m\n")
     print(summary(fit1))
+    fit1_df <- data.frame(
+      time = fit1$time,
+      n_risk = fit1$n.risk,
+      n_event = fit1$n.event,
+      n_censor = fit1$n.censor,
+      survival = fit1$surv,
+      std_err = fit1$std.err,
+      cumhaz = fit1$cumhaz,
+      std_chaz = fit1$std.chaz,
+      lower = fit1$lower,
+      upper = fit1$upper
+    )
+    fit1_df$strata <- rep(names(fit1$strata), times = fit1$strata)
+    merged_data_subset <- data.frame(
+      time = merged_data$time,
+      n_event = merged_data$variable_01,
+      id = merged_data$id
+    )
+    fit1_df <- merge(fit1_df, merged_data_subset, by = c("time", "n_event"), all.x = TRUE)
+    csv_filename <- paste0("Summary_of_the_fit_", new_column_name, ".csv")
+    write.csv(fit1_df, file = csv_filename, row.names = FALSE)
+
 
     # Log-rank test and p-value
     cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
@@ -214,6 +231,19 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
     p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
     print(surv_diff)
+    surv_diff_df <- data.frame(
+      group = attr(surv_diff$n, "dimnames")[[1]],
+      N = as.vector(surv_diff$n),
+      Observed = surv_diff$obs,
+      Expected = surv_diff$exp,
+      `O-E^2/E` = (surv_diff$obs - surv_diff$exp)^2 / surv_diff$exp,
+      `Chisq` = rep(surv_diff$chisq, 2),  # chi-cuadrado repetido dos veces
+      p_value = rep(surv_diff$pvalue, 2)    # p-valor repetido dos veces
+    )
+    csv_filename <- paste0("surv_diff_summary_", new_column_name, ".csv")
+    write.csv(surv_diff_df, file = csv_filename, row.names = FALSE)
+
+
     cat("\033[32mP-value\033[0m\n")
     print(p_value)
 
@@ -262,12 +292,33 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       # Perform MAXSTAT test
       merged_data$time <- merged_data[[time]]
       merged_data$variable_01 <- merged_data[[variable_01]]
-      gene_column <- get(i, merged_data)  # Access the column dynamically
-      MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
-                              smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-      cut.off <- MAXSTAT$estimate
-      cat("\033[32mCUT OFF\033[0m\n")
-      print(cut.off)
+      gene_column <- get(i, merged_data)
+      if (method == "maxstat") {
+        # Perform MAXSTAT test
+        cat("\033[32mUsing MAXSTAT to determine cutoff...\033[0m\n")
+        MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
+                                         smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+        cut.off <- MAXSTAT$estimate
+        cat("\033[32mMAXSTAT CUT OFF:\033[0m\n")
+        print(cut.off)
+
+      } else if (method == "median") {
+        # Use median to define cutoff
+        cat("\033[32mUsing Median to determine cutoff...\033[0m\n")
+        cut.off <- median(gene_column, na.rm = TRUE)
+        cat("\033[32mMEDIAN CUT OFF:\033[0m\n")
+        print(cut.off)
+
+      } else if (method == "quartiles") {
+        # Use quartiles to define cutoff (Q1 and Q3)
+        cat("\033[32mUsing Quartiles to determine cutoff...\033[0m\n")
+        Q1 <- quantile(gene_column, 0.25, na.rm = TRUE)
+        Q3 <- quantile(gene_column, 0.75, na.rm = TRUE)
+        cat("\033[32mQuartile 1 (Q1):\033[0m ", Q1, "\n")
+        cat("\033[32mQuartile 3 (Q3):\033[0m ", Q3, "\n")
+        cat("\033[32mUsing Q3 Quartile to determine cutoff...\033[0m\n")
+        cut.off <- quantile(gene_column, 0.75, na.rm = TRUE)
+      }
 
       # Create a new variable based on the cutoff
       new_column_name <- paste0(i, "_mRNA_expression")
@@ -284,6 +335,28 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       # Summary of the fit
       cat("\033[32mSummary of the fit\033[0m\n")
       print(summary(fit1))
+      fit1_df <- data.frame(
+        time = fit1$time,
+        n_risk = fit1$n.risk,
+        n_event = fit1$n.event,
+        n_censor = fit1$n.censor,
+        survival = fit1$surv,
+        std_err = fit1$std.err,
+        cumhaz = fit1$cumhaz,
+        std_chaz = fit1$std.chaz,
+        lower = fit1$lower,
+        upper = fit1$upper
+      )
+      fit1_df$strata <- rep(names(fit1$strata), times = fit1$strata)
+      merged_data_subset <- data.frame(
+        time = merged_data$time,
+        n_event = merged_data$variable_01,
+        id = merged_data$id
+      )
+      fit1_df <- merge(fit1_df, merged_data_subset, by = c("time", "n_event"), all.x = TRUE)
+      csv_filename <- paste0("Summary_of_the_fit_", new_column_name, ".csv")
+      write.csv(fit1_df, file = csv_filename, row.names = FALSE)
+
 
       # Log-rank test and p-value
       cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
@@ -291,6 +364,17 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
       print(surv_diff)
+      surv_diff_df <- data.frame(
+        group = attr(surv_diff$n, "dimnames")[[1]],
+        N = as.vector(surv_diff$n),
+        Observed = surv_diff$obs,
+        Expected = surv_diff$exp,
+        `O-E^2/E` = (surv_diff$obs - surv_diff$exp)^2 / surv_diff$exp,
+        `Chisq` = rep(surv_diff$chisq, 2),  # chi-cuadrado repetido dos veces
+        p_value = rep(surv_diff$pvalue, 2)    # p-valor repetido dos veces
+      )
+      csv_filename <- paste0("surv_diff_summary_", new_column_name, ".csv")
+      write.csv(surv_diff_df, file = csv_filename, row.names = FALSE)
       cat("\033[32mP-value\033[0m\n")
       print(p_value)
 
@@ -333,43 +417,98 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       cat("\n")
       cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
 
-      # Perform MAXSTAT test
-      merged_data$time<- merged_data[[time]]
-      merged_data$variable_01<- merged_data[[variable_01]]
-      MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
-                              smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
-      cut.off <- MAXSTAT$estimate
-      cat("\033[32mCUT OFF\033[0m\n")
-      print(cut.off)
+      # Establecer tiempo y variable
+      merged_data$time <- merged_data[[time]]
+      merged_data$variable_01 <- merged_data[[variable_01]]
 
-      # Create a new variable based on the cutoff
+      # Comprobar el método de corte
+      if (method == "maxstat") {
+        cat("\033[32mUsing MAXSTAT to determine cutoff...\033[0m\n")
+        MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
+                                         smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+        cut.off <- MAXSTAT$estimate
+        cat("\033[32mMAXSTAT CUT OFF:\033[0m\n")
+        print(cut.off)
 
+      } else if (method == "median") {
+        cat("\033[32mUsing Median to determine cutoff...\033[0m\n")
+        cut.off <- median(merged_data[[i]], na.rm = TRUE)
+        cat("\033[32mMEDIAN CUT OFF:\033[0m\n")
+        print(cut.off)
+
+      } else if (method == "quartiles") {
+        cat("\033[32mUsing Quartiles to determine cutoff...\033[0m\n")
+        Q1 <- quantile(merged_data[[i]], 0.25, na.rm = TRUE)
+        Q3 <- quantile(merged_data[[i]], 0.75, na.rm = TRUE)
+        cat("\033[32mQuartile 1 (Q1):\033[0m ", Q1, "\n")
+        cat("\033[32mQuartile 3 (Q3):\033[0m ", Q3, "\n")
+        cat("\033[32mUsing Q3 Quartile to determine cutoff...\033[0m\n")
+        cut.off <- quantile(gene_column, 0.75, na.rm = TRUE)
+      }
+
+      # Crear una nueva variable basada en el corte
       merged_data[[paste0(i)]] <- ifelse(merged_data[[i]] > cut.off, "High", "Low")
       merged_data[[paste0(i)]] <- factor(merged_data[[paste0(i)]])
 
-
-      # Fit survival model
+      # Ajustar el modelo de supervivencia
       cat("\033[32mFitting survival model\033[0m\n")
       column_name <- paste0(i)
-      surv_object <- survival::Surv( merged_data$time , merged_data$variable_01)
+      surv_object <- survival::Surv(merged_data$time, merged_data$variable_01)
       surv_formula <- as.formula(paste("surv_object ~", column_name))
 
       fit1 <- survival::survfit(surv_formula, data = merged_data)
-      # Summary of the fit
 
+      # Resumen del ajuste
       cat("\033[32mSummary of the fit\033[0m\n")
       print(summary(fit1))
 
-      # Log-rank test and p-value
+      fit1_df <- data.frame(
+        time = fit1$time,
+        n_risk = fit1$n.risk,
+        n_event = fit1$n.event,
+        n_censor = fit1$n.censor,
+        survival = fit1$surv,
+        std_err = fit1$std.err,
+        cumhaz = fit1$cumhaz,
+        std_chaz = fit1$std.chaz,
+        lower = fit1$lower,
+        upper = fit1$upper
+      )
+
+      fit1_df$strata <- rep(names(fit1$strata), times = fit1$strata)
+      merged_data_subset <- data.frame(
+        time = merged_data$time,
+        n_event = merged_data$variable_01,
+        id = merged_data$id
+      )
+      fit1_df <- merge(fit1_df, merged_data_subset, by = c("time", "n_event"), all.x = TRUE)
+
+      csv_filename <- paste0("Summary_of_the_fit_", i, ".csv")
+      write.csv(fit1_df, file = csv_filename, row.names = FALSE)
+
+      # Prueba de log-rank y p-valor
       cat("\033[32mPerforming log-rank test and obtaining p-value\033[0m\n")
       surv_diff <- survival::survdiff(surv_formula, data = merged_data)
       p_value <- 1 - stats::pchisq(surv_diff$chisq, length(surv_diff$n) - 1)
 
       print(surv_diff)
+      surv_diff_df <- data.frame(
+        group = attr(surv_diff$n, "dimnames")[[1]],
+        N = as.vector(surv_diff$n),
+        Observed = surv_diff$obs,
+        Expected = surv_diff$exp,
+        `O-E^2/E` = (surv_diff$obs - surv_diff$exp)^2 / surv_diff$exp,
+        Chisq = rep(surv_diff$chisq, 2),  # chi-cuadrado repetido dos veces
+        p_value = rep(surv_diff$pvalue, 2)    # p-valor repetido dos veces
+      )
+
+      csv_filename <- paste0("surv_diff_summary_", i, ".csv")
+      write.csv(surv_diff_df, file = csv_filename, row.names = FALSE)
+
       cat("\033[32mP-value\033[0m\n")
       print(p_value)
 
-      # Generate Kaplan-Meier plot
+      # Generar el gráfico de Kaplan-Meier
       cat("\033[32mGenerating Kaplan-Meier plot\033[0m\n")
       palette <- c("#9A3449", "#D4A8B1")
       plot(fit1, lty = 1, col = palette, lwd = 4, main = paste("Survival analysis for", i, "\n", "p-value =", format(p_value, digits = 3)))
@@ -382,6 +521,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
              lwd = 4)
       cat("\033[32mPlots saved in survival_analysis_plots_TME.pdf\033[0m\n")
     }
+
     dev.off()
 
   } else {

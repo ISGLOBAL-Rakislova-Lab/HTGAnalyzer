@@ -106,7 +106,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
     Missing = missing_values,
     CV = cv_values
   )
-  write.csv(summary_stats, file = "summary_stats.csv")
+  summary_stats$ID <- rownames(summary_stats)
+  write.csv(summary_stats, file = "summary_stats.csv", row.names = FALSE)
   cat("\033[32mSummary statistics saved as 'summary_stats.csv'\033[0m\n")
 
   cat("\033[33mINITIATING QC PLOTS...\033[0m\n")
@@ -147,9 +148,41 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   # Add sample names as a factor column
   ratios$samples <- factor(rownames(ratios))
 
+  # Calcula los valores de las columnas Q0 a Q5 usando los umbrales definidos
+  ratiosb$Q0 <- ifelse(ratiosb$`pos/gens` < threshold_line_pos, "PASS", "FAIL")
+  ratiosb$Q1 <- ifelse(ratiosb$total_gens > threshold_lib, "PASS", "FAIL")
+  ratiosb$Q2 <- ifelse(ratiosb$total_NC > threshold_line_nc, "PASS", "FAIL")
+  ratiosb$Q3 <- ifelse(ratiosb$`gdna/gens` < threshold_line_gdna, "PASS", "FAIL")
+  ratiosb$Q4 <- ifelse(ratiosb$`ERCC/gens` < threshold_line_ercc, "PASS", "FAIL")
+  ratiosb$Q5 <- ifelse(ratiosb$median > threshold_line_median, "PASS", "FAIL")
+
+  # Agrega los rownames como una columna 'ID'
+  ratiosb$ID <- rownames(ratiosb)
+
+  # Extrae el número de paciente y ordena por este número
+  ratiosb$ID_num <- as.numeric(gsub("patient_", "", ratiosb$ID))  # Extrae el número de ID
+  ratiosb <- ratiosb[order(ratiosb$ID_num), ]  # Ordena por la columna ID_num
+  ratiosb$ID_num <- NULL  # Elimina la columna auxiliar
+
+  # Elimina los rownames originales y reorganiza las columnas según el orden deseado
+  rownames(ratiosb) <- NULL
+  ratiosb <- ratiosb[, c("ID", "total_POS", "total_NC", "total_GDNA", "total_ERCC",
+                       "pos/gens", "Q0", "total_gens", "Q1",
+                       "nc/gens", "Q2", "gdna/gens", "Q3",
+                       "ERCC/gens", "Q4", "median", "Q5",
+                       "min", "max", "mean")]
+  ratiosb$QC_status <- ifelse(
+    apply(ratiosb[, c("Q0", "Q1", "Q2", "Q3", "Q4", "Q5")], 1, function(x) any(x == "FAIL")),
+    "FAIL",
+    "PASS"
+  )
+
+  # Verifica el resultado final
+  print(ratiosb)
+
   # Optionally save as CSV
   if (save_csv) {
-    write.csv(ratiosb, csv_file, row.names = TRUE)
+    write.csv(ratiosb, csv_file, row.names = FALSE)
     cat("\033[32mQC DATA SAVED AS '", csv_file, "'\033[0m\n")
   }
 ###
@@ -317,7 +350,7 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   colores_ercc <- ifelse(ratios$`ERCC/gens` <= threshold_line_ercc, "#4793AF",
                          ifelse(ratios$`ERCC/gens` <= threshold_superior_ercc, "#FFC470", "red"))
-  plot(ratios$`ERCC/gens`, xlab = "", ylab = "ERCC", col = colores_ercc,
+  plot(ratios$`ERCC/gens`, xlab = "", ylab = "ERCC/gens", col = colores_ercc,
        xaxt = "n", pch = 19, main = "ERCC (QC4)", ylim = c(0, max_value))
   axis(1, at = 1:nrow(ratios), labels = rownames(ratios), las = 2, cex.axis = 0.8)
   abline(h = threshold_line_ercc, col = "red")
@@ -339,8 +372,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   # Create the heatmap with ggplot2
   a<- ggplot2::ggplot(bin_df_melted, ggplot2::aes(x = variable, y = Sample, fill = factor(value))) +
     ggplot2::geom_tile(color = "white") +
-    ggplot2::scale_fill_manual(values = c("0" = "#FFF9D0", "1" = "red"), labels = c("OK", "Possible Outlier")) +
-    ggplot2::labs(x = "QC Metrics", y = "Samples", fill = "QC Status") +
+    ggplot2::scale_fill_manual(values = c("0" = "#FFF9D0", "1" = "red"), labels = c("OK", "Outlier")) +
+    ggplot2::labs(x = "QC Metrics", y = " ", fill = "QC Status") +
     ggplot2::theme_minimal() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
           axis.text.y = ggplot2::element_text(size = 7),
@@ -354,7 +387,7 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 
   rows_with_1 <- suppressWarnings(rownames(bin_matrix)[apply(bin_matrix, 1, any)])
   cat("\033[32m                              ***\033[0m\n")
-  cat(paste("\033[32mThese are the samples plotted at least once in the heatmap:\033[0m\n"))
+  cat(paste("\033[32mThese are the samples plotted at least once in the heatmap:  \033[0m\n"))
   cat(paste("The number of samples that are outliers are:", length(rows_with_1)))
   cat(rows_with_1)
   return(rows_with_1)

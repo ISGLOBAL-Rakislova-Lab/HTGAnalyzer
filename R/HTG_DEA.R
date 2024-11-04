@@ -28,7 +28,7 @@
 #'   col_data = AnnotData_tutorial,
 #'   design_formula = "HPV_status",
 #'   heatmap_columns = c("HPV_status", "Recurrence"),
-#'   contrast = c("HPV_status", "Positive", "Negative"),
+#'    contrast = c("HPV_status", "Associated", "Independent"),
 #'   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
 #'   remove_outliers = TRUE,
 #'   percentage_gene = 0.2,
@@ -42,19 +42,31 @@
 #' @name HTG_DEA
 #'
 utils::globalVariables(c("SampleID", "status"))
-HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heatmap_columns, contrast,
-                    pattern = NULL, remove_outliers = TRUE, percentage_gene = 0.2, threshold_gene = 200,
-                    threshold_subject = 10, pCutoff = 5e-2, apply_filtering = TRUE, apply_lfc_shrinkage = FALSE, extract_shrinkage = FALSE) {
-
-
+HTG_DEA <- function(outliers = NULL,
+                    counts_data,
+                    col_data,
+                    design_formula,
+                    heatmap_columns,
+                    contrast,
+                    pattern = NULL,
+                    remove_outliers = TRUE,
+                    percentage_gene = 0.2,
+                    threshold_gene = 200,
+                    threshold_subject = 10,
+                    pCutoff = 5e-2,
+                    apply_filtering = TRUE,
+                    apply_lfc_shrinkage = FALSE,
+                    extract_shrinkage = FALSE) {
 
   # Filtering counts data based on provided pattern
   if (!is.null(pattern)) {
+    cat("\033[33mINITIATING DATA FILTERING...\033[0m\n")
     counts_data <- subset(counts_data, !grepl(pattern, rownames(counts_data)))
   }
 
   # Removing outliers if specified
   if (remove_outliers && !is.null(outliers) && length(outliers) > 0) {
+    cat("\033[33mREMOVING SPECIFIED OUTLIERS...\033[0m\n")
     counts_filtered <- counts_data[, !colnames(counts_data) %in% outliers]
     AnnotData <- col_data[!col_data[["id"]] %in% outliers, ]
   } else {
@@ -63,6 +75,7 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   }
 
   # Prepare data for DESeq2 analysis
+  cat("\033[33mPREPARING DATA FOR DESeq2 ANALYSIS...\033[0m\n")
   design_formul <- as.formula(paste("~ ", design_formula))
   colnames(AnnotData) <- gsub(" ", "_", colnames(AnnotData))
   col_data <- AnnotData[order(AnnotData$id), ]
@@ -77,10 +90,12 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   }
 
   # Create DESeqDataSet object
+  cat("\033[33mCREATING DESeqDataSet OBJECT...\033[0m\n")
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
 
   # Filtering genes if specified
   if (apply_filtering) {
+    cat("\033[33mAPPLYING GENE FILTERING BASED ON THRESHOLDS...\033[0m\n")
     n_genes <- nrow(DESeq2::counts(dds))
     n_subj <- ncol(DESeq2::counts(dds))
     zero_threshold <- ceiling(n_subj * 0.2)
@@ -91,19 +106,23 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   }
 
   # Perform DESeq2 analysis
+  cat("\033[33mPERFORMING DESeq2 ANALYSIS...\033[0m\n")
   vsd <- DESeq2::vst(dds, blind = FALSE)
   dds <- DESeq2::DESeq(dds)
   res <- DESeq2::results(dds, contrast = contrast, cooksCutoff = TRUE)
 
   # Save results
   write.csv(res, "results_HTG_DEA.csv", row.names = TRUE)
+  cat("\033[32mResults saved as 'results_HTG_DEA.csv'\033[0m\n")
 
   # Print top 10 results
+  cat("\033[32mDisplaying top 10 differential expression results...\033[0m\n")
   top_genes <- head(res[order(res$padj), ], 10)
   print(top_genes)
 
   # Apply LFC shrinkage if specified
   if (apply_lfc_shrinkage) {
+    cat("\033[33mAPPLYING LOG-FOLD CHANGE SHRINKAGE...\033[0m\n")
     coef_name <- DESeq2::resultsNames(dds)[2]
     resLFC <- DESeq2::lfcShrink(dds, coef = coef_name, type = "apeglm")
     top_genes <- head(resLFC[order(resLFC$padj), ], 10)
@@ -112,13 +131,14 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
 
   # Save plots to PDF
   pdf("DEA_plots.pdf", width = 10, height = 8)
+  cat("\033[32mSaving plots as 'DEA_plots.pdf'\033[0m\n")
 
   # Volcano plot
   suppressWarnings(invisible(print(EnhancedVolcano::EnhancedVolcano(res,
-                                                   lab = rownames(res),
-                                                   x = 'log2FoldChange',
-                                                   y = 'padj',
-                                                   pCutoff = pCutoff))))
+                                                                    lab = rownames(res),
+                                                                    x = 'log2FoldChange',
+                                                                    y = 'padj',
+                                                                    pCutoff = pCutoff))))
 
   # Heatmap of sample-to-sample distances
   vsd_cor <- stats::cor(SummarizedExperiment::assay(vsd))
@@ -138,6 +158,7 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
   # Individual gene plots for top 10 genes
   top_genes_indices <- rownames(top_genes)
   for (gene_index in top_genes_indices) {
+    cat("\033[33mPlotting gene expression for gene:\033[0m", gene_index, "\n")
     gen_a2m <- as.data.frame(SummarizedExperiment::assay(vsd)[gene_index, ])
     colnames(gen_a2m) <- "expression"
     gen_a2m$SampleID <- rownames(gen_a2m)
@@ -174,3 +195,4 @@ HTG_DEA <- function(outliers = NULL, counts_data, col_data, design_formula, heat
     return(res)
   }
 }
+
