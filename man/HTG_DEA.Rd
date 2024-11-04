@@ -47,7 +47,7 @@ results <- HTG_DEA(
   col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Recurrence"),
-  contrast = c("HPV_status", "Positive", "Negative"),
+   contrast = c("HPV_status", "Associated", "Independent"),
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   remove_outliers = TRUE,
   percentage_gene = 0.2,

@@ -62,7 +62,7 @@ ALL_done <- HTG_analysis(
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),
   heatmap_columns = c("HPV_status", "Ciclina_D1"),
-  contrast = c("HPV_status", "Positive", "Negative"),
+  contrast = c("HPV_status", "Associated", "Independent"),
   pCutoff = 5e-2,
   variable_01 = "Recurrence_01",
   time = "Time_to_death_surv",

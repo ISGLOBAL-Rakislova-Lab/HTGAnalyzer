@@ -11,6 +11,7 @@ HTG_survival(
   counts_data,
   DEA = NULL,
   res = NULL,
+  method = "maxstat",
   genes_to_use = NULL,
   outliers = NULL,
   pattern = NULL,
@@ -30,6 +31,8 @@ HTG_survival(
 \item{DEA}{DESeqDataSet object or NULL. Pre-existing DESeqDataSet object. If NULL, a new DESeqDataSet will be created from `counts_data` and `col_data`. Which is necesary to obtain normalized_counts.}
 
 \item{res}{Data frame or NULL. Result data with `padj` values to identify top genes. Used if `genes_to_use` is NULL.}
+
+\item{method}{Method for determining cutoff (maxstat, median, or quartiles).}
 
 \item{genes_to_use}{Character vector or NULL. Specific genes to use for survival analysis. Takes precedence over `res`.}
 
@@ -58,6 +61,7 @@ HTG_survival(variable_01 = "Recurrence_01",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = res_tutorial,
+             method = "maxstat",
              genes_to_use = NULL,
              TME = NULL,
              outliers = outliers_tutorial,
@@ -70,6 +74,7 @@ HTG_survival(variable_01 = "Recurrence_01",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = NULL,
+             method = "quartiles",
              genes_to_use = c("LCP1", "OMA1"),
              TME = NULL,
              outliers = outliers_tutorial,
@@ -82,6 +87,7 @@ HTG_survival(variable_01 = "Recurrence_01",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = NULL,
+             method = "median",
              genes_to_use = NULL,
              TME = TME_data_tutorial$EPIC,
              outliers = outliers_tutorial,
