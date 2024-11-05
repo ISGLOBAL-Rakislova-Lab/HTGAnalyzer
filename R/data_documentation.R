@@ -40,14 +40,14 @@ NULL
 #' @name counts_data_tutorial
 #' @title Gene Expression Counts Data
 #' @description A matrix of gene expression counts with genes as rows and samples as columns.
-#' @format A matrix with dimensions 19612 x 11.
+#' @format A matrix with dimensions 19616 x 11.
 #' @source Generated for tutorial purposes.
 NULL
 
 #' @name counts_data_RNAseq
 #' @title RNAseq Gene Expression Counts Data
 #' @description A matrix of gene expression counts obtained from RNA sequencing, with genes as rows and samples as columns.
-#' @format A matrix with dimensions 19394 x 11.
+#' @format A matrix with dimensions 19398 x 11.
 #' @source Generated for tutorial purposes.
 NULL
 
@@ -62,7 +62,7 @@ NULL
 #'   \item \code{FIGO_2021_STAGE}: FIGO stage of the sample
 #'   \item \code{Recurrence}: Recurrence status (yes/no)
 #'   \item \code{Recurrence_01}: Recurrence status as a binary variable (1/0)
-#'   \item \code{Time_to_death_surv}: Time to death or survival
+#'   \item \code{Time_to_recurrence}: Time to recurrence
 #' }
 #' @source Generated for tutorial purposes.
 NULL

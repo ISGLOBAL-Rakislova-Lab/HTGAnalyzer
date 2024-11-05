@@ -12,7 +12,7 @@ A data frame with 11 rows and 7 columns:
   \item \code{FIGO_2021_STAGE}: FIGO stage of the sample
   \item \code{Recurrence}: Recurrence status (yes/no)
   \item \code{Recurrence_01}: Recurrence status as a binary variable (1/0)
-  \item \code{Time_to_death_surv}: Time to death or survival
+  \item \code{Time_to_recurrence}: Time to recurrence
 }
 }
 \source{

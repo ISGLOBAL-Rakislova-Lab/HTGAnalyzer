@@ -61,7 +61,7 @@
 #'   contrast = c("HPV_status", "Associated", "Independent"),
 #'   pCutoff = 5e-2,
 #'   variable_01 = "Recurrence_01",
-#'   time = "Time_to_death_surv",
+#'   time = "time_to_recurrence",
 #'   DEA = TRUE,
 #'   remove_outliers = TRUE,
 #'   GSEA = TRUE,
@@ -70,7 +70,7 @@
 #'   survival_analysis = TRUE
 #' )
 #' @name HTG_analysis
-utils::globalVariables(c("PC1", "PC2", "Tag", "Sample", "padj", "Description", "Count", ".data", "mean_value", "Cell_Type", "Value", "Average", "Fraction", "shapiro_test", "id"))
+utils::globalVariables(c("PC1", "PC2", "Tag", "Sample", "padj", "Description", "Count", ".data", "Condition_Group", "mean_value", "Cell_Type", "Value", "Average", "Fraction", "shapiro_test", "id"))
 HTG_analysis <- function(outliers = NULL,
                          pattern = NULL,
                          counts_data,

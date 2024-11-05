@@ -22,7 +22,7 @@ HTG_survival(
 \arguments{
 \item{variable_01}{Character. The name of the survival event variable (e.g., "Recurrence_01").}
 
-\item{time}{Character. The name of the time variable (e.g., "Time_to_death_surv").}
+\item{time}{Character. The name of the time variable (e.g., "time_to_recurrence").}
 
 \item{col_data}{Data frame. Annotation data containing the survival event and time variables.}
 
@@ -57,7 +57,7 @@ if `TME` is provided, it uses the genes from `TME`. If multiple parameters are p
 
 # USING DEA RESULTS:
 HTG_survival(variable_01 = "Recurrence_01",
-             time = "Time_to_death_surv",
+             time = "time_to_recurrence",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = res_tutorial,
@@ -70,7 +70,7 @@ HTG_survival(variable_01 = "Recurrence_01",
 
 # USING SPECIFIC GENES
 HTG_survival(variable_01 = "Recurrence_01",
-             time = "Time_to_death_surv",
+             time = "time_to_recurrence",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = NULL,
@@ -83,7 +83,7 @@ HTG_survival(variable_01 = "Recurrence_01",
 
 # USING TME DATA
 HTG_survival(variable_01 = "Recurrence_01",
-             time = "Time_to_death_surv",
+             time = "time_to_recurrence",
              col_data = AnnotData_tutorial,
              counts_data = counts_data_tutorial,
              res = NULL,

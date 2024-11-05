@@ -33,7 +33,7 @@
 #' @param contrast Character vector. Specifies the contrast for differential expression analysis. Default is NULL.
 #' @param pCutoff Numeric. The p-value cutoff for generating the volcano plot. Default is 0.05.
 #' @param variable_01 Character. Name of the survival event variable (e.g., "Recurrence_01"). Required for TME. Set NULL if you don't have it and turn FALSE TME
-#' @param time Character. Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis
+#' @param time Character. Name of the time variable (e.g., "time_to_recurrence"). Required for survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis
 #' @param DEA Logical. Indicates whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.
 #' @param remove_outliers Logical. Indicates whether to remove outliers. Default is TRUE. Turn FALSE for RNAseq data.
 #' @param GSEA Logical. Indicates whether to perform Gene Set Enrichment Analysis (GSEA). Default is TRUE.

@@ -4,7 +4,7 @@
 \alias{counts_data_tutorial}
 \title{Gene Expression Counts Data}
 \format{
-A matrix with dimensions 19612 x 11.
+A matrix with dimensions 19616 x 11.
 }
 \source{
 Generated for tutorial purposes.

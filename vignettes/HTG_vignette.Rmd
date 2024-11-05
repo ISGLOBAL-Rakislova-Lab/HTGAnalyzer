@@ -90,11 +90,10 @@ they suit your needs.
 
 ```{r, eval=FALSE}
 result <- HTG_auto(
-  counts_file_path = "~/HTGAnalyzer/counts.xlsx",  # path to counts data
-  file_type = "HTG",  # Type of file
-  AnnotData_file_path = "~/HTGAnalyzer/annotdata.xlsx",  # path to annotdata.
-  pattern = "^NC-|^POS-|^GDNA-|^ERCC-",  # HTG probes that start with one of these prefixes
-  # this thresholds are stablish for HTG transcriptomic panel. 
+  counts_file_path = "~/HTGAnalyzer/counts.xlsx",
+  file_type = "HTG",
+  AnnotData_file_path = "~/HTGAnalyzer/annotdata.xlsx",
+  pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   threshold_superior_pos = 5, 
   threshold_line_pos = 4, 
   threshold_inferior_lib = 5e+06,
@@ -113,13 +112,12 @@ result <- HTG_auto(
   percentage_gene = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
-  genes_to_use = c("CCND1", "MMP10", "CTTN"), # Genes used for survival analysis (if you turn NULL it will use the top 10 genes of differential expression. )
-  heatmap_columns = c("HPV_status", "Ciclina_D1"),  # Columns for the heatmap
-  contrast = c("HPV_status", "Positive", "Negative"),  # Contrast for differential expression analysis
+  genes_to_use = c("CCND1", "MMP10", "CTTN"),
+  heatmap_columns = c("HPV_status", "Ciclina_D1"),
+  contrast = c("HPV_status", "Associated", "Independent"),
   pCutoff = 5e-2,
-  variable_01 = "Recurrence_01",   # Variable for survival analysis
-  time = "Time_to_death_surv",  # Time for survival analysis
-  # Analysis that can be performed. 
+  variable_01 = "Recurrence_01",
+  time = "time_to_recurrence",
   DEA = TRUE,
   remove_outliers = TRUE,
   GSEA = TRUE,
@@ -174,10 +172,10 @@ result <- HTG_auto(
   threshold_subject = 10,  
   genes_to_use = c("CCND1", "MMP10", "CTTN"),  # Genes used for survival analysis (optional)
   heatmap_columns = c("HPV_status", "Ciclina_D1"),  
-  contrast = c("HPV_status", "Positive", "Negative"),  # Contrast for differential analysis
+  contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,  
   variable_01 = "Recurrence_01",  # Variable for survival analysis
-  time = "Time_to_death_surv",  # Time for survival analysis
+  time = "time_to_recurrence",  # Time for survival analysis
   DEA = TRUE,  
   remove_outliers = TRUE,  
   GSEA = FALSE,  
@@ -355,10 +353,10 @@ ALL_done <- HTG_analysis(outliers = outliers_tutorial,
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
                          heatmap_columns = c("HPV_status","Ciclina_D1"),
-                         contrast = c("HPV_status", "Positive", "Negative"), 
+                         contrast = c("HPV_status", "Associated", "Independent"), 
                          pCutoff = 5e-2, 
                          variable_01 = "Recurrence_01",
-                         time = "Time_to_death_surv", 
+                         time = "time_to_recurrence", 
                          DEA = TRUE, 
                          remove_outliers = TRUE,
                          GSEA = FALSE, 
@@ -379,7 +377,7 @@ results <- HTG_DEA(outliers= outliers_tutorial,
                    AnnotData_tutorial, 
                    design_formula = "HPV_status", 
                    heatmap_columns = c("HPV_status", "Recurrence"),
-                   contrast = c("HPV_status", "Positive", "Negative"), 
+                   contrast = c("HPV_status", "Associated", "Independent"), 
                    pattern = "^NC-|^POS-|^GDNA-|^ERCC-", 
                    remove_outliers = TRUE,
                    percentage_gene = 0.2, 
@@ -419,7 +417,6 @@ TME_results<- HTG_TME(outliers= outliers_tutorial,
                       remove_outliers = TRUE, 
                       DEA = NULL)
 
-
 head(TME_results$EPIC)
 head(TME_results$QTI)
 head(TME_results$XCELL)
@@ -435,36 +432,42 @@ provided.
 ```{r}
 ############# survival using res
  HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
+              time = "time_to_recurrence",
               col_data = AnnotData_tutorial,
               counts_data = counts_data_tutorial,
-              res = res_tutorial, #DEA results. 
+              res = res_tutorial,
+              method = "median",
               genes_to_use = NULL,
+              TME = NULL,
               outliers = outliers_tutorial,
               pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
               remove_outliers = TRUE)
 
-###### survival using genes to use
+ # USING SPECIFIC GENES
+
  HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
+              time = "time_to_recurrence",
               col_data = AnnotData_tutorial,
               counts_data = counts_data_tutorial,
               res = NULL,
+              method = "quartiles",
               genes_to_use = c("LCP1", "OMA1"),
+              TME = NULL,
               outliers = outliers_tutorial,
               pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
               remove_outliers = TRUE)
  
 
-###### survival using TME data.
-HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
+ # USING TME DATA
+ HTG_survival(variable_01 = "Recurrence_01",
+              time = "time_to_recurrence",
               col_data = AnnotData_tutorial,
               counts_data = counts_data_tutorial,
               res = NULL,
+              method = "maxstat",
               genes_to_use = NULL,
               TME = TME_data_tutorial$EPIC,
-              outliers = outliers,
+              outliers = outliers_tutorial,
               pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
               remove_outliers = TRUE)
 ```
@@ -497,10 +500,10 @@ result <- HTG_auto(
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"), # Genes used for survival analysis (optional)
   heatmap_columns = c("HPV_status", "Ciclina_D1"),  # Columns for the heatmap
-  contrast = c("HPV_status", "Positive", "Negative"),  # Contrast for differential analysis
+  contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,
   variable_01 = "Recurrence_01",   # Variable for analysis
-  time = "Time_to_death_surv",  # Time for survival analysis
+  time = "time_to_recurrence",  # Time for survival analysis
   DEA = TRUE,
   remove_outliers = TRUE,
   GSEA = TRUE,
@@ -538,10 +541,10 @@ result <- HTG_auto(
   threshold_subject = 10,  
   genes_to_use = c("CCND1", "MMP10", "CTTN"),  # Genes used for survival analysis (optional)
   heatmap_columns = c("HPV_status", "Ciclina_D1"),  
-  contrast = c("HPV_status", "Positive", "Negative"),  # Contrast for differential analysis
+  contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,  
   variable_01 = "Recurrence_01",  # Variable for survival analysis
-  time = "Time_to_death_surv",  # Time for survival analysis
+  time = "time_to_recurrence",  # Time for survival analysis
   DEA = TRUE,  
   remove_outliers = TRUE,  
   GSEA = FALSE,  
@@ -607,22 +610,22 @@ Million).
 
 ```{r}
  # Subset rows with the prefix "ERCC"
- cts_ERCC <- HTG_subset(counts_data_tutorial, "ERCC")
+ cts_ERCC <- HTG_subset(counts_data_RNAseq, "ERCC")
 
  # Subset rows with the prefix "POS"
- cts_POS <- HTG_subset(counts_data_tutorial, "POS")
+ cts_POS <- HTG_subset(counts_data_RNAseq, "POS")
 
  # Subset rows with the prefix "NC"
- cts_NC <- HTG_subset(counts_data_tutorial, "NC")
+ cts_NC <- HTG_subset(counts_data_RNAseq, "NC")
  
 # Subset rows with the prefix "GDNA"
- cts_GDNA <- HTG_subset(counts_data_tutorial, "GDNA")
+ cts_GDNA <- HTG_subset(counts_data_RNAseq, "GDNA")
 
  # Subset rows with the prefix "ZZZ3"
- cts_ZZZ3 <- HTG_subset(counts_data_tutorial, "ZZZ3")
+ cts_ZZZ3 <- HTG_subset(counts_data_RNAseq, "ZZZ3")
 
   # Subset rows with the prefix "ZZZ3" and normalize the data
- cts_ZZZ3 <- HTG_subset(counts_data_tutorial, "ZZZ3", normalize = TRUE)
+ cts_ZZZ3 <- HTG_subset(counts_data_RNAseq, "ZZZ3", normalize = TRUE)
 
  resAAAS<- HTG_subset(res_tutorial, "AAAS")
 ```
@@ -633,7 +636,7 @@ As RNaseq doen't have a QC() if is needed you can perform a summary
 stats.
 
 ```{r}
-summary <- HTG_calculate_summary_stats(counts_data_tutorial, pattern = NULL)
+summary <- HTG_calculate_summary_stats(counts_data_RNAseq, pattern = NULL)
 ```
 
 #### Perform all the analysis: HTG_analysis() for RNAseq:
@@ -647,7 +650,7 @@ separately, you can use the functions `HTG_GSEA()`, `HTG_DEA()`,
 ```{r}
 ALL_done <- HTG_analysis(outliers = NULL, # RNAseq doen't have outliers. 
                          pattern = NULL, 
-                         counts_data = counts_data_tutorial, 
+                         counts_data = counts_data_RNAseq, 
                          col_data = AnnotData_tutorial, 
                          design_formula = "HPV_status", 
                          percentage_gene = 0.2, 
@@ -655,10 +658,10 @@ ALL_done <- HTG_analysis(outliers = NULL, # RNAseq doen't have outliers.
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
                          heatmap_columns = c("HPV_status","Ciclina_D1"),
-                         contrast = c("HPV_status", "Positive", "Negative"), 
+                         contrast = c("HPV_status", "Associated", "Independent"), 
                          pCutoff = 5e-2, 
                          variable_01 = "Recurrence_01",
-                         time = "Time_to_death_surv", 
+                         time = "time_to_recurrence", 
                          DEA = TRUE, 
                          remove_outliers = FALSE, #set false because don't have outliers. 
                          GSEA = FALSE, 
@@ -675,11 +678,11 @@ LFC shrinkage, `HTG_DEA()` will provide more options.
 ```{r}
 ### DEA:
 results <- HTG_DEA(outliers= NULL, 
-                   counts_data= counts_data_tutorial, 
+                   counts_data= counts_data_RNAseq, 
                    AnnotData_tutorial, 
                    design_formula = "HPV_status", 
                    heatmap_columns = c("HPV_status", "Recurrence"),
-                   contrast = c("HPV_status", "Positive", "Negative"), 
+                   contrast = c("HPV_status", "Associated", "Independent"), 
                    pattern = NULL, 
                    remove_outliers = TRUE,
                    percentage_gene = 0.2, 
@@ -713,7 +716,7 @@ object contains results from three methodologies.
 
 TME_results<- HTG_TME(outliers= NULL, 
                       pattern= NULL,
-                      counts_data= counts_data_tutorial, 
+                      counts_data= counts_data_RNAseq, 
                       AnnotData= AnnotData_tutorial, 
                       design_formula= "HPV_status", 
                       remove_outliers = FALSE, 
@@ -733,38 +736,43 @@ genes_to_use, then DEA results, and finally TME results if none are
 provided.
 
 ```{r}
-###### survival using res
- HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
-              col_data = AnnotData_tutorial,
-              counts_data = counts_data_tutorial,
-              res = res_tutorial, #DEA results. 
-              genes_to_use = NULL,
-              outliers = NULL,
-              pattern = NULL,
-              remove_outliers = FALSE)
-
-###### survival using genes to use
- HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
-              col_data = AnnotData_tutorial,
-              counts_data = counts_data_tutorial,
-              res = NULL,
-              genes_to_use = c("LCP1", "OMA1"),
-              outliers = NULL,
-              pattern = NULL,
-              remove_outliers = FALSE)
- 
-
-###### survival using TME data.
+# survival using res
 HTG_survival(variable_01 = "Recurrence_01",
-              time = "Time_to_death_surv",
-              col_data = AnnotData_tutorial,
-              counts_data = counts_data_tutorial,
-              res = NULL,
-              genes_to_use = NULL,
-              TME = TME_data_tutorial$EPIC,
-              outliers = NULL,
-              pattern = NULL,
-              remove_outliers = FALSE)
+             time = "time_to_recurrence",
+             col_data = AnnotData_tutorial,
+             counts_data = counts_data_tutorial,
+             res = res_tutorial,
+             method = "median",
+             genes_to_use = NULL,
+             TME = NULL,
+             outliers = NULL,
+             pattern = NULL,
+             remove_outliers = FALSE)
+
+# USING SPECIFIC GENES
+HTG_survival(variable_01 = "Recurrence_01",
+             time = "time_to_recurrence",
+             col_data = AnnotData_tutorial,
+             counts_data = counts_data_tutorial,
+             res = NULL,
+             method = "quartiles",
+             genes_to_use = c("LCP1", "OMA1"),
+             TME = NULL,
+             outliers = NULL,
+             pattern = NULL,
+             remove_outliers = FALSE)
+
+# USING TME DATA
+HTG_survival(variable_01 = "Recurrence_01",
+             time = "time_to_recurrence",
+             col_data = AnnotData_tutorial,
+             counts_data = counts_data_tutorial,
+             res = NULL,
+             method = "maxstat",
+             genes_to_use = NULL,
+             TME = TME_data_tutorial$EPIC,
+             outliers = NULL,
+             pattern = NULL,
+             remove_outliers = FALSE)
+
 ```

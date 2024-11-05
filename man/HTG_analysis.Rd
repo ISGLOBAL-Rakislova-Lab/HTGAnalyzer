@@ -65,7 +65,7 @@ ALL_done <- HTG_analysis(
   contrast = c("HPV_status", "Associated", "Independent"),
   pCutoff = 5e-2,
   variable_01 = "Recurrence_01",
-  time = "Time_to_death_surv",
+  time = "time_to_recurrence",
   DEA = TRUE,
   remove_outliers = TRUE,
   GSEA = TRUE,

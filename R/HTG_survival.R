@@ -6,7 +6,7 @@
 #' `res`, and `res` takes precedence over `TME`.
 #'
 #' @param variable_01 Character. The name of the survival event variable (e.g., "Recurrence_01").
-#' @param time Character. The name of the time variable (e.g., "Time_to_death_surv").
+#' @param time Character. The name of the time variable (e.g., "time_to_recurrence").
 #' @param col_data Data frame. Annotation data containing the survival event and time variables.
 #' @param counts_data Matrix. Raw count data for the genes.
 #' @param DEA DESeqDataSet object or NULL. Pre-existing DESeqDataSet object. If NULL, a new DESeqDataSet will be created from `counts_data` and `col_data`. Which is necesary to obtain normalized_counts.
@@ -25,7 +25,7 @@
 #'
 #' # USING DEA RESULTS:
 #' HTG_survival(variable_01 = "Recurrence_01",
-#'              time = "Time_to_death_surv",
+#'              time = "time_to_recurrence",
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = res_tutorial,
@@ -38,7 +38,7 @@
 #'
 #' # USING SPECIFIC GENES
 #' HTG_survival(variable_01 = "Recurrence_01",
-#'              time = "Time_to_death_surv",
+#'              time = "time_to_recurrence",
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = NULL,
@@ -51,7 +51,7 @@
 #'
 #' # USING TME DATA
 #' HTG_survival(variable_01 = "Recurrence_01",
-#'              time = "Time_to_death_surv",
+#'              time = "time_to_recurrence",
 #'              col_data = AnnotData_tutorial,
 #'              counts_data = counts_data_tutorial,
 #'              res = NULL,
