@@ -40,7 +40,6 @@ for (pkg in github_packages) {
   remotes::install_github(pkg, force=TRUE)
 }
 ```
-Visit their GitHub pages for installation instructions.
 
 # 2. TUTORIAL.
 The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge files, the package now supports RNAseq data and addresses the gap left by the closure of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis** for transcriptomic panels.
