@@ -37,7 +37,7 @@ Visit their GitHub pages for installation instructions.
 # 2. TUTORIAL.
 The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge files, the package now supports RNAseq data and addresses the gap left by the closure of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis** for transcriptomic panels.
 
-## 2.0 DATA IMPUT:
+## 2.0 DATA INPUT:
 To use this package, you'll need:
 * An Excel file containing data counts, either from HTG or RNAseq,
 * An Excel file with annotation or clinical data.
