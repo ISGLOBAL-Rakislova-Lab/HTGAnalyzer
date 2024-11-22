@@ -24,14 +24,22 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library (HTGAnalyzer)
 ```
- **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
+ **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed by running:
 
-- [omnideconv/immunedeconv](https://github.com/omnideconv/immunedeconv)
-- [dviraran/xCell](https://github.com/dviraran/xCell)
-- [GfellerLab/EPIC](https://github.com/GfellerLab/EPIC)
-- [IOBR/IOBR](https://github.com/IOBR/IOBR)
-- [kevinblighe/EnhancedVolcano](https://github.com/kevinblighe/EnhancedVolcano)
+```{r}
+github_packages <- c(
+  "omnideconv/immunedeconv",
+  "dviraran/xCell",
+  "GfellerLab/EPIC",
+  "IOBR/IOBR",
+  "kevinblighe/EnhancedVolcano"
+)
 
+# Install each GitHub package
+for (pkg in github_packages) {
+  remotes::install_github(pkg, force=TRUE)
+}
+```
 Visit their GitHub pages for installation instructions.
 
 # 2. TUTORIAL.
