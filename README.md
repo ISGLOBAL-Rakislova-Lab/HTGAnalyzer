@@ -8,11 +8,6 @@
 
 # HTGAnalyzer
 
-Here you will find a tutorial to perform a complete analysis for HTG Edge results and RNAseq with HTGAnalyzer. Remember that we also have a shinny app to perform all the analysis locally follow the following link to know more: https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny
-. and by a shinny app which only teh WC is available in the website https://isglobal-rakislova-lab.shinyapps.io/htganalyzer_shiny/
-
-
-
 HTGAnalyzer is an R package designed for the analysis of HTG EdgeSeq data and RNA sequencing results. The package provides tools for quality control (QC), differential gene expression analysis, tumor microenvironment profiling, survival analysis, and gene set enrichment analysis.
 
 In addition to the R package, we offer **two Shiny apps** for user-friendly local or web-based analysis:
