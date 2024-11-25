@@ -14,8 +14,6 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 - **Full Analysis Shiny App:** Perform a complete analysis locally on your own machine. [Learn more here.](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny)
 - **Web-based QC Shiny App:** Focus exclusively on quality control (QC) through our hosted web app. [Try it online here.](https://isglobal-rakislova-lab.shinyapps.io/htganalyzer_shiny/)
 
-
-Having the results of **HTG Edge Reveal** or **RNAseq**, this package will help you perform Quality Control, Differential Expression Analysis (DEA), Gene Set Enrichment Analysis (GSEA), Tumor Microenvironment Analysis (TME), and Survival Analysis.
 ![FIGURE_1](https://github.com/user-attachments/assets/49a47a9b-c6ae-4231-938f-9654c44995a3)
 
 # 1. INSTALATION:
