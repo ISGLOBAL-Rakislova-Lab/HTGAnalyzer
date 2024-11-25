@@ -11,7 +11,7 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 - **Full Analysis Shiny App:** Perform a complete analysis locally on your own machine. [Learn more here.](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny)
 - **Web-based QC Shiny App:** Focus exclusively on quality control (QC) through our hosted web app. [Try it online here.](https://isglobal-rakislova-lab.shinyapps.io/htganalyzer_shiny/)
 
-![FIGURE_1](https://github.com/user-attachments/assets/49a47a9b-c6ae-4231-938f-9654c44995a3)
+![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
 # 1. INSTALATION:
 To use this R package you have to perform the following code.
