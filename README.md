@@ -1,9 +1,9 @@
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
-[![Codecov test coverage](https://codecov.io/gh/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ISGLOBAL-Rakislova-Lab/HTGAnalyzer?branch=master)
+
 [![License](https://img.shields.io/badge/license-GPL2-blue.svg)](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/blob/master/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://ISGLOBAL-Rakislova-Lab.github.io/HTGAnalyzer)
+<p align="right">
+  <img src="https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/blob/main/www/HTGAnalyzer_logo.png" alt="HTGAnalyzer Logo" width="150">
+</p>
 
 
 # HTGAnalyzer
