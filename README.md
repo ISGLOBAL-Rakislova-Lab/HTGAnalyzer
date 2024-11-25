@@ -22,7 +22,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 
 library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
-library (HTGAnalyzer)
+library(HTGAnalyzer)
 ```
  **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed by running:
 
