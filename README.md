@@ -14,7 +14,36 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
 # 1. INSTALATION:
-To use this R package you have to perform the following code.
+We provide an renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
+```{r}
+# Install libraries
+install.packages("renv")
+install.packages("shiny")
+
+# Activate library
+library(renv)
+library(shiny)
+
+# Download the file renv.lock
+if (!file.exists("renv.lock")) {
+  download.file(
+    url = "https://raw.githubusercontent.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/main/renv.lock",
+    destfile = "renv.lock"
+  )
+}
+
+# Install the packages
+renv::restore(lockfile = "renv.lock")
+## SELECT OPTION 1.
+```
+```{r}
+library(devtools)
+install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+```
+
+## Alternative installation
+Since some packages are sourced from GitHub and may be challenging to install, we provide an alternative installation method below in case you encounter any issues.
+
 ```{r}
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
