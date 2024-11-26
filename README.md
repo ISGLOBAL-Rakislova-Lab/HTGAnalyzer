@@ -20,6 +20,12 @@ We provide an renv.lock file to simplify package installation. However, if this 
 install.packages("renv")
 install.packages("shiny")
 
+# Optionally, to ensure compatibility with our setup, you can install specific versions:
+# renv version: 1.0.11
+# shiny version: 1.9.1
+# remotes::install_version("renv", version = "1.0.11")
+# remotes::install_version("shiny", version = "1.9.1")
+
 # Activate library
 library(renv)
 library(shiny)
@@ -44,15 +50,6 @@ install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 ## Alternative installation
 Since some packages are sourced from GitHub and may be challenging to install, we provide an alternative installation method below in case you encounter any issues.
 
-```{r}
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-
-library(devtools)
-install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
-library(HTGAnalyzer)
-```
  **NOTE**: To complete the installation of `HTGAnalyzer`, please ensure that the following GitHub packages are installed by running:
 
 ```{r}
@@ -68,6 +65,16 @@ library(xCell)
 library(EPIC)
 library(IOBR)
 library(EnhancedVolcano)
+```
+
+```{r}
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+library(devtools)
+install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+library(HTGAnalyzer)
 ```
 
 # 2. TUTORIAL.
