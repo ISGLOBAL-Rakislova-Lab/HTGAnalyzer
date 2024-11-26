@@ -27,18 +27,18 @@ library(HTGAnalyzer)
  **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed by running:
 
 ```{r}
-github_packages <- c(
-  "omnideconv/immunedeconv",
-  "dviraran/xCell",
-  "GfellerLab/EPIC",
-  "IOBR/IOBR",
-  "kevinblighe/EnhancedVolcano"
-)
+github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
 
 # Install each GitHub package
 for (pkg in github_packages) {
   remotes::install_github(pkg, force=TRUE)
 }
+
+library(immunedeconv)
+library(xCell)
+library(EPIC)
+library(IOBR)
+library(EnhancedVolcano)
 ```
 
 # 2. TUTORIAL.
