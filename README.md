@@ -14,7 +14,7 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
 # 1. INSTALLATION (20min aprox) :
-We provide an renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
+We provide a renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
 ```{r}
 # Install libraries
 install.packages("renv")
@@ -48,7 +48,7 @@ install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 ```
 
 ## Alternative installation
-Since some packages are sourced from GitHub and may be challenging to install, we provide an alternative installation method below in case you encounter any issues.
+Since some packages are sourced from GitHub and their installation may e challenging, we provide an alternative installation method below should you encounter any issues.
 
  **NOTE**: To complete the installation of `HTGAnalyzer`, please ensure that the following GitHub packages are installed by running:
 
@@ -78,7 +78,7 @@ library(HTGAnalyzer)
 ```
 
 # 2. TUTORIAL.
-The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge files, the package now supports RNAseq data and addresses the gap left by the closure of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis** for transcriptomic panels.
+The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge data, the package now supports RNAseq data and addresses the gap created by the discontinuation of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis** for transcriptomic panels.
 
 ## 2.0 DATA INPUT:
 To use this package, you'll need:
@@ -86,16 +86,16 @@ To use this package, you'll need:
 * An Excel file with annotation or clinical data.
 
 ## 2.1. QUICK START.
-HTGAnalyzer has a functions called `HTG_auto` which provide an easy way to perform all the analysis.
+HTGAnalyzer has a function called `HTG_auto` which provides an easy way to perform all the analyses.
 
 ### 2.1.1 HTG_auto.
 #### 2.1.1.1 HTG_auto: all the analysis
-The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analysis including Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis**. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
+The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeline for HTG data. It integrates various analyses including analyses such as Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis**. This function is designed to simplify the process, with default settings for ease of use, while also providing flexibility to modify parameters according to specific needs.
   
 **EXAMPLE:**
-imagine that your AnnotData looks like this: 
+Imagine that your AnnotData looks like this: 
 
-** **IS VERY IMPORTANT THAT THE SAMPLE NAME IN AnnotData.xlsx HAS TO BE "id"** **
+** **It is very important that the sample name in AnnotData.xlsx is labeled as "id".** **
 
 |       id       | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01 | Time_to_death_surv |
 |----------------|------------|------------|-----------------|------------|----------------|---------------------|
@@ -138,7 +138,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      file_type = "RNAseq",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
-                     QC = FALSE, #it uses probes which are not in RNAseq data. 
+                     QC = FALSE, #it uses probes that are not present in RNAseq data. 
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
@@ -153,12 +153,12 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
 
 The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Ciclina_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and Time_to_death_surv, to evaluate their impact on patient outcomes.
 
-#### 2.1.1.2 HTG_auto:skiping analysis.
+#### 2.1.1.2 HTG_auto:skipping analysis.
 If you want to skip an analysis, simply set the value to FALSE.
 
 ```{r}
 
-##### Replace "~/counts.xlsx" and "~/AnnotData.xlsx" with your authentic file paths.
+##### Replace "~/counts.xlsx" and "~/AnnotData.xlsx" with your actual file paths.
 ##### You can find the example Excel files in the SUPPLEMENTARY_OUTPUT folder on GitHub.
 
 # WITHOUT TME
@@ -200,7 +200,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
 If you prefer to have more control over the analysis process or if you have already completed some analysis, and `HTG_auto` does not fully meet your needs, we offer additional options to tailor your workflow.
 
 ### 2.2.2 DATA IMPORT.
-**NOTE**: We recomend you to avoir special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
+**NOTE**: We recommend avoiding special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
 
 #### 2.2.2.1 HTG_import_counts
 Let's start with the `HTG_import_counts` function. This function is designed to import count data (either **RNAseq or HTG**) into R from an Excel file. 
@@ -251,7 +251,7 @@ head(rna_data)
 After importing, your data will be ready for future steps. 
 
 #### 2.2.2.2 AnnotData importation:
-You can easy do it by:
+You can easily do it by:
 ```{r}
 AnnotData<- read_excel("path/to/your/annot_file.xlsx")
 head(AnnotData)
@@ -259,7 +259,7 @@ head(AnnotData)
 
 ### 2.2.3 QUALITY CONTROL.
 #### 2.2.3.1 HTG_QC
-This function performs various quality control (QC) checks tailored for the HTG EdgeSeq transcriptomic panel, though thresholds can be adjusted as needed.
+This function performs various quality control (QC) checks tailored for the HTG EdgeSeq transcriptomic panel, and thresholds can be adjusted as needed.
 From now on, we will use the tutorial dataset to facilitate the execution.
 ```{r}
 outliers<- HTG_QC(counts_data_tutorial)
@@ -267,7 +267,7 @@ outliers
 ```
 
 #### 2.2.3.2 HTG_calculate_summary_stats
-The `HTG_QC` function has already integrate this function. However, should additional checks be needed (for example for **RNAseq data** ,you can use `HTG_calculate_summary_stats` to calculates detailed summary statistics.
+The `HTG_QC` function already integrates this function. However, should additional checks be needed (for example for **RNAseq data** ,you can use `HTG_calculate_summary_stats` to calculates detailed summary statistics.
 
 ```{r}
 # HTG
@@ -316,7 +316,7 @@ All these analysis can be performed using the `HTG_analysis` function.  This fun
 
 In the two examples provided in this tutorial, the function is configured to perform all analysis. However, you can customize the function to execute only the analysis you require by setting the relevant parameters to `TRUE` or `FALSE`.
 
-**NOTE**: if you don't have a column and is used for an analysis that you will not perform you can put `NULL` on that column
+**NOTE**: If you don't have a column used for an analysis that you will not perform, you can set `NULL` on that column
 
 ```{r}
 # EXAMPLE HTG:
@@ -358,7 +358,7 @@ ALL_analysis <- HTG_analysis(
 ```
 
 #### 2.2.4.2 HTG_DEA
-Each analysis can be performed separately, giving you greater control and flexibility over the process. For example, the `HTG_DEA` function allows you to tailor the differential expression analysis to meet specific needs and datasets. It provides options to apply filters and perform log-fold change (LFC) shrinkage as required, enabling you to customize the analysis according to your objectives.
+Each analysis can be performed separately, giving you more control and flexibility over the process. For example, the `HTG_DEA` function allows you to tailor the differential expression analysis to meet specific needs and datasets. It provides options to apply filtering and perform log-fold change (LFC) shrinkage as required, enabling you to customize the analysis according to your objectives.
 
 ```{r}
 # EXAMPLE FOR HTG: 
