@@ -13,7 +13,7 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
-# 1. INSTALATION:
+# 1. INSTALATION (20min aprox) :
 We provide an renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
 ```{r}
 # Install libraries
