@@ -24,7 +24,7 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library(HTGAnalyzer)
 ```
- **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed by running:
+ **NOTE**: To complete the installation of `HTGAnalyzer`, please ensure that the following GitHub packages are installed by running:
 
 ```{r}
 github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
