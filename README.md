@@ -9,7 +9,7 @@ HTGAnalyzer is an R package designed for the analysis of HTG EdgeSeq data and RN
 
 In addition to the R package, we offer **two Shiny apps** for user-friendly local or web-based analysis:
 - **Full Analysis Shiny App:** Perform a complete analysis locally on your own machine. [Learn more here.](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny)
-- **Web-based QC Shiny App:** Focus exclusively on quality control (QC) through our hosted web app. [Try it online here.](http://isglobal-rakislova-lab.shinyapps.io/htg_shinny_app-main)
+- **Web-based QC Shiny App:** Focus exclusively on quality control (QC) through our hosted web app. [Try it online here.](https://isglobal-rakislova-lab.shinyapps.io/htg_shinny_app-main/)
 
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
