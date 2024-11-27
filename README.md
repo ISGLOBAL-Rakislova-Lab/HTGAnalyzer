@@ -1,4 +1,3 @@
-![image](https://github.com/user-attachments/assets/f96aa9e9-d963-47f0-879e-a7f3d03ef5ec)<p align="right">
   <img src="https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/blob/main/www/HTGAnalyzer_logo.png" alt="HTGAnalyzer Logo" width="150">
 </p>
 
