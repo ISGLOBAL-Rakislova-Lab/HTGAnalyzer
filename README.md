@@ -45,6 +45,7 @@ renv::restore(lockfile = "renv.lock")
 ```{r}
 library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+library(HTGAnalyzer)
 ```
 
 ## Alternative installation
