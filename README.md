@@ -1,4 +1,4 @@
-<p align="right">
+![image](https://github.com/user-attachments/assets/f96aa9e9-d963-47f0-879e-a7f3d03ef5ec)<p align="right">
   <img src="https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/blob/main/www/HTGAnalyzer_logo.png" alt="HTGAnalyzer Logo" width="150">
 </p>
 
@@ -97,19 +97,19 @@ Imagine that your AnnotData looks like this:
 
 ** **It is very important that the sample name in AnnotData.xlsx is labeled as "id".** **
 
-|       id       | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01 | Time_to_death_surv |
-|----------------|------------|------------|-----------------|------------|----------------|---------------------|
-| pacient_1      | Positive   | 10         | IIIB            | yes        | 1              | 1287                |
-| pacient_2      | Positive   | 50         | II              | no         | 0              | 510                 |
-| pacient_3      | Positive   | NA         | IIIC            | no         | 0              | 762                 |
-| pacient_4      | Positive   | 0          | IB              | yes        | 1              | 1164                |
-| pacient_5      | Negative   | 50         | IB              | yes        | 1              | 5844                |
-| pacient_6      | Negative   | 80         | IB              | no         | 0              | 1436                |
-| pacient_7      | Negative   | 20         | IB              | no         | 0              | 2145                |
-| pacient_8      | Negative   | 50         | IB              | yes        | 1              | 2458                |
-| pacient_9      | Negative   | NA         | IB              | yes        | 1              | 234                 |
-| pacient_10     | Negative   | 70         | II              | no         | 0              | 996                 |
-| pacient_11     | Negative   | 40         | IB              | no         | 0              | 768                 |
+|       id    | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01  | time_to_recurrence  |
+|-------------|------------|------------|-----------------|------------|----------------|---------------------|
+| VSCC_1      | Positive   | 10         | IIIB            | yes        | 1              | 1287                |
+| VSCC_2      | Positive   | 50         | II              | no         | 0              | 510                 |
+| VSCC_3      | Positive   | NA         | IIIC            | no         | 0              | 762                 |
+| VSCC_4      | Positive   | 0          | IB              | yes        | 1              | 1164                |
+| VSCC_5      | Negative   | 50         | IB              | yes        | 1              | 5844                |
+| VSCC_6      | Negative   | 80         | IB              | no         | 0              | 1436                |
+| VSCC_7      | Negative   | 20         | IB              | no         | 0              | 2145                |
+| VSCC_8      | Negative   | 50         | IB              | yes        | 1              | 2458                |
+| VSCC_9      | Negative   | NA         | IB              | yes        | 1              | 234                 |
+| VSCC_10     | Negative   | 70         | II              | no         | 0              | 996                 |
+| VSCC_11     | Negative   | 40         | IB              | no         | 0              | 768                 |
 
 Then:
 ```{r}
@@ -125,7 +125,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
-                     time = "Time_to_death_surv",
+                     time = "time_to_recurrence",
                      DEA = TRUE,
                      remove_outliers = TRUE,
                      GSEA = TRUE,
@@ -142,7 +142,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
-                     time = "Time_to_death_surv",
+                     time = "time_to_recurrence",
                      DEA = TRUE,
                      remove_outliers = FALSE,
                      GSEA = TRUE,
@@ -151,7 +151,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      survival_analysis = TRUE)
 ```
 
-The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Ciclina_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and Time_to_death_surv, to evaluate their impact on patient outcomes.
+The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Ciclina_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and time_to_recurrence, to evaluate their impact on VSCC outcomes.
 
 #### 2.1.1.2 HTG_auto:skipping analysis.
 If you want to skip an analysis, simply set the value to FALSE.
@@ -170,7 +170,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      heatmap_columns = c("HPV_status", "Ciclina_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = NULL,  #As you will not need this variable. You can keep it as NULL
-                     time = "Time_to_death_surv",
+                     time = "time_to_recurrence",
                      DEA = TRUE,
                      remove_outliers = TRUE,
                      GSEA = TRUE,
@@ -208,7 +208,7 @@ Let's start with the `HTG_import_counts` function. This function is designed to 
 #### Typical HTG EdgeSeq Data Format
 Results from the HTG EdgeSeq machine usually have a header that looks like this:
 
-| Sample Name   | patient_1     | patient_2     | patient_3     | patient_4     | patient_5     | patient_6     | patient_7     | patient_8     |
+| Sample Name   | VSCC_1        | VSCC_2        | VSCC_3        | VSCC_4        | VSCC_5        | VSCC_6        | VSCC_7        | VSCC_8        |
 |---------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|---------------|
 | Sample ID     | 1             | 2             | 3             | 4             | 5             | 6             | 7             | 8             |
 | Well          | A1            | B1            | C1            | D1            | E1            | F1            | G1            | H1            |
@@ -226,7 +226,7 @@ The `HTG_import_counts` function can import this file, recognize the header, rem
 #### Alternative Data Format
 If your Excel file has sample names as the first row and genes in the first column, like the format shown below, it will work as well:
 
-| id           | patient_1     | patient_2     | patient_3     | patient_4      | patient_5    | patient_6     | patient_7    | patient_8      |
+| id           | VSCC_1        | VSCC_2        | VSCC_3        | VSCC_4         | VSCC_5       | VSCC_6        | VSCC_7       | VSCC_8         |
 |--------------|---------------|---------------|---------------|----------------|--------------|---------------|--------------|----------------|
 | A3GALT2      | 0             | 0             | 164           | 19             | 46           | 1             | 0            | 0              |
 | A4GALT       | 2             | 662           | 665           | 830            | 748          | 89            | 256          | 333            |
@@ -330,7 +330,7 @@ ALL_analysis <- HTG_analysis(
   contrast = c("HPV_status", "Positive", "Negative"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
-  time = "Time_to_death_surv", 
+  time = "time_to_recurrence", 
   DEA = TRUE,
   remove_outliers = TRUE,
   GSEA = TRUE,
@@ -348,7 +348,7 @@ ALL_analysis <- HTG_analysis(
   contrast = c("HPV_status", "Positive", "Negative"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
-  time = "Time_to_death_surv", 
+  time = "time_to_recurrence", 
   DEA = TRUE,
   remove_outliers = FALSE,
   GSEA = TRUE,
@@ -439,7 +439,7 @@ The `HTG_survival` function is designed for performing survival analysis and off
 
 # Survial of LCP1 and OMA1 gene
 survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_tutorial,
 res = res_tutorial,
@@ -450,7 +450,7 @@ remove_outliers = TRUE)
 
 # Survival from Top10 genes
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_tutorial,
 res = res_tutorial,
@@ -461,7 +461,7 @@ remove_outliers = TRUE)
 
 # Survival of EPIC TME results.
 survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_tutorial,
 res = NULL,
@@ -475,7 +475,7 @@ remove_outliers = TRUE)
                  
 # Survial of of CCND1 gene
 survival_gene_to_use<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_RNAseq,
 genes_to_use = "CCND1",
@@ -483,7 +483,7 @@ remove_outliers = FALSE)
 
 # Survival from Top10 genes
 survival_res<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_RNAseq,
 res = res_tutorial,
@@ -491,7 +491,7 @@ remove_outliers = FALSE)
 
 # Survival of EPIC TME results.
 survival_TME<- HTG_survival(variable_01 = "Recurrence_01",
-time = "Time_to_death_surv",
+time = "time_to_recurrence",
 col_data = AnnotData_tutorial,
 counts_data = counts_data_RNAseq,
 res = NULL,
