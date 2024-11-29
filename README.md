@@ -23,18 +23,19 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
 library(devtools)
-github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("ComplexHeatmap", "DESeq2", "clusterProfiler"))
+library(ComplexHeatmap)
+library(DESeq2)
+library(clusterProfiler)
 
+github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
 # Install each GitHub package
 for (pkg in github_packages) {
   remotes::install_github(pkg, force=TRUE)
+  library(pkg)
 }
-
-library(immunedeconv)
-library(xCell)
-library(EPIC)
-library(IOBR)
-library(EnhancedVolcano)
 ```
 **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
 
