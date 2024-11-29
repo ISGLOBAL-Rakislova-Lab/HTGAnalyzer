@@ -19,25 +19,35 @@ We provide two options to install and use the HTGAnalyzer package, depending on 
 ## **Option 1: Full Installation of HTGAnalyzer**
 This option is for users who want to install the HTGAnalyzer package along with its dependencies, including additional packages from GitHub. This installation is suitable for those comfortable with R and who want the full functionality of HTGAnalyzer.
 ```{r}
+# Install devtools if not already installed
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
 library(devtools)
+# Install BiocManager if not already installed
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
+  install.packages("BiocManager")
 }
-bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler","limma","biomaRt","preprocessCore")
-# Install each Bioconductor package
+# List of Bioconductor packages
+bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore")
+# Install and load each Bioconductor package
 for (pkg in bioc_packages) {
-  BiocManager::install(pkg, force=TRUE)
-  library(pkg)
+  if (!requireNamespace(pkg, quietly = TRUE)) { # Only install if not already installed
+    BiocManager::install(pkg, force = TRUE)
+  }
+  library(pkg, character.only = TRUE) # Load the package
 }
-github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
-# Install each GitHub package
+# List of GitHub packages (user/repo format)
+github_packages <- c("omnideconv/immunedeconv", "dviraran/xCell", "GfellerLab/EPIC", "IOBR/IOBR", "kevinblighe/EnhancedVolcano")
+# Install and load each GitHub package
 for (pkg in github_packages) {
-  remotes::install_github(pkg, force=TRUE)
-  library(pkg)
+  repo_name <- strsplit(pkg, "/")[[1]][2] # Extract package name from "user/repo"
+  if (!requireNamespace(repo_name, quietly = TRUE)) { # Only install if not installed
+    remotes::install_github(pkg, force = TRUE)
+  }
+  library(repo_name, character.only = TRUE) # Load the package
 }
+
 ```
 **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
 
