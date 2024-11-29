@@ -32,7 +32,13 @@ library(EPIC)
 library(IOBR)
 library(EnhancedVolcano)
 ```
+**NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
 
+- [omnideconv/immunedeconv](https://github.com/omnideconv/immunedeconv)
+- [dviraran/xCell](https://github.com/dviraran/xCell)
+- [GfellerLab/EPIC](https://github.com/GfellerLab/EPIC)
+- [IOBR/IOBR](https://github.com/IOBR/IOBR)
+  
 ```{r}
 if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
