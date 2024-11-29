@@ -23,7 +23,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
   install.packages("devtools")
 }
 library(devtools)
-if (!requireNamespace("BiocManager", quietly = TRUE))
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
 }
 bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler","limma","biomaRt","preprocessCore")
