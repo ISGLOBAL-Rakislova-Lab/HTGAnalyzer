@@ -13,8 +13,46 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
-# 1. INSTALLATION (20min aprox) :
-We provide a renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
+# 1. INSTALLATION :
+We provide two options to install and use the HTGAnalyzer package, depending on your needs and familiarity with R.
+
+## **Option 1: Full Installation of HTGAnalyzer**
+This option is for users who want to install the HTGAnalyzer package along with its dependencies, including additional packages from GitHub. This installation is suitable for those comfortable with R and who want the full functionality of HTGAnalyzer.
+```{r}
+github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
+
+# Install each GitHub package
+for (pkg in github_packages) {
+  remotes::install_github(pkg, force=TRUE)
+}
+
+library(immunedeconv)
+library(xCell)
+library(EPIC)
+library(IOBR)
+library(EnhancedVolcano)
+```
+
+```{r}
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+
+library(devtools)
+install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
+library(HTGAnalyzer)
+```
+
+## **Option 2: Use HTGAnalyzer ShinyApp with renv (Recommended for Basic Use)**
+For users who only need to use the HTGAnalyzer ShinyApp for basic tasks, we recommend using the `renv` library. The `renv` package simplifies the setup by creating an isolated environment with the exact versions of packages specified in a `renv.lock` file. This allows you to use HTGAnalyzer without needing to manage dependencies yourself.
+
+### Why Use renv?
+- It creates a temporary environment to run HTGAnalyzer without modifying your global R environment.
+- All required packages are installed automatically based on the `renv.lock` file.
+- It is a straightforward and user-friendly option for those who only need the ShinyApp.
+
+**NOTE:** After using HTGAnalyzer, you can exit the `renv` environment by running: `renv::deactivate()` This will return you to your global R environment, leaving your R setup unchanged.
+
 ```{r}
 # Create a new folder and set it as the working directory
 dir.create("HTGAnalyzer_shiny_project", showWarnings = FALSE)
@@ -52,41 +90,6 @@ renv::restore(lockfile = "renv.lock")
 # Reminder to the user
 cat("Setup is complete. HTGAnalyzer shiny will work as long as you are in this folder:", getwd(), "\n")
 
-```
-```{r}
-library(devtools)
-install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
-library(HTGAnalyzer)
-```
-
-## Alternative installation
-Since some packages are sourced from GitHub and their installation may e challenging, we provide an alternative installation method below should you encounter any issues.
-
- **NOTE**: To complete the installation of `HTGAnalyzer`, please ensure that the following GitHub packages are installed by running:
-
-```{r}
-github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
-
-# Install each GitHub package
-for (pkg in github_packages) {
-  remotes::install_github(pkg, force=TRUE)
-}
-
-library(immunedeconv)
-library(xCell)
-library(EPIC)
-library(IOBR)
-library(EnhancedVolcano)
-```
-
-```{r}
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-
-library(devtools)
-install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
-library(HTGAnalyzer)
 ```
 
 # 2. TUTORIAL.
