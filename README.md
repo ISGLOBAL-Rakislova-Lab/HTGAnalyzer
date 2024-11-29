@@ -44,7 +44,7 @@ library(HTGAnalyzer)
 ```
 
 ## **Option 2: Use HTGAnalyzer ShinyApp with renv (Recommended for Basic Use)**
-For users who only need to use the HTGAnalyzer ShinyApp for basic tasks, we recommend using the `renv` library. The `renv` package simplifies the setup by creating an isolated environment with the exact versions of packages specified in a `renv.lock` file. This allows you to use HTGAnalyzer without needing to manage dependencies yourself.
+For users who only need to use the HTGAnalyzer ShinyApp, we recommend using the `renv` library. The `renv` package simplifies the setup by creating an isolated environment with the exact versions of packages specified in a `renv.lock` file. This allows you to use HTGAnalyzer without needing to manage dependencies yourself.
 
 ### Why Use renv?
 - It creates a temporary environment to run HTGAnalyzer without modifying your global R environment.
