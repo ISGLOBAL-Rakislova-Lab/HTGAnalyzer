@@ -29,7 +29,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler","limma","biomaRt","preprocessCore")
 # Install each Bioconductor package
 for (pkg in bioc_packages) {
-  BiocManager::install(pkg)
+  BiocManager::install(pkg, force=TRUE)
   library(pkg)
 }
 github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
