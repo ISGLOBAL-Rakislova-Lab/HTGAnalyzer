@@ -19,6 +19,10 @@ We provide two options to install and use the HTGAnalyzer package, depending on 
 ## **Option 1: Full Installation of HTGAnalyzer**
 This option is for users who want to install the HTGAnalyzer package along with its dependencies, including additional packages from GitHub. This installation is suitable for those comfortable with R and who want the full functionality of HTGAnalyzer.
 ```{r}
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  install.packages("devtools")
+}
+library(devtools)
 github_packages <- c("omnideconv/immunedeconv","dviraran/xCell","GfellerLab/EPIC","IOBR/IOBR","kevinblighe/EnhancedVolcano")
 
 # Install each GitHub package
@@ -40,11 +44,6 @@ library(EnhancedVolcano)
 - [IOBR/IOBR](https://github.com/IOBR/IOBR)
   
 ```{r}
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-
-library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library(HTGAnalyzer)
 ```
