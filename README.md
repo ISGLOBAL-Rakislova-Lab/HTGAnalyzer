@@ -16,6 +16,13 @@ In addition to the R package, we offer **two Shiny apps** for user-friendly loca
 # 1. INSTALLATION (20min aprox) :
 We provide a renv.lock file to simplify package installation. However, if this causes any issues, we offer an alternative installation method as a backup. By following the installation steps below, you will gain access to both the HTGAnalyzer R package and the Shiny app locally (note that the online version does not require any installation). To use the R package, execute the following code:
 ```{r}
+# Create a new folder and set it as the working directory
+dir.create("HTGAnalyzer_shiny_project", showWarnings = FALSE)
+setwd("HTGAnalyzer_shiny_project")
+
+# Verify the current working directory
+cat("Current working directory is:", getwd(), "\n")
+
 # Install libraries
 install.packages("renv")
 install.packages("shiny")
@@ -41,6 +48,10 @@ if (!file.exists("renv.lock")) {
 # Install the packages
 renv::restore(lockfile = "renv.lock")
 ## SELECT OPTION 1.
+
+# Reminder to the user
+cat("Setup is complete. HTGAnalyzer shiny will work as long as you are in this folder:", getwd(), "\n")
+
 ```
 ```{r}
 library(devtools)
