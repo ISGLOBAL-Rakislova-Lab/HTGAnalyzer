@@ -25,6 +25,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 library(devtools)
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+}
 BiocManager::install(c("ComplexHeatmap", "DESeq2", "clusterProfiler"))
 library(ComplexHeatmap)
 library(DESeq2)
