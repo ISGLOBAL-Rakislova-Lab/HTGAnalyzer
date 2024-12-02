@@ -53,7 +53,7 @@
 #' HTG_survival(variable_01 = "Recurrence_01",
 #'              time = "time_to_recurrence",
 #'              col_data = AnnotData_tutorial,
-#'              counts_data = counts_data_tutorial,
+#'              counts_data = NULL,
 #'              res = NULL,
 #'              method = "median",
 #'              genes_to_use = NULL,
@@ -63,14 +63,14 @@
 #'              remove_outliers = TRUE)
 #'
 #' @name HTG_survival
-HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, res = NULL, method= "maxstat", genes_to_use = NULL,
+HTG_survival <- function(variable_01, time, col_data, counts_data = NULL, DEA = NULL, res = NULL, method= "maxstat", genes_to_use = NULL,
                          outliers = NULL, pattern = NULL, remove_outliers = TRUE, TME = NULL) {
 
 
   if (is.null(variable_01) || is.null(time)) {
     stop("Variables for survival analysis are required.")
   }
-
+  if (!is.null(counts_data)){
   # Filtering counts data based on provided pattern
   if (!is.null(pattern)) {
     cat("\033[33mFILTERING THE COUNT DATA. DELETING THE PROVES...\033[0m\n")
@@ -102,12 +102,13 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
   }
 
   # Create DESeqDataSet object
-    cat("\033[33mOBTAINING NORMALIEZ COUNTS...\033[0m\n")
+    cat("\033[33mOBTAINING NORMALIZED COUNTS...\033[0m\n")
     rownames(col_data) <- col_data$id
     dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = ~ 1)
     dds <- DESeq2::estimateSizeFactors(dds)
   normalized_counts <- DESeq2::counts(dds, normalized = TRUE)
   df_t <- t(normalized_counts)
+
 
   # Checking for duplicate columns
   cat("\033[32mChecking for duplicate columns\033[0m\n")
@@ -128,6 +129,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
   df_ta <- as.data.frame(df_t)
   df_ta$id <- rownames(df_ta)
+  }
 
   # Selecting genes
   if (!is.null(genes_to_use)) {
@@ -417,11 +419,11 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
       cat("\n")
       cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
 
-      # Establecer tiempo y variable
+      #Set time and variable.
       merged_data$time <- merged_data[[time]]
       merged_data$variable_01 <- merged_data[[variable_01]]
 
-      # Comprobar el método de corte
+      # Check the cutoff method.
       if (method == "maxstat") {
         cat("\033[32mUsing MAXSTAT to determine cutoff...\033[0m\n")
         MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ merged_data[[i]], data = merged_data,
@@ -446,11 +448,11 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
         cut.off <- quantile(gene_column, 0.75, na.rm = TRUE)
       }
 
-      # Crear una nueva variable basada en el corte
+      # Create a new variable based on the cutoff
       merged_data[[paste0(i)]] <- ifelse(merged_data[[i]] > cut.off, "High", "Low")
       merged_data[[paste0(i)]] <- factor(merged_data[[paste0(i)]])
 
-      # Ajustar el modelo de supervivencia
+      # Fit the survival model
       cat("\033[32mFitting survival model\033[0m\n")
       column_name <- paste0(i)
       surv_object <- survival::Surv(merged_data$time, merged_data$variable_01)
@@ -458,7 +460,7 @@ HTG_survival <- function(variable_01, time, col_data, counts_data, DEA = NULL, r
 
       fit1 <- survival::survfit(surv_formula, data = merged_data)
 
-      # Resumen del ajuste
+      # Summary of the fit
       cat("\033[32mSummary of the fit\033[0m\n")
       print(summary(fit1))
 

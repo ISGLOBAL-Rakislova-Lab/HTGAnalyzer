@@ -46,7 +46,9 @@ HTG_GSEA <- function(res) {
   # Emaplot for gseGO
   cat("\033[32mCreating Emaplot for gseGO \033[0m\n")
   x2 <- enrichplot::pairwise_termsim(gse2)
-  emapplot1 <- enrichplot::emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggplot2::ggtitle("Enrichment Map gseGO ")
+  #emapplot1 <- enrichplot::emapplot(x2, max.overlaps = 70, min.segment.length = 0.3, point_size = 0.3, font.size = 5) +   ggplot2::ggtitle("Enrichment Map gseGO ")
+  emapplot1 <- enrichplot::emapplot(x2) + ggplot2::ggtitle("Enrichment Map gseGO ")
+
 
   # Ridgeplot for gseGO
   cat("\033[32mCreating Ridgeplot for gseGO \033[0m\n")
@@ -85,7 +87,9 @@ HTG_GSEA <- function(res) {
   # Emaplot for KEGG
   cat("\033[32mCreating Emaplot for KEGG\033[0m\n")
   x3 <- enrichplot::pairwise_termsim(kk2)
-  emapplot2 <- enrichplot::emapplot(x3, font.size = 8 +  ggplot2::ggtitle("KEGG Enrichment Map"))
+  #emapplot2 <- enrichplot::emapplot(x3, font.size = 8 +  ggplot2::ggtitle("KEGG Enrichment Map"))
+  emapplot2 <- enrichplot::emapplot(x3) + ggplot2::ggtitle("KEGG Enrichment Map")
+
 
   # Ridgeplot for KEGG
   cat("\033[32mCreating Ridgeplot for KEGG\033[0m\n")

@@ -113,7 +113,7 @@ result <- HTG_auto(
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),
-  heatmap_columns = c("HPV_status", "Ciclina_D1"),
+  heatmap_columns = c("Recurrence", "FIGO_2021_STAGE"),
   contrast = c("HPV_status", "Associated", "Independent"),
   pCutoff = 5e-2,
   variable_01 = "Recurrence_01",
@@ -171,14 +171,14 @@ result <- HTG_auto(
   threshold_gene = 200,  
   threshold_subject = 10,  
   genes_to_use = c("CCND1", "MMP10", "CTTN"),  # Genes used for survival analysis (optional)
-  heatmap_columns = c("HPV_status", "Ciclina_D1"),  
+  heatmap_columns = c("HPV_status", "Cyclin_D1"),  
   contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,  
   variable_01 = "Recurrence_01",  # Variable for survival analysis
   time = "time_to_recurrence",  # Time for survival analysis
   DEA = TRUE,  
   remove_outliers = TRUE,  
-  GSEA = FALSE,  
+  GSEA = FALSE,  # Turn FALSE to skip GSEA
   generate_heatmap = TRUE,  
   TME = TRUE,  
   survival_analysis = FALSE  # Skip survival analysis by setting this parameter to FALSE
@@ -201,7 +201,7 @@ You can upload data directly from HTG Edge Reveal using this format. R
 needs a quadratic information structure, so maybe you will have to edit
 your data to look like this on excel before importing:
 
-| **id**           | patient_1  | patient_2  | patient_3  | patient_4  | patient_5  | patient_6  | patient_7  | patient_8  |
+| **id**           | VSCC_1     | VSCC_2     | VSCC_3     | VSCC_4     | VSCC_5     | VSCC_6     | VSCC_7     | VSCC_8     |
 |--------|--------|--------|--------|--------|--------|--------|--------|--------|
 | **Sample ID**    | 1          | 2          | 3          | 4          | 5          | 6          | 7          | 8          |
 | **Well**         | A1         | B1         | C1         | D1         | E1         | F1         | G1         | H1         |
@@ -216,7 +216,7 @@ your data to look like this on excel before importing:
 
 Or an alternative format:
 
-| **id**      | patient_10 | patient_11 | patient_5 | patient_6 | patient_4 | patient_1 | patient_2 | patient_3 | patient_7 | patient_9 | patient_8 |
+| **id**      | VSCC_10    | VSCC_11    | VSCC_5    | VSCC_6    | VSCC_4    | VSCC_1    | VSCC_2    | VSCC_3    | VSCC_7    | VSCC_9    | VSCC_8    |
 |------|------|------|------|------|------|------|------|------|------|------|------|
 | **A3GALT2** | 0          | 0          | 164       | 19        | 46        | 1         | 0         | 0         | 0         | 0         | 0         |
 | **A4GALT**  | 2          | 662        | 665       | 830       | 748       | 89        | 256       | 333       | 210       | 2         | 504       |
@@ -250,13 +250,13 @@ can use this function.
 head(AnnotData_tutorial)
 
 AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial,  # Dataset to modify
-                                        "Ciclina_D1",  # Column to transform
+                                        "Cyclin_D1",  # Column to transform
                                         60,  # Threshold to categorize the data
                                         "high",  # Value for entries greater than 60
                                         "low")  # Value for entries less than 60
 #Last column will be the generated one 
 head(AnnotData_tutorial)
-head(AnnotData_tutorial$Ciclina_D12)
+head(AnnotData_tutorial$Cyclin_D12)
 
 ```
 
@@ -352,7 +352,7 @@ ALL_done <- HTG_analysis(outliers = outliers_tutorial,
                          threshold_gene = 200, 
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
-                         heatmap_columns = c("HPV_status","Ciclina_D1"),
+                         heatmap_columns = c("HPV_status","Cyclin_D1"),
                          contrast = c("HPV_status", "Associated", "Independent"), 
                          pCutoff = 5e-2, 
                          variable_01 = "Recurrence_01",
@@ -462,7 +462,7 @@ provided.
  HTG_survival(variable_01 = "Recurrence_01",
               time = "time_to_recurrence",
               col_data = AnnotData_tutorial,
-              counts_data = counts_data_tutorial,
+              counts_data = NULL,
               res = NULL,
               method = "maxstat",
               genes_to_use = NULL,
@@ -499,7 +499,7 @@ result <- HTG_auto(
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"), # Genes used for survival analysis (optional)
-  heatmap_columns = c("HPV_status", "Ciclina_D1"),  # Columns for the heatmap
+  heatmap_columns = c("HPV_status", "Cyclin_D1"),  # Columns for the heatmap
   contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,
   variable_01 = "Recurrence_01",   # Variable for analysis
@@ -540,7 +540,7 @@ result <- HTG_auto(
   threshold_gene = 200,  
   threshold_subject = 10,  
   genes_to_use = c("CCND1", "MMP10", "CTTN"),  # Genes used for survival analysis (optional)
-  heatmap_columns = c("HPV_status", "Ciclina_D1"),  
+  heatmap_columns = c("HPV_status", "Cyclin_D1"),  
   contrast = c("HPV_status", "Associated", "Independent"),  # Contrast for differential analysis
   pCutoff = 5e-2,  
   variable_01 = "Recurrence_01",  # Variable for survival analysis
@@ -593,7 +593,7 @@ can use this function.
 head(AnnotData_tutorial)
 
 AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial,  # Dataset to modify
-                                        "Ciclina_D1",  # Column to transform
+                                        "Cyclin_D1",  # Column to transform
                                         60,  # Threshold to categorize the data
                                         "high",  # Value for entries greater than 60
                                         "low")  # Value for entries less than 60
@@ -657,7 +657,7 @@ ALL_done <- HTG_analysis(outliers = NULL, # RNAseq doen't have outliers.
                          threshold_gene = 200, 
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
-                         heatmap_columns = c("HPV_status","Ciclina_D1"),
+                         heatmap_columns = c("HPV_status","Cyclin_D1"),
                          contrast = c("HPV_status", "Associated", "Independent"), 
                          pCutoff = 5e-2, 
                          variable_01 = "Recurrence_01",
@@ -766,7 +766,7 @@ HTG_survival(variable_01 = "Recurrence_01",
 HTG_survival(variable_01 = "Recurrence_01",
              time = "time_to_recurrence",
              col_data = AnnotData_tutorial,
-             counts_data = counts_data_tutorial,
+             counts_data = NULL,
              res = NULL,
              method = "maxstat",
              genes_to_use = NULL,

@@ -99,7 +99,7 @@ HTG_auto(
 
 \item{variable_01}{Character. Name of the survival event variable (e.g., "Recurrence_01"). Required for TME. Set NULL if you don't have it and turn FALSE TME}
 
-\item{time}{Character. Name of the time variable (e.g., "Time_to_death_surv"). Required for survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis}
+\item{time}{Character. Name of the time variable (e.g., "time_to_recurrence"). Required for survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis}
 
 \item{DEA}{Logical. Indicates whether to perform DESeq2 analysis with filtering and without Lfc shrinkage. Default is TRUE.}
 
@@ -134,16 +134,16 @@ result <- HTG_auto(
   file_type = "HTG",
   AnnotData_file_path = "path/to/your/annot_file.xlsx",
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
-  design_formula = "Group",
+  design_formula = "Recurrence",
   percentage_gene = 0.2,
   threshold_gene = 200,
   threshold_subject = 10,
   genes_to_use = c("CCND1", "MMP10", "CTTN"),
-  heatmap_columns = c("Group", "Smoker"),
-  contrast = c("Group", "high", "low"),
+  heatmap_columns = c("Recurrence", "FIGO_2021_STAGE"),
+  contrast = c("Recurrence", "high", "low"),
   pCutoff = 0.05,
   variable_01 = "Recurrence_01",
-  time = "Time_to_event",
+  time = "time_to_recurrence",
   DEA = TRUE,
   remove_outliers = TRUE,
   GSEA = FALSE,

@@ -22,27 +22,28 @@
 #'
 HTG_import_counts <- function(file_path, file_type) {
 
-  if (file_type == "HTG") {
-    htg_db <- readxl::read_excel(file_path)
-    htg_db <- as.data.frame(htg_db)
-    rownames_db <- htg_db[[1]]
-    htg_db <- htg_db[, -1]
-    rownames(htg_db) <- rownames_db
+if (file_type == "HTG") {
+  # Leer y procesar archivo HTG
+  htg_db <- readxl::read_excel(file_path)
+  htg_db <- as.data.frame(htg_db)
+  rownames_db <- htg_db[[1]]
+  htg_db <- htg_db[, -1]
+  rownames(htg_db) <- rownames_db
 
-    cts <- htg_db
-    if (grepl("^Sample ID", rownames(cts)[1])) {
-      cts <- cts[-c(1:4), ]
-      cts <- apply(cts, 2, as.numeric)
-      rownames(cts) <- rownames(htg_db)[-c(1:4)]
-      cts <- as.data.frame(cts)
-    }
-    return(cts)
-  } else if (file_type == "RNAseq") {
-    rna_db <- readxl::read_excel(file_path)
-    rna_db <- as.data.frame(rna_db)
-    return(rna_db)
-  } else {
-    stop("file_type has to be 'HTG' or 'RNAseq'")
+  cts <- htg_db
+  if (grepl("^Sample ID", rownames(cts)[1])) {
+    cts <- cts[-c(1:4), ]
+    cts <- apply(cts, 2, as.numeric)
+    rownames(cts) <- rownames(htg_db)[-c(1:4)]
+    cts <- as.data.frame(cts)
   }
+  counts_data <- cts
+} else if (file_type == "RNAseq") {
+  # Leer y procesar archivo RNAseq
+  rna_db <- readxl::read_excel(file_path)
+  rna_db <- as.data.frame(rna_db)
+  counts_data <- rna_db
+} else {
+  stop("file_type has to be 'HTG' or 'RNAseq'")
 }
-
+}

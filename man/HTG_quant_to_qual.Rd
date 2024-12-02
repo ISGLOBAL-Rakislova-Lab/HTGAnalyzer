@@ -31,6 +31,6 @@ This function converts quantitative columns in a data frame into qualitative one
 }
 \examples{
 # Transform the "Ciclina_D1" column in the "data" data frame with threshold 60
-AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial, "Ciclina_D1", 60, "high", "low")
+AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial, "Cyclin_D1", 60, "high", "low")
 
 }
