@@ -533,8 +533,10 @@ TME = TME_data_tutorial$EPIC,
 outliers = outliers_tutorial,
 remove_outliers = FALSE)
 ```
+
+
 <div style="display: flex; justify-content: center; gap: 20px;">
-    <img src="https://github.com/user-attachments/assets/25dbac67-84eb-4c58-af88-b7e67fdaec33" alt="Image 1" width="200"/>
+    <img src="https://github.com/user-attachments/assets/74a92a2b-6007-4d37-b40c-d53fdf3ba0ef" alt="Image 1" width="200"/>
     <img src="https://github.com/user-attachments/assets/ecf90cb3-9d11-46f7-8b63-cc5c3596902d" alt="ISGlobal Logo" width="200"/>
     <img src="https://github.com/user-attachments/assets/e2680f9a-38e4-4966-bb66-741d2cf58391" alt="Image 2" width="200"/>
 </div>
