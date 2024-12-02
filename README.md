@@ -29,7 +29,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
 }
 # List of Bioconductor packages
-bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore")
+bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore","GSVA")
 # Install and load each Bioconductor package
 for (pkg in bioc_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) { # Only install if not already installed
