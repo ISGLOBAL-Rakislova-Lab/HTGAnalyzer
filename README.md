@@ -19,31 +19,25 @@ We provide two options to install and use the HTGAnalyzer package, depending on 
 ## **Option 1: Full Installation of HTGAnalyzer**
 This option is for users who want to install the HTGAnalyzer package along with its dependencies, including additional packages from GitHub. This installation is suitable for those comfortable with R and who want the full functionality of HTGAnalyzer.
 ```{r}
-# Install devtools if not already installed
 install.packages("devtools")
 install.packages("BiocManager")
 library(devtools)
 library(BiocManager)
-
-bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore","GSVA")
-# Install and load each Bioconductor package
+bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore", "GSVA")
 for (pkg in bioc_packages) {
-  if (!requireNamespace(pkg, quietly = TRUE)) { # Only install if not already installed
+  if (!requireNamespace(pkg, quietly = TRUE)) {
     BiocManager::install(pkg, force = TRUE)
   }
   library(pkg, character.only = TRUE) # Load the package
 }
-
 github_packages <- c("omnideconv/immunedeconv", "dviraran/xCell", "GfellerLab/EPIC", "IOBR/IOBR", "kevinblighe/EnhancedVolcano")
-# Install and load each GitHub package
 for (pkg in github_packages) {
-  repo_name <- strsplit(pkg, "/")[[1]][2] # Extract package name from "user/repo"
-  if (!requireNamespace(repo_name, quietly = TRUE)) { # Only install if not installed
+  repo_name <- strsplit(pkg, "/")[[1]][2] 
+  if (!requireNamespace(repo_name, quietly = TRUE)) {
     remotes::install_github(pkg, force = TRUE)
   }
   library(repo_name, character.only = TRUE) # Load the package
 }
-
 ```
 **NOTE**: To install the `HTGAnalyzer` package, please ensure that the following GitHub packages are installed:
 
