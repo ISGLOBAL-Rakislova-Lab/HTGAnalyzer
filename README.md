@@ -47,6 +47,7 @@ for (pkg in github_packages) {
 - [IOBR/IOBR](https://github.com/IOBR/IOBR)
   
 ```{r}
+library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library(HTGAnalyzer)
 ```
