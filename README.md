@@ -121,7 +121,7 @@ Imagine that your AnnotData looks like this:
 
 ** **It is very important that the sample name in AnnotData.xlsx is labeled as "id".** **
 
-|       id    | HPV_status | Ciclina_D1 | FIGO_2021_STAGE | Recurrence | Recurrence_01  | time_to_recurrence  |
+|       id    | HPV_status | Cyclin_D1  | FIGO_2021_STAGE | Recurrence | Recurrence_01  | time_to_recurrence  |
 |-------------|------------|------------|-----------------|------------|----------------|---------------------|
 | VSCC_1      | Positive   | 10         | IIIB            | yes        | 1              | 1287                |
 | VSCC_2      | Positive   | 50         | II              | no         | 0              | 510                 |
@@ -146,7 +146,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
                      QC = TRUE,
-                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     heatmap_columns = c("HPV_status", "Cyclin_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
@@ -163,7 +163,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
                      QC = FALSE, #it uses probes that are not present in RNAseq data. 
-                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     heatmap_columns = c("HPV_status", "Cyclin_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
@@ -175,7 +175,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      survival_analysis = TRUE)
 ```
 
-The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Ciclina_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and time_to_recurrence, to evaluate their impact on VSCC outcomes.
+The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Cyclin_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and time_to_recurrence, to evaluate their impact on VSCC outcomes.
 
 #### 2.1.1.2 HTG_auto:skipping analysis.
 If you want to skip an analysis, simply set the value to FALSE.
@@ -191,7 +191,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
                      QC = TRUE,
-                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     heatmap_columns = c("HPV_status", "Cyclin_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = NULL,  #As you will not need this variable. You can keep it as NULL
                      time = "time_to_recurrence",
@@ -208,7 +208,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      "~/AnnotData.xlsx",
                      design_formula = "HPV_status",
                      QC = FALSE,
-                     heatmap_columns = c("HPV_status", "Ciclina_D1"),
+                     heatmap_columns = c("HPV_status", "Cyclin_D1"),
                      contrast = c("HPV_status", "Positive", "Negative"),
                      variable_01 = "Recurrence_01",  
                      time = NULL, #As you will not need this variable. You can keep it as NULL
@@ -350,7 +350,7 @@ ALL_analysis <- HTG_analysis(
   counts_data = counts_data_tutorial, 
   col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
-  heatmap_columns = c("HPV_status", "Ciclina_D1"), 
+  heatmap_columns = c("HPV_status", "Cyclin_D1"), 
   contrast = c("HPV_status", "Positive", "Negative"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
@@ -368,7 +368,7 @@ ALL_analysis <- HTG_analysis(
   counts_data = counts_data_RNAseq, 
   col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
-  heatmap_columns = c("HPV_status", "Ciclina_D1"), 
+  heatmap_columns = c("HPV_status", "Cyclin_D1"), 
   contrast = c("HPV_status", "Positive", "Negative"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
