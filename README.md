@@ -123,17 +123,17 @@ Imagine that your AnnotData looks like this:
 
 |       id    | HPV_status | Cyclin_D1  | FIGO_2021_STAGE | Recurrence | Recurrence_01  | time_to_recurrence  |
 |-------------|------------|------------|-----------------|------------|----------------|---------------------|
-| VSCC_1      | Positive   | 10         | IIIB            | yes        | 1              | 1287                |
-| VSCC_2      | Positive   | 50         | II              | no         | 0              | 510                 |
-| VSCC_3      | Positive   | NA         | IIIC            | no         | 0              | 762                 |
-| VSCC_4      | Positive   | 0          | IB              | yes        | 1              | 1164                |
-| VSCC_5      | Negative   | 50         | IB              | yes        | 1              | 5844                |
-| VSCC_6      | Negative   | 80         | IB              | no         | 0              | 1436                |
-| VSCC_7      | Negative   | 20         | IB              | no         | 0              | 2145                |
-| VSCC_8      | Negative   | 50         | IB              | yes        | 1              | 2458                |
-| VSCC_9      | Negative   | NA         | IB              | yes        | 1              | 234                 |
-| VSCC_10     | Negative   | 70         | II              | no         | 0              | 996                 |
-| VSCC_11     | Negative   | 40         | IB              | no         | 0              | 768                 |
+| VSCC_1      | Associated   | 10         | IIIB            | yes        | 1              | 1287                |
+| VSCC_2      | Associated   | 50         | II              | no         | 0              | 510                 |
+| VSCC_3      | Associated   | NA         | IIIC            | no         | 0              | 762                 |
+| VSCC_4      | Associated   | 0          | IB              | yes        | 1              | 1164                |
+| VSCC_5      | Independent   | 50         | IB              | yes        | 1              | 5844                |
+| VSCC_6      | Independent   | 80         | IB              | no         | 0              | 1436                |
+| VSCC_7      | Independent   | 20         | IB              | no         | 0              | 2145                |
+| VSCC_8      | Independent   | 50         | IB              | yes        | 1              | 2458                |
+| VSCC_9      | Independent   | NA         | IB              | yes        | 1              | 234                 |
+| VSCC_10     | Independent   | 70         | II              | no         | 0              | 996                 |
+| VSCC_11     | Independent   | 40         | IB              | no         | 0              | 768                 |
 
 Then:
 ```{r}
@@ -147,7 +147,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      design_formula = "HPV_status",
                      QC = TRUE,
                      heatmap_columns = c("HPV_status", "Cyclin_D1"),
-                     contrast = c("HPV_status", "Positive", "Negative"),
+                     contrast = c("HPV_status", "Associated", "Independent"),
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
                      DEA = TRUE,
@@ -164,7 +164,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      design_formula = "HPV_status",
                      QC = FALSE, #it uses probes that are not present in RNAseq data. 
                      heatmap_columns = c("HPV_status", "Cyclin_D1"),
-                     contrast = c("HPV_status", "Positive", "Negative"),
+                     contrast = c("HPV_status", "Associated", "Independent"),
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
                      DEA = TRUE,
@@ -175,7 +175,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      survival_analysis = TRUE)
 ```
 
-The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (positive vs. negative), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Cyclin_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and time_to_recurrence, to evaluate their impact on VSCC outcomes.
+The code generates a PDF and CSV with detailed analysis results. It performs Differential Expression Analysis (DEA) comparing HPV_status (Associated vs. Independent), removes outliers, and conducts Gene Set Enrichment Analysis (GSEA). A heatmap visualizes the separation based on HPV status and Cyclin_D1, with the option to add more columns. Additionally, it assesses the Tumor Microenvironment (TME) and performs survival analysis using top DEA genes, along with Recurrence_01 and time_to_recurrence, to evaluate their impact on VSCC outcomes.
 
 #### 2.1.1.2 HTG_auto:skipping analysis.
 If you want to skip an analysis, simply set the value to FALSE.
@@ -192,7 +192,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      design_formula = "HPV_status",
                      QC = TRUE,
                      heatmap_columns = c("HPV_status", "Cyclin_D1"),
-                     contrast = c("HPV_status", "Positive", "Negative"),
+                     contrast = c("HPV_status", "Associated", "Independent"),
                      variable_01 = NULL,  #As you will not need this variable. You can keep it as NULL
                      time = "time_to_recurrence",
                      DEA = TRUE,
@@ -209,7 +209,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      design_formula = "HPV_status",
                      QC = FALSE,
                      heatmap_columns = c("HPV_status", "Cyclin_D1"),
-                     contrast = c("HPV_status", "Positive", "Negative"),
+                     contrast = c("HPV_status", "Associated", "Independent"),
                      variable_01 = "Recurrence_01",  
                      time = NULL, #As you will not need this variable. You can keep it as NULL
                      DEA = TRUE,
@@ -351,7 +351,7 @@ ALL_analysis <- HTG_analysis(
   col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Cyclin_D1"), 
-  contrast = c("HPV_status", "Positive", "Negative"), 
+  contrast = c("HPV_status", "Associated", "Independent"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
   time = "time_to_recurrence", 
@@ -369,7 +369,7 @@ ALL_analysis <- HTG_analysis(
   col_data = AnnotData_tutorial, 
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Cyclin_D1"), 
-  contrast = c("HPV_status", "Positive", "Negative"), 
+  contrast = c("HPV_status", "Associated", "Independent"), 
   pCutoff = 5e-2, 
   variable_01 = "Recurrence_01", 
   time = "time_to_recurrence", 
@@ -392,7 +392,7 @@ results <- HTG_DEA(
   col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina"),
-  contrast = c("HPV_status", "Positive", "Negative"),
+  contrast = c("HPV_status", "Associated", "Independent"),
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   percentage_gene = 0.2,
   percentage_zero = 0.2,
@@ -410,7 +410,7 @@ results <- HTG_DEA(
   col_data = AnnotData_tutorial,
   design_formula = "HPV_status",
   heatmap_columns = c("HPV_status", "Ciclina"),
-  contrast = c("HPV_status", "Positive", "Negative"),
+  contrast = c("HPV_status", "Associated", "Independent"),
   pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   remove_outliers = FALSE,
   percentage_gene = 0.2,
