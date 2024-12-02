@@ -20,15 +20,11 @@ We provide two options to install and use the HTGAnalyzer package, depending on 
 This option is for users who want to install the HTGAnalyzer package along with its dependencies, including additional packages from GitHub. This installation is suitable for those comfortable with R and who want the full functionality of HTGAnalyzer.
 ```{r}
 # Install devtools if not already installed
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
+install.packages("devtools")
+install.packages("BiocManager")
 library(devtools)
-# Install BiocManager if not already installed
-if (!requireNamespace("BiocManager", quietly = TRUE)) {
-  install.packages("BiocManager")
-}
-# List of Bioconductor packages
+library(BiocManager)
+
 bioc_packages <- c("ComplexHeatmap", "DESeq2", "clusterProfiler", "limma", "biomaRt", "preprocessCore","GSVA")
 # Install and load each Bioconductor package
 for (pkg in bioc_packages) {
@@ -37,7 +33,7 @@ for (pkg in bioc_packages) {
   }
   library(pkg, character.only = TRUE) # Load the package
 }
-# List of GitHub packages (user/repo format)
+
 github_packages <- c("omnideconv/immunedeconv", "dviraran/xCell", "GfellerLab/EPIC", "IOBR/IOBR", "kevinblighe/EnhancedVolcano")
 # Install and load each GitHub package
 for (pkg in github_packages) {
