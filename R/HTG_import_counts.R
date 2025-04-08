@@ -26,7 +26,6 @@ if (file_type == "HTG") {
   # Leer y procesar archivo HTG
   htg_db <- readxl::read_excel(file_path)
   htg_db <- as.data.frame(htg_db)
-  htg_db <- gsub("[[:space:]-]", "_", rownames(htg_db))
   rownames_db <- htg_db[[1]]
   htg_db <- htg_db[, -1]
   rownames(htg_db) <- rownames_db
@@ -43,7 +42,7 @@ if (file_type == "HTG") {
   # Leer y procesar archivo RNAseq
   rna_db <- readxl::read_excel(file_path)
   rna_db <- as.data.frame(rna_db)
-  rna_db <- gsub("[[:space:]-]", "_", rownames(rna_db))
+  rna_db$id <- gsub("[[:space:]-]", "_", rna_db$id)
   cat("First column will become rownames")
   rownames(rna_db) <- rna_db[[1]]
   rna_db <- rna_db[,-1]
