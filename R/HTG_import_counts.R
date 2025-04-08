@@ -42,8 +42,12 @@ if (file_type == "HTG") {
   # Leer y procesar archivo RNAseq
   rna_db <- readxl::read_excel(file_path)
   rna_db <- as.data.frame(rna_db)
+  cat("First column will become rownames")
+  rownames(rna_db) <- rna_db[[1]]
+  rna_db <- rna_db[,-1]
   counts_data <- rna_db
+  
 } else {
-  stop("file_type has to be 'HTG' or 'RNAseq'")
+  stop("File_type has to be 'HTG' or 'RNAseq'")
 }
 }
