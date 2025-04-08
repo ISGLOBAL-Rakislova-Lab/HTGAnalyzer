@@ -1509,7 +1509,7 @@ HTG_analysis <- function(outliers = NULL,
   #####
   #####
   #####
-  if (survival_analysis) {
+    if (survival_analysis) {
     cat("\033[33mSTARTING SURVIVAL ANALYSIS\033[0m\n")
     if (is.null(col_data[[time]]) || is.null(col_data[[variable_01]])) {
       stop("Variables for survival analysis are required.")
@@ -1568,7 +1568,6 @@ HTG_analysis <- function(outliers = NULL,
     # Filter data
     cat("\033[32mFiltering data.\033[0m\n")
     subset_data <- dplyr::filter(col_data, id %in% ids_data)
-cat("borrar c")
     df_ta <- as.data.frame(df_t)
     df_ta$id <- rownames(df_ta)
 
@@ -1579,11 +1578,11 @@ cat("borrar c")
     } else if (exists("res")) {
       cat("\033[32mSelecting TOP 10 genes with the lowest padj\033[0m\n")
       top_genes <- rownames(head(res[order(res$padj), ], 10))
-      top_genes <- rownames(head(res[order(res$padj), ], 10))
     } else {
       stop("No genes provided or found in res object.")
     }
-    selected_df_t <- df_t[, top_genes, drop = FALSE]
+    
+    selected_df_t <- df_ta[, top_genes, drop = FALSE]
     selected_df_t <- as.data.frame(selected_df_t)
     selected_df_t$id <- rownames(selected_df_t)
     col_data$id <- rownames(col_data)
@@ -1600,15 +1599,15 @@ cat("borrar c")
       if (!is.numeric(merged_data[[i]])) {
         next
       }
-cat("d")
       cat("\n")
       cat("\033[32mPerforming analysis for column:\033[0m ", i, "\n")
       # Perform MAXSTAT test
       merged_data$time <- merged_data[[time]]
       merged_data$variable_01 <- merged_data[[variable_01]]
+      merged_data$variable_01<- as.numeric(merged_data$variable_01)
       gene_column <- merged_data[[i]]    #get(i, merged_data)
       MAXSTAT <- maxstat::maxstat.test(survival::Surv(time, variable_01) ~ gene_column, data = merged_data,
-                                       smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.45, maxprop = 0.55)
+                                       smethod = "LogRank", pmethod = "Lau92", iscores = TRUE, minprop = 0.1, maxprop = 0.9)
       cut.off <- MAXSTAT$estimate
       cat("\033[32mCUT OFF\033[0m\n")
       print(cut.off)
@@ -1691,4 +1690,3 @@ cat("d")
       cat("\033[32mSkipping survival analysis.\033[0m\n")
     }
   }
-
