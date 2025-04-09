@@ -409,16 +409,35 @@ HTG_analysis <- function(outliers = NULL,
     }
     else {
     cat("\033[33mSTARTING GSEA\033[0m\n")
+  # Prepare gene list for gseGO
+  cat("\033[32mPreparing gene list for GSEA\033[0m\n")
+  original_gene_list <- res$log2FoldChange
+  names(original_gene_list) <- rownames(res)
+  gene_list <- na.omit(original_gene_list)
+  gene_list <- sort(gene_list, decreasing = TRUE)
 
-      # gseGO  Analysis
-      cat("\033[32mPerforming gseGO Analysis\033[0m\n")
-      cat("\033[32mPreparing gene list for GSEA\033[0m\n")
-      original_gene_list <- res$log2FoldChange
-      names(original_gene_list) <- rownames(res)
-      gene_list <- na.omit(original_gene_list)
-      gene_list <- sort(gene_list, decreasing = TRUE)
+  # gseGO  Analysis
+  cat("\033[32mBEFORE STARTING...\033[0m\n")
+  cat("\033[34mEnsure your gene_list is named, numeric, and sorted decreasingly (important for GSEA).\033[0m\n")
+  cat("\033[34mIf your gene_list contains mostly zeros or non-positive values, gseGO might not work properly.\033[0m\n")
+  cat("\033[34mChecking gene_list structure...\033[0m\n")
+
+
+  # Checks útils
+  print(head(gene_list, 5))
+  cat("Gene list length: ", length(gene_list), "\n")
+  cat("Any negative values? ", any(gene_list < 0), "\n")
+  cat("Any NA values? ", any(is.na(gene_list)), "\n")
+  cat("Length gene_list:", length(gene_list),"\n")
+
+  # Comprovació de noms
+  if (is.null(names(gene_list))) {
+    stop("Gene_list must be a named numeric vector. Please provide gene symbols as names.")
+  }
+
+  cat("\033[32mPerforming gseGO Analysis\033[0m\n")
       gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
-                                     minGSSize = 3, maxGSSize = 800, pvalueCutoff = 0.05, verbose = TRUE, eps = 0,
+                                     minGSSize = 3, maxGSSize = 800, pvalueCutoff =1, verbose = TRUE, eps = 0,
                                      OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
 
       # Dotplot for gseGO
@@ -464,7 +483,7 @@ HTG_analysis <- function(outliers = NULL,
       kegg_gene_list <- sort(kegg_gene_list, decreasing = TRUE)
 
       kk2 <- clusterProfiler::gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
-                                      pvalueCutoff = 0.05, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
+                                      pvalueCutoff =1, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
       # Dotplot for KEGG
       cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
@@ -509,7 +528,7 @@ HTG_analysis <- function(outliers = NULL,
           keyType = 'SYMBOL',
           readable = TRUE,
           ont = "BP",
-          pvalueCutoff = 0.05,
+          pvalueCutoff =1,
           qvalueCutoff = 0.10
         )
 
@@ -556,7 +575,7 @@ HTG_analysis <- function(outliers = NULL,
         names(genes) <- rownames(sig_genes_df)
         go_enrich <- clusterProfiler::enrichGO(gene = names(genes), universe = names(gene_list), OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
                                                keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                                               pvalueCutoff = 0.05, qvalueCutoff = 0.10)
+                                               pvalueCutoff =1, qvalueCutoff = 0.10)
         go_results <- go_enrich@result
         significant_terms <- go_results[go_results$qvalue < 0.05, ]
         significant_terms <- significant_terms[order(significant_terms$qvalue), ]
