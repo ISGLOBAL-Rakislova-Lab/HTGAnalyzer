@@ -30,10 +30,41 @@ HTG_GSEA <- function(res) {
   gene_list <- sort(gene_list, decreasing = TRUE)
 
   # gseGO  Analysis
+  cat("\033[32mBEFORE STARTING...\033[0m\n")
+  cat("\033[34mEnsure your gene_list is named, numeric, and sorted decreasingly (important for GSEA).\033[0m\n")
+  cat("\033[34mIf your gene_list contains mostly zeros or non-positive values, gseGO might not work properly.\033[0m\n")
+  cat("\033[34mChecking gene_list structure...\033[0m\n")
+
+
+  # Checks útils
+  print(head(gene_list, 5))
+  cat("Gene list length: ", length(gene_list), "\n")
+  cat("Any negative values? ", any(gene_list < 0), "\n")
+  cat("Any NA values? ", any(is.na(gene_list)), "\n")
+  cat("Length gene_list:", length(gene_list),"\n")
+
+  # Comprovació de noms
+  if (is.null(names(gene_list))) {
+    stop("Gene_list must be a named numeric vector. Please provide gene symbols as names.")
+  }
+
   cat("\033[32mPerforming gseGO Analysis\033[0m\n")
-  gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
-                minGSSize = 3, maxGSSize = 800, pvalueCutoff = 0.05, verbose = TRUE, eps = 0,
-                OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
+  gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL",# nPermSimple = 1000,
+                                 minGSSize = 3, maxGSSize = 800, pvalueCutoff = 1, verbose = TRUE, eps = 0,
+                                 OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
+  print(gse2)
+
+
+  if (nrow(gse2@result) == 0) {
+    cat("\033[31mNo enriched terms found.\033[0m\n")
+    cat("\033[33mℹ️ Possible reasons:\n")
+    cat(" - gene_list has too many zero or low values\n")
+    cat(" - Too strict pvalueCutoff or pAdjustMethod\n")
+    cat(" - Genes not annotated in the selected ontology\n")
+    cat("\033[34m TIP: You can try increasing the pvalueCutoff (e.g., to 0.1), or use the online GSEA tool:\n")
+    cat(" https://www.gsea-msigdb.org/gsea/index.jsp\n\033[0m")
+    stop("No GSEA results to plot.")
+  }
 
   # Dotplot for gseGO
    cat("\033[32mCreating Dotplot for gseGO \033[0m\n")
@@ -60,7 +91,9 @@ HTG_GSEA <- function(res) {
 
   # Treeplot for gseGO
   cat("\033[32mCreating Treeplot for gseGO \033[0m\n")
+  num_terms <- nrow(x2@result)
   treeplot1 <- suppressWarnings(enrichplot::treeplot(x2) + ggplot2::ggtitle("gseGO Treeplot"))
+
 
   # Create gseaplot2 plots with titles
   a <- enrichplot::gseaplot2(gse2, geneSetID = 1, title = paste("GSEA Plot:", gse2$Description[1]))
@@ -78,7 +111,7 @@ HTG_GSEA <- function(res) {
   kegg_gene_list <- sort(kegg_gene_list, decreasing = TRUE)
 
   kk2 <- clusterProfiler::gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
-                 pvalueCutoff = 0.05, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
+                 pvalueCutoff = 1, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
   # Dotplot for KEGG
   cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
@@ -101,6 +134,7 @@ HTG_GSEA <- function(res) {
 
   # Treeplot for KEGG
   cat("\033[32mCreating Treeplot for KEGG \033[0m\n")
+  num_terms <- nrow(x3@result)
   treeplot2 <- suppressWarnings(enrichplot::treeplot(x3) + ggplot2::ggtitle("KEGG Treeplot"))
 
   upset_plot <- enrichplot::upsetplot(kk2) + ggplot2::labs(title = "Up set plot for KEGG")
@@ -123,7 +157,7 @@ HTG_GSEA <- function(res) {
       keyType = 'SYMBOL',
       readable = TRUE,
       ont = "BP",
-      pvalueCutoff = 0.05,
+      pvalueCutoff = 1,
       qvalueCutoff = 0.10
     )
 
@@ -170,7 +204,7 @@ HTG_GSEA <- function(res) {
       names(genes) <- rownames(sig_genes_df)
       go_enrich <- clusterProfiler::enrichGO(gene = names(genes), universe = names(gene_list), OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
                             keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                            pvalueCutoff = 0.05, qvalueCutoff = 0.10)
+                            pvalueCutoff = 1, qvalueCutoff = 0.10)
       go_results <- go_enrich@result
       significant_terms <- go_results[go_results$qvalue < 0.05, ]
       significant_terms <- significant_terms[order(significant_terms$qvalue), ]
@@ -191,4 +225,3 @@ HTG_GSEA <- function(res) {
       write.csv(kegg_gene_list, "kegg_gene_list.csv")
     }
 }
-
