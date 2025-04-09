@@ -42,7 +42,6 @@ if (file_type == "HTG") {
   # Leer y procesar archivo RNAseq
   rna_db <- readxl::read_excel(file_path)
   rna_db <- as.data.frame(rna_db)
-  rna_db$id <- gsub("[[:space:]-]", "_", rna_db$id)
   cat("First column will become rownames")
   rownames(rna_db) <- rna_db[[1]]
   rna_db <- rna_db[,-1]
