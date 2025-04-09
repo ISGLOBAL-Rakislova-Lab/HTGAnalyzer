@@ -1,7 +1,7 @@
 #' HTG_import_counts
 #'
 #' @description  Import counts data from an Excel file. It can be either HTG excel or RNAseq.
-#' The first row in the Excel file must contain the column headers, with "id" as the first column header followed by the names of each sample.
+#' The first row in the Excel file must contain the column headers, with "id" as the first column header followed by the names of each sample. As the first column will become the rownames, it can't be started by a number. 
 #' Please note that you might need to modify the Excel file to ensure it is in the correct format for importing data into R. Ensure column names are free of special characters and spaces to avoid import issues.
 #'
 #' @param file_path Path to the Excel file containing HTG counts. All the columns have to had a name in excel file.
