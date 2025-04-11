@@ -81,7 +81,7 @@ HTG_analysis <- function(outliers = NULL,
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
                          heatmap_columns = NULL,
-                         pvalueCutoff = 1,
+                         pvalueCutoff = 0.05,
                          contrast = NULL,
                          pCutoff = 5e-2,
                          variable_01 = NULL,
@@ -374,7 +374,7 @@ HTG_analysis <- function(outliers = NULL,
       axis.title.y = ggplot2::element_text(size = 25),        # Título del eje Y
       axis.text = ggplot2::element_text(size = 20),           # Texto de los ejes
       legend.title = ggplot2::element_text(size = 25),        # Título de la leyenda
-      legend.text = ggplot2::element_text(size = 20)          # Texto de los elementos de la leyenda
+      legend.text = ggplot2::element_text(size = 12)          # Texto de los elementos de la leyenda
     )
 
   print(pca_plot)
