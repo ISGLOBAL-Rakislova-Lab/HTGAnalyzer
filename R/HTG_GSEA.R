@@ -19,7 +19,7 @@
 #'
 #'
 utils::globalVariables(c("padj", "Description", "Count"))
-HTG_GSEA <- function(res) {
+HTG_GSEA <- function(res, pvalueCutoff = 1) {
   cat("\033[32mPerforming gseGO  analysis\033[0m\n")
 
   # Prepare gene list for gseGO
@@ -50,7 +50,7 @@ HTG_GSEA <- function(res) {
 
   cat("\033[32mPerforming gseGO Analysis\033[0m\n")
   gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL",# nPermSimple = 1000,
-                                 minGSSize = 3, maxGSSize = 800, pvalueCutoff = 1, verbose = TRUE, eps = 0,
+                                 minGSSize = 3, maxGSSize = 800, pvalueCutoff = pvalueCutoff, verbose = TRUE, eps = 0,
                                  OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
   print(gse2)
 
@@ -111,7 +111,7 @@ HTG_GSEA <- function(res) {
   kegg_gene_list <- sort(kegg_gene_list, decreasing = TRUE)
 
   kk2 <- clusterProfiler::gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
-                 pvalueCutoff = 1, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
+                 pvalueCutoff = pvalueCutoff, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
   # Dotplot for KEGG
   cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
@@ -157,7 +157,7 @@ HTG_GSEA <- function(res) {
       keyType = 'SYMBOL',
       readable = TRUE,
       ont = "BP",
-      pvalueCutoff = 1,
+      pvalueCutoff = pvalueCutoff,
       qvalueCutoff = 0.10
     )
 
@@ -204,7 +204,7 @@ HTG_GSEA <- function(res) {
       names(genes) <- rownames(sig_genes_df)
       go_enrich <- clusterProfiler::enrichGO(gene = names(genes), universe = names(gene_list), OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
                             keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                            pvalueCutoff = 1, qvalueCutoff = 0.10)
+                            pvalueCutoff = pvalueCutoff, qvalueCutoff = 0.10)
       go_results <- go_enrich@result
       significant_terms <- go_results[go_results$qvalue < 0.05, ]
       significant_terms <- significant_terms[order(significant_terms$qvalue), ]
