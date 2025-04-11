@@ -280,6 +280,10 @@ You can easily do it by:
 AnnotData<- read_excel("path/to/your/annot_file.xlsx")
 head(AnnotData)
 ```
+**REMEMBER** If there is any variable that needs to be transformed from quantitative to qualitative **HTG_quant_to_qual**
+```{r}
+AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial, "Cyclin_D1", 60, "high", "low")
+```
 
 ### 2.2.3 QUALITY CONTROL.
 #### 2.2.3.1 HTG_QC
