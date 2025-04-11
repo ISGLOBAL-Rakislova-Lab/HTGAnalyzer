@@ -19,7 +19,7 @@
 #'
 #'
 utils::globalVariables(c("padj", "Description", "Count"))
-HTG_GSEA <- function(res, pvalueCutoff = 1) {
+HTG_GSEA <- function(res, pvalueCutoff = 0.05) {
   cat("\033[32mPerforming gseGO  analysis\033[0m\n")
 
   # Prepare gene list for gseGO
