@@ -81,6 +81,7 @@ HTG_analysis <- function(outliers = NULL,
                          threshold_subject = 10,
                          genes_to_use = c("CCND1", "MMP10", "CTTN"),
                          heatmap_columns = NULL,
+                         pvalueCutoff = 1,
                          contrast = NULL,
                          pCutoff = 5e-2,
                          variable_01 = NULL,
@@ -437,7 +438,7 @@ HTG_analysis <- function(outliers = NULL,
 
   cat("\033[32mPerforming gseGO Analysis\033[0m\n")
       gse2 <- clusterProfiler::gseGO(geneList = gene_list, ont = "BP", keyType = "SYMBOL", nPermSimple = 500000,
-                                     minGSSize = 3, maxGSSize = 800, pvalueCutoff =1, verbose = TRUE, eps = 0,
+                                     minGSSize = 3, maxGSSize = 800,  pvalueCutoff = pvalueCutoff, verbose = TRUE, eps = 0,
                                      OrgDb = org.Hs.eg.db::org.Hs.eg.db, pAdjustMethod = "bonferroni")
 
       # Dotplot for gseGO
@@ -483,7 +484,7 @@ HTG_analysis <- function(outliers = NULL,
       kegg_gene_list <- sort(kegg_gene_list, decreasing = TRUE)
 
       kk2 <- clusterProfiler::gseKEGG(geneList = kegg_gene_list, organism = "hsa", minGSSize = 3, maxGSSize = 800,
-                                      pvalueCutoff =1, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
+                                       pvalueCutoff = pvalueCutoff, pAdjustMethod = "none", keyType = "ncbi-geneid", nPermSimple = 100000)
 
       # Dotplot for KEGG
       cat("\033[32mCreating Dotplot for KEGG\033[0m\n")
@@ -528,7 +529,7 @@ HTG_analysis <- function(outliers = NULL,
           keyType = 'SYMBOL',
           readable = TRUE,
           ont = "BP",
-          pvalueCutoff =1,
+           pvalueCutoff = pvalueCutoff,
           qvalueCutoff = 0.10
         )
 
@@ -575,7 +576,7 @@ HTG_analysis <- function(outliers = NULL,
         names(genes) <- rownames(sig_genes_df)
         go_enrich <- clusterProfiler::enrichGO(gene = names(genes), universe = names(gene_list), OrgDb =  org.Hs.eg.db::org.Hs.eg.db,
                                                keyType = 'SYMBOL', readable = TRUE, ont = "BP",
-                                               pvalueCutoff =1, qvalueCutoff = 0.10)
+                                                pvalueCutoff = pvalueCutoff, qvalueCutoff = 0.10)
         go_results <- go_enrich@result
         significant_terms <- go_results[go_results$qvalue < 0.05, ]
         significant_terms <- significant_terms[order(significant_terms$qvalue), ]
