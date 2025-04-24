@@ -134,7 +134,8 @@ HTG_auto <- function(counts_file_path, file_type = "HTG",
 
   counts_data <- counts_data[, counts_colnames %in% common_ids]
   col_data <- col_data[common_ids, , drop = FALSE]
-
+cat("\033[33mSelecting shared sample IDs between count and annotation matrices...\033[0m\n")
+cat("\033[33mIf any dimension is 0, the IDs may not match.\033[0m\n")
   cat("\033[32mDimensions of filtered counts_data:\033[0m\n")
   print(dim(counts_data))
 
