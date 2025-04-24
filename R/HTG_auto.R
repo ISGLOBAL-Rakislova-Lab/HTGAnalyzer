@@ -28,7 +28,7 @@
 #' @param percentage_gene Numeric. Minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.
 #' @param threshold_gene Numeric. Minimum count threshold per gene. Default is 200.
 #' @param threshold_subject Numeric. Minimum count threshold per subject. Default is 10.
-#' @param genes_to_use Character vector. Specifies top genes for analysis and survival analysis. Default is c("CCND1", "MMP10", "CTTN").
+#' @param genes_to_use Character vector. Specifies top genes for analysis and survival analysis. Default is c("CCND1", "MMP10", "CTTN").If genes_to_use = NULL, the top 10 genes with the lowest padj values from the differential expression analysis (DEA) will be selected if DEA = TRUE.
 #' @param heatmap_columns Character vector. Specifies columns to be used for annotations in the heatmap.
 #' @param contrast Character vector. Specifies the contrast for differential expression analysis. Default is NULL.
 #' @param pCutoff Numeric. The p-value cutoff for generating the volcano plot. Default is 0.05.
