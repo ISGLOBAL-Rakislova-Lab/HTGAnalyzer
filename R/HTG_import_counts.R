@@ -48,6 +48,6 @@ if (file_type == "HTG") {
   counts_data <- rna_db
   
 } else {
-  stop("File_type has to be 'HTG' or 'RNAseq'")
+  stop("\033[33mFile_type has to be 'HTG' or 'RNAseq'\033[0m\n")
 }
 }
