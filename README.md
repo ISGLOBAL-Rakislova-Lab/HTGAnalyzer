@@ -106,7 +106,7 @@ The HTGAnalyzer package is designed for users with limited bioinformatics experi
 
 ## 2.0 DATA INPUT:
 To use this package, you'll need:
-* An Excel file containing data counts, either from HTG or RNAseq,
+* An Excel file containing data counts, either from HTG or RAW RNAseq (remember, no decimals),
 * An Excel file with annotation or clinical data.
 
 ## 2.1. QUICK START.
@@ -119,7 +119,7 @@ The `HTG_auto` function in HTGAnalyzer automates a comprehensive analysis pipeli
 **EXAMPLE:**
 Imagine that your AnnotData looks like this: 
 
-** **It is very important that the sample name in AnnotData.xlsx is labeled as "id".** **
+** **It is very important that the sample name in AnnotData.xlsx and counts.xlsx is labeled as "id" as shown in HTG_import_counts section below** **
 
 |       id    | HPV_status | Cyclin_D1  | FIGO_2021_STAGE | Recurrence | Recurrence_01  | time_to_recurrence  |
 |-------------|------------|------------|-----------------|------------|----------------|---------------------|
@@ -224,10 +224,13 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
 If you prefer to have more control over the analysis process or if you have already completed some analysis, and `HTG_auto` does not fully meet your needs, we offer additional options to tailor your workflow.
 
 ### 2.2.2 DATA IMPORT.
-**NOTE**: We recommend avoiding special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues.
+**NOTE**: 
+* We recommend avoiding special characters on excel files (e.g., spaces, (,), ?, `, ^, ., -, *, and others)  to avoid analysis issues. 
+* Remember also that the data has to be RAW, some normalizations will be performed.
 
 #### 2.2.2.1 HTG_import_counts
 Let's start with the `HTG_import_counts` function. This function is designed to import count data (either **RNAseq or HTG**) into R from an Excel file. 
+**NOTE**: It is very important that the sample name in AnnotData.xlsx and counts.xlsx is labeled as "id"
 
 #### Typical HTG EdgeSeq Data Format
 Results from the HTG EdgeSeq machine usually have a header that looks like this:
@@ -344,7 +347,9 @@ All these analysis can be performed using the `HTG_analysis` function.  This fun
 
 In the two examples provided in this tutorial, the function is configured to perform all analysis. However, you can customize the function to execute only the analysis you require by setting the relevant parameters to `TRUE` or `FALSE`.
 
-**NOTE**: If you don't have a column used for an analysis that you will not perform, you can set `NULL` on that column
+**NOTE**: 
+* If you don't have a column used for an analysis that you will not perform, you can set `NULL` on that column.
+* The PCA plot will be performed for 2 comparisons. So, we recomend you that if that column have more than 2 variables, delete that samples from de Annotation and Counts file.
 
 ```{r}
 # EXAMPLE HTG:
