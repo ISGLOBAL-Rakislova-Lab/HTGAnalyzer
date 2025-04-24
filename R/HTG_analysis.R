@@ -18,7 +18,7 @@
 #' @param TME A logical value indicating whether to perform Tumor Microenvironment (TME) analysis. Default is TRUE. Parameter variable_01 will be needed.
 #' @param survival_analysis A logical value indicating whether to perform survival analysis. Default is FALSE. Parameter time will be needed.
 #' @param percentage_gene A numeric value between 0 and 1 indicating the minimum fraction of samples in which a gene must be expressed to be retained. Default is 0.2.
-#' @param genes_to_use A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN").
+#' @param genes_to_use A character vector specifying top genes for analysis. Default is c("CCND1", "MMP10", "CTTN"). If genes_to_use = NULL, the top 10 genes with the lowest padj values from the differential expression analysis (DEA) will be selected if DEA = TRUE.
 #' @param DEA A logical value indicating whether to perform DESeq2 analysis with filtering and without LFC shrinkage. Default is TRUE.
 #' @param variable_01 A character string specifying the event/censoring variable used in the survival analysis. Set NULL if you don't have it and turn FALSE TME
 #' @param time A character string specifying the time variable used in the survival analysis. Set NULL if you don't have it and turn FALSE survival_analysis
