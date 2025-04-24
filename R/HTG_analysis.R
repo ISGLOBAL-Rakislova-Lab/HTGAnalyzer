@@ -358,6 +358,8 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
   pca_data <- as.data.frame(pca_result$x)
   pca_data$Sample <- SummarizedExperiment::colData(dds)$id
   pca_data$Condition_Group <- SummarizedExperiment::colData(dds)[[design_formula]]
+cat("\033[33mWarning: Your condition group has more than 2 groups. Please remove samples part of the comparison groups from your dataset.\033[0m\n")
+
 
   color_palette <- c("#4793AF", "#E57373")
   names(color_palette) <- unique(pca_data$Condition_Group)
