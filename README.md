@@ -104,6 +104,9 @@ cat("Setup is complete. HTGAnalyzer shiny will work as long as you are in this f
 # 2. TUTORIAL.
 The HTGAnalyzer package is designed for users with limited bioinformatics experience who need a straightforward tool for transcriptomic data analysis. Initially created for HTG Edge data, the package now supports RNAseq data and addresses the gap created by the discontinuation of HTG Edge. HTGAnalyzer provides an easy-to-use solution for conducting Quality Control (**QC**), Differential Expression Analysis (**DEA**), Gene Set Enrichment Analysis (**GSEA**), Tumor Microenvironment Analysis (**TME**), and **Survival Analysis** for transcriptomic panels.
 
+**NOTE**: For more information, please refer to the help documentation for the HTGAnalyzer package in R. You can access it by typing `?HTGAnalyzer` in the R console.
+
+
 ## 2.0 DATA INPUT:
 To use this package, you'll need:
 * An Excel file containing data counts, either from HTG or RAW RNAseq (remember, no decimals),
@@ -151,6 +154,7 @@ HTG_auto_HTG <- HTG_auto("~/counts.xlsx",
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
                      DEA = TRUE,
+                     genes_to_use = NULL, #you can also put genes: c("KRAS", "TP53", "IDH1")
                      remove_outliers = TRUE,
                      GSEA = TRUE,
                      generate_heatmap = TRUE,
@@ -168,6 +172,7 @@ HTG_auto_RNA <- HTG_auto("~/counts.xlsx",
                      variable_01 = "Recurrence_01",
                      time = "time_to_recurrence",
                      DEA = TRUE,
+                     genes_to_use = NULL, #you can also put genes: c("KRAS", "TP53", "IDH1")
                      remove_outliers = FALSE,
                      GSEA = TRUE,
                      generate_heatmap = TRUE,
