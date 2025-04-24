@@ -150,7 +150,10 @@ HTG_analysis <- function(outliers = NULL,
   col_data[[contrast[1]]] <- as.factor(col_data[[contrast[1]]])
   counts_filtered<- as.data.frame(counts_filtered)
 
+cat("\033[33m[WARNING] DESeq2 expects integer counts. Are you sure it's raw counts?\033[0m\n")
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = counts_filtered, colData = col_data, design = design_formul)
+cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
+    
   cat("\033[32m\033[0m\n")
   cat("\033[32mBEFORE FILTERING\033[0m\n")
   print(dds)
