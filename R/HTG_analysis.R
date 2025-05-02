@@ -215,8 +215,9 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
   cat("\033[32mRESULTS OF THE CONTRAST (TOP 10 p-adj)\033[0m\n")
   print(head(res[order(res$padj), ], 10))
   cat("\033[32m \033[0m\n")
-  cat("\033[32mRESULTS of DEA WILL BE SAVED IN .CSV IN YOUR CURRENT DIRECTORY\033[0m\n")
   write.csv(res, "results_DEA.csv", row.names = TRUE)
+  cat("\033[32mRESULTS of DEA WILL BE SAVED IN .CSV IN YOUR CURRENT DIRECTORY\033[0m\n")
+
   pdf("DEA_plots_HTG_analysis.pdf", width = 10, height = 8)
 
   #  GWASTools::qqPlot(res$pvalue)
