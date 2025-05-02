@@ -220,6 +220,7 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
   pdf("DEA_plots_HTG_analysis.pdf", width = 10, height = 8)
 
   #  GWASTools::qqPlot(res$pvalue)
+  cat("\033[32mGenerating Z-scores\033[0m\n")
   z_scores <- stats::qnorm(res$pvalue)
   stats::qqnorm(z_scores, main = "QQ Plot de p-values")
   stats::qqline(z_scores, col = "red", lwd = 2)
@@ -239,7 +240,9 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
   # pheatmap::pheatmap(vsd_cor,
   #                    main = "Sample-to-Sample Correlation Heatmap",
   #                    display_numbers = TRUE)
+  cat("\033[32mNormalyzing by estimateSizeFactors\033[0m\n")
   dds <- DESeq2::estimateSizeFactors(dds)
+  cat("\033[32mGenerating SSize Factors vs. Column Sums plot \033[0m\n")
   plot(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)),
        xlab = "Size Factors", ylab = "Column Sums of Counts",
        main = "Size Factors vs. Column Sums")
