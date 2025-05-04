@@ -296,8 +296,9 @@ AnnotData_tutorial <- HTG_quant_to_qual(AnnotData_tutorial, "Cyclin_D1", 60, "hi
 ```
 Additionally, for users with clinical data stored in [REDCap (Research Electronic Data Capture)](https://projectredcap.org/) 
 , the REDCapR package in R provides a convenient way to connect and extract information directly into your R environment for integration with HTGAnalyzer. This allows for seamless incorporation of relevant clinical variables into your analysis workflow.
+
 You can have a tutorial [here](https://cran.r-project.org/web/packages/ReviewR/vignettes/usage_connect_to_redcap.html
-)
+).
 
 ### 2.2.3 QUALITY CONTROL.
 #### 2.2.3.1 HTG_QC
