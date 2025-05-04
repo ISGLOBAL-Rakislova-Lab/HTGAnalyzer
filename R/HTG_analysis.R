@@ -220,9 +220,10 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
 
   pdf("DEA_plots_HTG_analysis.pdf", width = 10, height = 8)
 
-  #  GWASTools::qqPlot(res$pvalue)
   cat("\033[32mGenerating Z-scores\033[0m\n")
-  z_scores <- stats::qnorm(res$pvalue)
+  pvals <- res$pvalue
+  pvals <- pvals[!is.na(pvals) & pvals > 0 & pvals < 1]
+  z_scores <- stats::qnorm(pvals)
   stats::qqnorm(z_scores, main = "QQ Plot de p-values")
   stats::qqline(z_scores, col = "red", lwd = 2)
 
