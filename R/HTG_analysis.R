@@ -244,7 +244,7 @@ cat("\033[33m[WARNING] Yes! It was raw counts\033[0m\n")
   #                    display_numbers = TRUE)
   cat("\033[32mNormalyzing by estimateSizeFactors\033[0m\n")
   dds <- DESeq2::estimateSizeFactors(dds)
-  cat("\033[32mGenerating SSize Factors vs. Column Sums plot \033[0m\n")
+  cat("\033[32mGenerating Size Factors vs. Column Sums plot \033[0m\n")
   plot(DESeq2::sizeFactors(dds), colSums(DESeq2::counts(dds)),
        xlab = "Size Factors", ylab = "Column Sums of Counts",
        main = "Size Factors vs. Column Sums")
