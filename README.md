@@ -57,10 +57,8 @@ If you have Docker installed, this is the easiest way to run the Shiny app witho
 Make sure:
 
 You have Docker installed and running.
-
 Your computer/user has permission to use Docker.
-
-You can access Docker Hub[hub.docker.com].
+You can access [Docker Hub](hub.docker.com).
 
 In terminal run:
 ```
