@@ -51,7 +51,7 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library(HTGAnalyzer)
 ```
-## **Option 2: Use HTGAnalyzer ShinyApp with Docker / Singularity (Recommended)**
+## **Option 2 (recommended): Use HTGAnalyzer ShinyApp with Docker or Singularity**
 If you have Docker installed, this is the easiest way to run the Shiny app without needing to manually install R packages or dependencies. It ensures exact reproducibility across different computing environments.
 
 Make sure:
