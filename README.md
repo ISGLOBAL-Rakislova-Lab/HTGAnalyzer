@@ -51,7 +51,7 @@ library(devtools)
 install_github("ISGLOBAL-Rakislova-Lab/HTGAnalyzer")
 library(HTGAnalyzer)
 ```
-## **Option 2: Use HTGAnalyzer ShinyApp with Docker (Recommended if possible)**
+## **Option 2: Use HTGAnalyzer ShinyApp with Docker / Singularity (Recommended)**
 If you have Docker installed, this is the easiest way to run the Shiny app without needing to manually install R packages or dependencies. It ensures exact reproducibility across different computing environments.
 
 Make sure:
@@ -70,6 +70,14 @@ docker run -p 3838:3838 htg_analyzer
 💡 Once the container is running, open your browser and go to:
 http://localhost:3838
 Or, if needed, replace with your local IP (e.g. http://127.0.0.1:3838)
+
+**With Singularity**
+In case you want to run HTGAnalzyer ShinyApp using Singularity, in terminal run:
+
+```
+singularity build htg_analyzer.sif docker://paupascualmas/htg_analyzer
+singularity run htg_analyzer.sif
+```
 
 ## **Option 3: Use HTGAnalyzer ShinyApp with renv (Basic Use)**
 For users who only need to use the HTGAnalyzer ShinyApp, we recommend using the `renv` library. The `renv` package simplifies the setup by creating an isolated environment with the exact versions of packages specified in a `renv.lock` file. This allows you to use HTGAnalyzer without needing to manage dependencies yourself.
