@@ -76,6 +76,8 @@ docker run -it -p 3838:3838 paupascualmas/htg_analyzer
 http://localhost:3838
 Or, if needed, replace with your local IP (e.g. http://127.0.0.1:3838)
 
+**NOTE**: More information about the analysis will be shown on the bash console.
+
 **With Singularity**
 In case you want to run HTGAnalzyer ShinyApp using Singularity, in terminal run:
 
