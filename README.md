@@ -65,7 +65,12 @@ Make sure:
 In terminal run:
 ```
 docker pull paupascualmas/htg_analyzer
-docker run -p 3838:3838 htg_analyzer
+docker run -p 3838:3838 paupascualmas/htg_analyzer
+```
+alternative
+```
+# If you want to see the logs
+docker run -it -p 3838:3838 paupascualmas/htg_analyzer
 ```
 💡 Once the container is running, open your browser and go to:
 http://localhost:3838
