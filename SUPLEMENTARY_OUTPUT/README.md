@@ -27,17 +27,6 @@ This folder includes:
 
 > ⚠️ Some large files (e.g., raw count matrices or full GSEA plots) were excluded due to size limitations.
 
----
-
-## 📄 Citation
-
-If you use this repository or its data in your work, please cite the original sources:
-
-- TCGA Research Network: https://www.cancer.gov/tcga  
-- cBioPortal for Cancer Genomics: https://www.cbioportal.org/  
-- HTG Molecular Diagnostics: https://www.htgmolecular.com/
-
----
 
 ## 📬 Contact
 
