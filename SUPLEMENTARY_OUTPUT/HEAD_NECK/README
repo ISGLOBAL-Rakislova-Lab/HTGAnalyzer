@@ -1,9 +1,9 @@
-# TCGA Head and Neck Squamous Cell Carcinoma (HNSC) – Gene Expression and Survival Analysis
+#TCGA Head and Neck Squamous Cell Carcinoma (HNSC) – Gene Expression and Survival Analysis
 
 This repository contains results from the analysis of gene expression and survival in the **TCGA Head and Neck Squamous Cell Carcinoma (TCGA-HNSC)** cohort using HTG_auto function from HTGAnalyzer package.  
 Data were accessed through [cBioPortal](https://www.cbioportal.org/study/summary?id=hnsc_tcga_gdc), originally released by the Genomic Data Commons (GDC) in **July 2024**.
 
-## Dataset Overview
+##Dataset Overview
 
 - **Samples**: 502 primary tumor samples  
 - **Sex distribution**: 133 female, 369 male patients  
