@@ -20,13 +20,33 @@ Samples were processed using the **HTG EdgeSeq Processor** and sequenced on an *
 ### 🔧 Code Execution
 
 The full pipeline was executed using the `HTG_auto()` function in R. The exact command can be found in the project's scripts.
+```{r}
+ HTG_auto(
+    "~/counts.xlsx",
+    file_type        = "HTG",
+    "~/AnnotData.xlsx",
+    design_formula   = "HPV_status",
+    QC               = TRUE,
+    heatmap_columns  = c("HPV_status","Cyclin_D1"),
+    contrast         = c("HPV_status","Associated","Independent"),
+    variable_01      = "Recurrence_01",
+    time             = "time_to_recurrence",
+    DEA              = TRUE,
+    genes_to_use     = NULL,
+    remove_outliers  = TRUE,
+    GSEA             = TRUE,
+    generate_heatmap = TRUE,
+    TME              = TRUE,
+    survival_analysis= TRUE
+  )
+```
 
 ---
 
 ### 📁 Raw Data
 
 - `count.xlsx`: Raw gene expression matrix  
-- `tpm_counts.csv`: TPM-normalized expression values
+- `AnnotData.xlsx`: Annotation data. 
 
 ---
 
