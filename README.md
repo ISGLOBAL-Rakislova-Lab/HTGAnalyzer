@@ -577,7 +577,9 @@ TME = TME_data_tutorial$EPIC,
 outliers = outliers_tutorial,
 remove_outliers = FALSE)
 ```
-
+HTGAnalyzer is a registered digital work under intellectual property law.  
+> Registered on 20 May 2025 by ISGlobal (CIF: G65341695) with timestamp certificate #52548973 issued by Coloriuris S.L.  
+> Authors: Robert Albero Gallego, Laia Diez Ahijado, Natalia Rakislova, Jaume Ordi.
 
 <div style="display: flex; justify-content: center; gap: 20px;">
     <img src="https://github.com/user-attachments/assets/74a92a2b-6007-4d37-b40c-d53fdf3ba0ef" alt="Image 1" width="200"/>
