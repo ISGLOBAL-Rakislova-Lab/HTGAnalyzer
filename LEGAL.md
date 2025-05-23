@@ -1,6 +1,6 @@
 ## Legal Notice
 
-The software contained in this repository (`HTGAnalyzer`) is a registered digital work protected under intellectual property rights.
+The software contained in this repository (HTGAnalyzer) is a digital work protected under copyright and registered on Coloriuris on 20/05/2025.
 
 **Title of the digital work**: HTGAnalyzer-main.zip  
 **Type of work**: Software  
