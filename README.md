@@ -578,8 +578,7 @@ outliers = outliers_tutorial,
 remove_outliers = FALSE)
 ```
 HTGAnalyzer is a registered digital work under intellectual property law.  
-> Registered on 20 May 2025 by ISGlobal (CIF: G65341695) with timestamp certificate #52548973 issued by Coloriuris S.L.  
-> Authors: Robert Albero Gallego, Laia Diez Ahijado, Natalia Rakislova, Jaume Ordi.
+> © 2024 FUNDACIÓN PRIVADA INSTITUTO DE SALUD GLOBAL BARCELONA, FUNDACIÓ DE RECERCA CLÍNIC BARCELONA – INSTITUT D’INVESTIGACIONS BIOMÈDIQUES AUGUST PI I SUNYER, HOSPITAL CLÍNIC BARCELONA. All rights reserved. Registered Coloriuris 20/05/2025.
 
 <div style="display: flex; justify-content: center; gap: 20px;">
     <img src="https://github.com/user-attachments/assets/74a92a2b-6007-4d37-b40c-d53fdf3ba0ef" alt="Image 1" width="200"/>
