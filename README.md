@@ -60,7 +60,7 @@ Make sure:
 
 - Your computer/user has permission to use Docker.
 
-- You can access [Docker Hub](hub.docker.com).
+- You can access [Docker Hub](https://hub.docker.com/).
 
 In terminal run:
 ```
