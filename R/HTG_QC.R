@@ -261,7 +261,10 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
     # listMarts()
     # listAttributes()
     ds <- datasets[grepl(org, datasets)]
-    mart <- biomaRt::useMart(host = "https://www.ensembl.org", biomart = 'ENSEMBL_MART_ENSEMBL', dataset = ds)
+
+    ##
+    ### In case it is not working you can find for a mirror place here: https://www.ensembl.org/info/about/mirrors.html
+    mart <- biomaRt::useMart(host = "https://useast.ensembl.org", biomart = 'ENSEMBL_MART_ENSEMBL', dataset = ds)
     ensembl <- biomaRt::getBM(attributes=type, mart = mart)
     #######################################
 
@@ -598,7 +601,8 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   rows_with_1 <- suppressWarnings(rownames(bin_matrix)[apply(bin_matrix, 1, any)])
   cat("\033[32m                              ***\033[0m\n")
   cat(paste("\033[32mThese are the samples plotted at least once in the heatmap:  \033[0m\n"))
-  cat(paste("The number of samples that are outliers are:", length(rows_with_1)))
+  cat("The number of samples that are outliers is:", length(rows_with_1), "\n")
+
   cat(rows_with_1)
   return(rows_with_1)
 }
