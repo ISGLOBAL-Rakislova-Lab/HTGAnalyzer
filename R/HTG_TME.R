@@ -100,7 +100,8 @@ HTG_TME <- function(outliers, pattern = NULL, counts_data, AnnotData, design_for
     # listMarts()
     # listAttributes()
     ds <- datasets[grepl(org, datasets)]
-    mart <- biomaRt::useMart(host = "https://www.ensembl.org", biomart = 'ENSEMBL_MART_ENSEMBL', dataset = ds)
+    ### In case it is not working you can find for a mirror place here: https://www.ensembl.org/info/about/mirrors.html
+    mart <- biomaRt::useMart(host = "https://useast.ensembl.org", biomart = 'ENSEMBL_MART_ENSEMBL', dataset = ds)
     ensembl <- biomaRt::getBM(attributes=type, mart = mart)
     #######################################
 
