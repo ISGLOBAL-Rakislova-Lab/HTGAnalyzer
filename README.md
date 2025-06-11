@@ -1,3 +1,4 @@
+google-site-verification: google6cd413e5f8777310.html
 <p align="right">
   <img src="https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/blob/main/www/HTGAnalyzer_logo.png" alt="HTGAnalyzer Logo" width="150">
 </p>
