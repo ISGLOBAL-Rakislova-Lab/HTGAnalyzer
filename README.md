@@ -64,13 +64,13 @@ Make sure:
 
 In terminal run:
 ```
-docker pull paupascualmas/htg_analyzer
-docker run -p 3838:3838 paupascualmas/htg_analyzer
+docker pull paupascualmas/htganalyzer
+docker run -p 3838:3838 paupascualmas/htganalyzer
 ```
 alternative
 ```
 # If you want to see the logs
-docker run -it -p 3838:3838 paupascualmas/htg_analyzer
+docker run -it -p 3838:3838 paupascualmas/htganalyzer
 ```
 💡 Once the container is running, open your browser and go to:
 http://localhost:3838
@@ -82,8 +82,8 @@ Or, if needed, replace with your local IP (e.g. http://127.0.0.1:3838)
 In case you want to run HTGAnalzyer ShinyApp using Singularity, in terminal run:
 
 ```
-singularity build htg_analyzer.sif docker://paupascualmas/htg_analyzer
-singularity run htg_analyzer.sif
+singularity build htg_analyzer.sif docker://paupascualmas/htganalyzer
+singularity run htganalyzer.sif
 ```
 
 ## **Option 3: Use HTGAnalyzer ShinyApp with renv (Basic Use)**
