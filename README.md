@@ -60,7 +60,7 @@ Make sure:
 
 - Your computer/user has permission to use Docker.
 
-- You can access ([Docker](https://hub.docker.com/r/paupascualmas/htg_analyzer)).
+- You can access ([Docker HTGAnalyzer](https://hub.docker.com/r/paupascualmas/htganalyzer)).
 
 In terminal run:
 ```
