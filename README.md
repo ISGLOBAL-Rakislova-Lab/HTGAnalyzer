@@ -165,6 +165,22 @@ To use this package, you'll need:
 * An Excel file containing data counts, either from HTG or RAW RNAseq (remember, no decimals),
 * An Excel file with annotation or clinical data.
 
+For learning purposes, we provide **mock data** (example datasets) so you can follow the full tutorial without using your own files.  
+You can download them here:  
+🔗 [HTG_data_tutorial](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial)
+
+Alternatively, these datasets are also included within the package and can be loaded directly in R:
+
+```r
+# Example datasets included in HTGAnalyzer:
+data(counts_data_tutorial)   # HTG example count data
+data(counts_data_RNAseq)     # RNA-seq example count data
+data(AnnotData_tutorial)     # Example annotation/clinical data
+data(outliers_tutorial)      # Example list of outlier samples
+data(res_tutorial)           # Example DESeq2 results object
+data(TME_data_tutorial)      # Example tumor microenvironment data
+```
+
 ## 2.1. QUICK START.
 HTGAnalyzer has a function called `HTG_auto` which provides an easy way to perform all the analyses.
 
