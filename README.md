@@ -5,11 +5,30 @@
 
 # HTGAnalyzer
 
-HTGAnalyzer is an R package designed for the analysis of HTG EdgeSeq data and RNA sequencing results. The package provides tools for quality control (QC), differential gene expression analysis, tumor microenvironment profiling, survival analysis, and gene set enrichment analysis.
+**HTGAnalyzer** is an R package designed for the analysis of HTG EdgeSeq data and RNA sequencing results.  
+It provides tools for:
+
+- Quality control (QC)  
+- Differential gene expression analysis  
+- Tumor microenvironment profiling  
+- Survival analysis  
+- Gene set enrichment analysis
+
 
 In addition to the R package, we offer **two Shiny apps** for user-friendly local or web-based analysis:
 - **Full Analysis Shiny App:** Perform a complete analysis locally on your own machine. [Learn more here.](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny)
 - **Web-based QC Shiny App:** Focus exclusively on quality control (QC) through our hosted web app. [Try it online here.](https://isglobal-rakislova-lab.shinyapps.io/htg_shinny_app-main/)
+
+
+You can explore the complete analysis results in the **Supplementary Material** here:  
+[HTGAnalyzer Supplementary Output](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT)
+
+
+####  Paper  
+> **Laia Díez-Ahijado**, Aarón Marcén del Rincón, Lorena Marimón, Adela Saco, Marta del Pino, Aureli Torné, Katarzyna Darecka, Lia Sisuashvili, Núria Peñuelas, Pau Pascual-Mas, Núria Carreras-Dieguez, Oriol Ordi, Natalia Rakislova & Robert Albero (2025). *HTGAnalyzer: An accessible R package with a web interface for enhanced transcriptomic analysis in precision medicine*. **Computers in Biology and Medicine**, 196, 110772. [https://doi.org/10.1016/j.compbiomed.2025.110772](https://doi.org/10.1016/j.compbiomed.2025.110772)  
+
+----
+
 
 ![FIGURA_1-1](https://github.com/user-attachments/assets/448bd900-6f38-469c-9094-86b8794a2644)
 
