@@ -45,7 +45,7 @@ The full pipeline was executed using the `HTG_auto()` function in R. The exact c
 
 ### 📁 Raw Data
 You can download the **mock raw data** used in the tutorial here:  
-🔗 [HTG_data_tutorial](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial)
+🔗 [HTG_data_tutorial](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial/HTG_data_tutorial)
 
 Contents:
 - **`count.xlsx`** – Raw gene expression matrix (HTG format, integers only)  
