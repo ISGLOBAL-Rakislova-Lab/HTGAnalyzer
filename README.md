@@ -1,4 +1,4 @@
-<p align="right">
+****<p align="right">
   <img src="https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer_shiny/blob/main/www/HTGAnalyzer_logo.png" alt="HTGAnalyzer Logo" width="150">
 </p>
 
@@ -167,7 +167,9 @@ To use this package, you'll need:
 
 For learning purposes, we provide **mock data** (example datasets) so you can follow the full tutorial without using your own files.  
 You can download them here:  
-🔗 [HTG_data_tutorial](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial)
+🔗 [HTG_data_tutorial](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial/HTG_data_tutorial)
+🔗 [Examples output](https://github.com/ISGLOBAL-Rakislova-Lab/HTGAnalyzer/tree/main/SUPLEMENTARY_OUTPUT/HTG_data_tutorial)
+
 
 Alternatively, these datasets are also included within the package and can be loaded directly in R:
 
