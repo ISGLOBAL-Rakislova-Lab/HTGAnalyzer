@@ -37,6 +37,25 @@
 #' @examples
 #' # Run the function with example data
 #' HTG_QC(counts_data = counts_data_tutorial, pattern = "^NC-|^POS-|^GDNA-|^ERCC-", save_csv = TRUE)
+#' qc_results <- HTG_QC(
+#'  counts_data = counts_data_tutorial,
+#'  pattern = "^NC-|^POS-|^GDNA-|^ERCC-",   # control probe patterns
+#'  threshold_superior_pos = 5,             # maximum allowed value for POS controls
+#'  threshold_line_pos = 4,                 # warning limit for POS controls
+#'  threshold_inferior_lib = 5e+06,         # minimum acceptable library size
+#'  threshold_lib = 7e+06,                  # warning limit for library size
+#'  threshold_superior_nc = 0.05,           # maximum allowed for NC (negative controls)
+#'  threshold_line_nc = 0.045,              # warning limit for NC
+#'  threshold_superior_gdna = 0.025,        # maximum allowed for gDNA
+#'  threshold_line_gdna = 0.02,             # warning limit for gDNA
+#'  threshold_superior_ercc = 0.03,         # maximum allowed for ERCC
+#'  threshold_line_ercc = 0.025,            # warning limit for ERCC
+#'  threshold_inferior_median = 3,          # minimum acceptable for counts median
+#'  threshold_line_median = 5,              # warning limit for counts median
+#'  save_csv = TRUE,                        # save QC results to CSV
+#'  csv_file = "QC_results_tutorial.csv"    # output file name
+#' )
+
 #'
 #' @name HTG_QC
 #'
@@ -606,3 +625,4 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   cat(rows_with_1)
   return(rows_with_1)
 }
+
