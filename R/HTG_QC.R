@@ -55,7 +55,6 @@
 #'  save_csv = TRUE,                        # save QC results to CSV
 #'  csv_file = "QC_results_tutorial.csv"    # output file name
 #' )
-
 #'
 #' @name HTG_QC
 #'
@@ -625,4 +624,5 @@ HTG_QC <- function(counts_data, pattern = "^NC-|^POS-|^GDNA-|^ERCC-",
   cat(rows_with_1)
   return(rows_with_1)
 }
+
 
