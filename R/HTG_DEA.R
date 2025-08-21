@@ -109,6 +109,7 @@ HTG_DEA <- function(outliers = NULL,
   cat("\033[33mPERFORMING DESeq2 ANALYSIS...\033[0m\n")
   vsd <- DESeq2::vst(dds, blind = FALSE)
   dds <- DESeq2::DESeq(dds)
+  dds
   res <- DESeq2::results(dds, contrast = contrast, cooksCutoff = TRUE)
 
   # Save results
@@ -195,4 +196,5 @@ HTG_DEA <- function(outliers = NULL,
     return(res)
   }
 }
+
 
